@@ -1,0 +1,129 @@
+.ag-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 320px;
+  border: 1px solid #d7dde5;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+  color: #1f2937;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.ag-header {
+  display: flex;
+  border-bottom: 1px solid #d7dde5;
+  background: #f7f9fc;
+}
+
+.ag-header-left-pinned,
+.ag-header-center-viewport,
+.ag-header-right-pinned {
+  display: flex;
+}
+
+.ag-header-center-viewport,
+.ag-body-viewport {
+  overflow: auto;
+}
+
+.ag-header-center-viewport {
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.ag-header-center-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.ag-header-row,
+.ag-row {
+  display: flex;
+  min-width: fit-content;
+}
+
+.ag-header-cell,
+.ag-cell {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  padding: 0 12px;
+  border-right: 1px solid #edf1f5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ag-header-cell {
+  height: 40px;
+  border-bottom: 1px solid #e5eaf0;
+}
+
+.ag-header-cell-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ag-body-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #ffffff;
+}
+
+.ag-body {
+  display: flex;
+  min-height: 100%;
+}
+
+.ag-body-center-container {
+  min-height: 100%;
+}
+
+.ag-row {
+  border-bottom: 1px solid #f1f4f7;
+}
+
+.ag-row-odd {
+  background: #fbfcfd;
+}
+
+.ag-row-selected {
+  background: #e8f1ff;
+}
+
+.ag-cell {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.ag-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(2px);
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.ag-live-banner,
+.ag-footer,
+.ag-header-left-pinned,
+.ag-header-right-pinned,
+.ag-body-left-pinned,
+.ag-body-right-pinned {
+  flex: 0 0 auto;
+}

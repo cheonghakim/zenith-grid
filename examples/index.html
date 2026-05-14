@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Awesome Grid Demo</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="demo-shell">
+      <header class="demo-hero">
+        <div>
+          <p class="eyebrow">Awesome Grid</p>
+          <h1>Enterprise grid MVP playground</h1>
+          <p class="subtitle">
+            Virtual scrolling, sorting, filtering, and row selection wired into the first runnable shell.
+          </p>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-card">
+            <span class="stat-label">Rows</span>
+            <strong id="rowCount">0</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Selected</span>
+            <strong id="selectedCount">0</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="toolbar">
+        <label class="toolbar-field">
+          <span>Quick filter</span>
+          <input id="quickFilterInput" type="search" placeholder="Search name, team, status..." />
+        </label>
+        <label class="toolbar-field">
+          <span>Status</span>
+          <select id="statusFilterSelect">
+            <option value="">All</option>
+            <option value="Active">Active</option>
+            <option value="Paused">Paused</option>
+            <option value="Review">Review</option>
+          </select>
+        </label>
+        <div class="toolbar-actions">
+          <button id="resetButton" type="button">Reset Filters</button>
+          <button id="reloadButton" type="button">Reload Data</button>
+        </div>
+      </section>
+
+      <section class="grid-panel">
+        <div class="panel-header">
+          <h2>Operations Table</h2>
+          <p>Click headers to sort. Click rows to toggle selection. Shift-click selects ranges.</p>
+        </div>
+        <div id="gridApp" class="grid-host"></div>
+      </section>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

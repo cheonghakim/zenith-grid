@@ -1,0 +1,27 @@
+{
+  "name": "awesome-grid",
+  "version": "0.1.0",
+  "description": "Enterprise-grade DataGrid library in Vanilla JavaScript",
+  "main": "dist/awesome-grid.js",
+  "module": "dist/awesome-grid.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/awesome-grid.js",
+      "default": "./dist/awesome-grid.js"
+    },
+    "./styles/grid.css": "./src/styles/grid.css"
+  },
+  "scripts": {
+    "dev": "vite examples",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "keywords": ["datagrid", "table", "virtual-scroll", "enterprise"],
+  "license": "MIT"
+}
