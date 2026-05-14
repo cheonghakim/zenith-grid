@@ -48,11 +48,13 @@ export class DOMRenderer {
     overlay.style.display = 'none';
     const banner = this._createElement('div', 'ag-live-banner');
     banner.style.display = 'none';
+    const sidePanel = this._createElement('div', 'ag-side-panel-host');
 
     this._container.appendChild(banner);
     this._container.appendChild(header);
     this._container.appendChild(bodyViewport);
     this._container.appendChild(footer);
+    this._container.appendChild(sidePanel);
     this._container.appendChild(overlay);
 
     this._els = {
@@ -73,6 +75,7 @@ export class DOMRenderer {
       overlay,
       banner,
       footer,
+      sidePanel,
     };
 
     this._built = true;
@@ -106,6 +109,40 @@ export class DOMRenderer {
   hideOverlay() {
     this._els.overlay.style.display = 'none';
     this._els.overlay.textContent = '';
+  }
+
+  showLiveBanner(message, onClick) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'ag-live-banner-button';
+    button.textContent = message;
+    if (typeof onClick === 'function') {
+      button.addEventListener('click', onClick, { once: true });
+    }
+
+    this._els.banner.innerHTML = '';
+    this._els.banner.appendChild(button);
+    this._els.banner.style.display = 'block';
+  }
+
+  hideLiveBanner() {
+    this._els.banner.style.display = 'none';
+    this._els.banner.innerHTML = '';
+  }
+
+  setFooterContent(content) {
+    this._els.footer.innerHTML = '';
+    if (!content) {
+      this._els.footer.style.display = 'none';
+      return;
+    }
+
+    this._els.footer.style.display = 'flex';
+    if (content instanceof HTMLElement) {
+      this._els.footer.appendChild(content);
+    } else {
+      this._els.footer.innerHTML = String(content);
+    }
   }
 
   getBodyViewport() {
@@ -142,6 +179,14 @@ export class DOMRenderer {
 
   getFooter() {
     return this._els.footer;
+  }
+
+  getRoot() {
+    return this._container;
+  }
+
+  getSidePanelHost() {
+    return this._els.sidePanel;
   }
 
   _createElement(tag, className) {

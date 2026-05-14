@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Awesome Grid Demo</title>
+    <title>Awesome Grid Testbench</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -11,15 +11,20 @@
       <header class="demo-hero">
         <div>
           <p class="eyebrow">Awesome Grid</p>
-          <h1>Enterprise grid MVP playground</h1>
+          <h1>Interactive feature testbench</h1>
           <p class="subtitle">
-            Virtual scrolling, sorting, filtering, and row selection wired into the first runnable shell.
+            Validate horizontal virtualization, variable row height, grouped rows, multi-depth trees,
+            client and server paging, infinite scroll, plugins, and runtime mutations from one screen.
           </p>
         </div>
         <div class="hero-stats">
           <div class="stat-card">
-            <span class="stat-label">Rows</span>
+            <span class="stat-label">Total Rows</span>
             <strong id="rowCount">0</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Visible Rows</span>
+            <strong id="visibleCount">0</strong>
           </div>
           <div class="stat-card">
             <span class="stat-label">Selected</span>
@@ -28,32 +33,163 @@
         </div>
       </header>
 
-      <section class="toolbar">
-        <label class="toolbar-field">
-          <span>Quick filter</span>
-          <input id="quickFilterInput" type="search" placeholder="Search name, team, status..." />
-        </label>
-        <label class="toolbar-field">
-          <span>Status</span>
-          <select id="statusFilterSelect">
-            <option value="">All</option>
-            <option value="Active">Active</option>
-            <option value="Paused">Paused</option>
-            <option value="Review">Review</option>
-          </select>
-        </label>
-        <div class="toolbar-actions">
-          <button id="resetButton" type="button">Reset Filters</button>
-          <button id="reloadButton" type="button">Reload Data</button>
-        </div>
+      <section class="control-grid">
+        <article class="control-card">
+          <h2>Data</h2>
+          <div class="control-row">
+            <label class="toolbar-field">
+              <span>Dataset</span>
+              <select id="datasetSelect">
+                <option value="flat">Flat Wide Dataset</option>
+                <option value="tree">Deep Tree Dataset</option>
+              </select>
+            </label>
+            <label class="toolbar-field redundant-control">
+              <span>Quick filter</span>
+              <input id="quickFilterInput" type="search" placeholder="Search operator, team, region, notes..." />
+            </label>
+            <label class="toolbar-field redundant-control">
+              <span>Status</span>
+              <select id="statusFilterSelect">
+                <option value="">All</option>
+                <option value="Active">Active</option>
+                <option value="Paused">Paused</option>
+                <option value="Review">Review</option>
+              </select>
+            </label>
+          </div>
+          <div class="toolbar-actions">
+            <button id="reloadButton" type="button" data-button-kind="action">Reload Dataset</button>
+            <button id="groupButton" type="button" data-button-kind="toggle">Group by Team</button>
+            <button id="treeButton" type="button" data-button-kind="toggle">Tree Mode</button>
+            <button id="expandTreeButton" type="button" data-button-kind="action">Expand All Tree</button>
+            <button id="collapseTreeButton" type="button" data-button-kind="action">Collapse All Tree</button>
+          </div>
+        </article>
+
+        <article class="control-card">
+          <h2>Display Modes</h2>
+          <div class="control-row compact">
+            <button id="clientModeButton" type="button" data-button-kind="mode">Client</button>
+            <button id="paginationButton" type="button" data-button-kind="mode">Pagination</button>
+            <button id="infiniteButton" type="button" data-button-kind="mode">Infinite</button>
+            <button id="nextPageButton" type="button" data-button-kind="action">Next Page</button>
+            <button id="prevPageButton" type="button" data-button-kind="action">Prev Page</button>
+            <button id="loadMoreButton" type="button" data-button-kind="action">Load More</button>
+            <label class="toolbar-field small">
+              <span>Page Size</span>
+              <select id="pageSizeSelect">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </label>
+          </div>
+          <div class="toolbar-actions">
+            <button id="paginationClientButton" type="button" data-button-kind="toggle">Pagination Local</button>
+            <button id="paginationServerButton" type="button" data-button-kind="toggle">Pagination Server</button>
+            <button id="infiniteClientButton" type="button" data-button-kind="toggle">Infinite Local</button>
+            <button id="infiniteServerButton" type="button" data-button-kind="toggle">Infinite Server</button>
+          </div>
+        </article>
+
+        <article class="control-card">
+          <h2>Mutations</h2>
+          <div class="toolbar-actions">
+            <button id="appendRowsButton" type="button" data-button-kind="action">Append 5 Rows</button>
+            <button id="updateFirstRowButton" type="button" data-button-kind="action">Update First Row</button>
+            <button id="patchFirstRowButton" type="button" data-button-kind="action">Patch First Row</button>
+            <button id="removeLastRowButton" type="button" data-button-kind="action">Remove Last Row</button>
+            <button id="liveButton" type="button" data-button-kind="action">Push Live Rows</button>
+            <button id="pauseLiveButton" type="button" data-button-kind="toggle">Pause Live</button>
+            <button id="resumeLiveButton" type="button" data-button-kind="action">Resume Live</button>
+          </div>
+        </article>
+
+        <article class="control-card redundant-control">
+          <h2>Plugins</h2>
+          <div class="toolbar-actions">
+            <button id="uppercasePluginButton" type="button" data-button-kind="toggle">Uppercase Team Plugin</button>
+            <button id="scorePluginButton" type="button" data-button-kind="toggle">Score Prefix Plugin</button>
+          </div>
+        </article>
+
+        <article class="control-card redundant-control">
+          <h2>Columns</h2>
+          <div class="control-row">
+            <label class="toolbar-field small">
+              <span>Target Column</span>
+              <select id="columnSelect">
+                <option value="id">ID</option>
+                <option value="name" selected>Operator</option>
+                <option value="team">Team</option>
+                <option value="status">Status</option>
+                <option value="score">Score</option>
+                <option value="region">Region</option>
+                <option value="severity">Severity</option>
+                <option value="owner">Owner</option>
+                <option value="queue">Queue</option>
+                <option value="lastAction">Last Action</option>
+                <option value="notes">Notes</option>
+                <option value="updatedAt">Updated At</option>
+              </select>
+            </label>
+            <label class="toolbar-field small">
+              <span>Pin</span>
+              <select id="pinSelect">
+                <option value="">None</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+              </select>
+            </label>
+            <label class="toolbar-field small">
+              <span>Width</span>
+              <input id="widthInput" type="number" min="50" step="10" value="220" />
+            </label>
+            <label class="checkbox-field">
+              <input id="visibleCheckbox" type="checkbox" checked />
+              <span>Visible</span>
+            </label>
+          </div>
+          <div class="toolbar-actions">
+            <button id="applyColumnButton" type="button" data-button-kind="action">Apply Column State</button>
+            <button id="saveColumnStateButton" type="button" data-button-kind="action">Save Column State</button>
+            <button id="loadColumnStateButton" type="button" data-button-kind="action">Load Column State</button>
+            <button id="clearColumnStateButton" type="button" data-button-kind="action">Clear Saved State</button>
+          </div>
+        </article>
       </section>
 
       <section class="grid-panel">
         <div class="panel-header">
           <h2>Operations Table</h2>
-          <p>Click headers to sort. Click rows to toggle selection. Shift-click selects ranges.</p>
+          <p>Scroll horizontally to confirm only center columns render, expand the deep tree, and use the built-in right overlay panel for columns, filters, plugins, and view settings.</p>
         </div>
         <div id="gridApp" class="grid-host"></div>
+      </section>
+
+      <section class="inspector-grid">
+        <article class="inspector-card">
+          <h2>Runtime State</h2>
+          <dl class="state-list">
+            <div><dt>Mode</dt><dd id="modeValue">client</dd></div>
+            <div><dt>Dataset</dt><dd id="datasetValue">flat</dd></div>
+            <div><dt>Grouping</dt><dd id="groupingValue">off</dd></div>
+            <div><dt>Tree</dt><dd id="treeValue">off</dd></div>
+            <div><dt>Tree Depth</dt><dd id="treeDepthValue">0</dd></div>
+            <div><dt>Variable Height</dt><dd id="variableHeightValue">off</dd></div>
+            <div><dt>Pagination</dt><dd id="paginationValue">n/a</dd></div>
+            <div><dt>Infinite</dt><dd id="infiniteValue">n/a</dd></div>
+            <div><dt>Plugins</dt><dd id="pluginsValue">none</dd></div>
+            <div><dt>Column State</dt><dd id="columnStateValue">default</dd></div>
+          </dl>
+        </article>
+
+        <article class="inspector-card">
+          <h2>Event Log</h2>
+          <pre id="eventLog" class="event-log">Waiting for grid events...</pre>
+        </article>
       </section>
     </div>
 

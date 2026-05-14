@@ -27,6 +27,10 @@ export class ColumnRegistry {
     return this._model.getVisibleLeafColumns();
   }
 
+  getAllLeafColumns() {
+    return this._model.getAllLeafColumns();
+  }
+
   getColumnsByPin() {
     return this._model.getColumnsByPin();
   }
@@ -38,6 +42,33 @@ export class ColumnRegistry {
       centerWidth: this._sumWidths(groups.center),
       rightWidth: this._sumWidths(groups.right),
     };
+  }
+
+  serializeState() {
+    return this._model.serializeState();
+  }
+
+  applySerializedState(state) {
+    this._model.applySerializedState(state);
+    this._markFirstVisibleColumn();
+  }
+
+  setVisible(colId, visible) {
+    const updated = this._model.setVisible(colId, visible);
+    this._markFirstVisibleColumn();
+    return updated;
+  }
+
+  setPinned(colId, pin) {
+    const updated = this._model.setPinned(colId, pin);
+    this._markFirstVisibleColumn();
+    return updated;
+  }
+
+  moveColumn(colId, toIndex, options) {
+    const updated = this._model.moveColumn(colId, toIndex, options);
+    this._markFirstVisibleColumn();
+    return updated;
   }
 
   setWidth(colId, width) {
