@@ -633,10 +633,23 @@ npm run dev
 
 예제 페이지에서는 HighGrid 데모를 열 수 있고, 우측 컨트롤 패널에서 모드 전환, 라이브 데이터, 컬럼 상태, 벤치마크를 확인할 수 있습니다.
 
-### 26. 배포 전 확인 사항
+### 26. GitHub Pages 배포
+
+GitHub Pages에는 라이브러리 번들(`src/index.js` entry)이 아니라 데모 페이지(`examples/index.html`)를 빌드한 결과물을 올려야 합니다.
+
+```bash
+npm run build:demo
+```
+
+이 명령은 `dist-pages/index.html`을 만들고, `.github/workflows/pages.yml`은 이 폴더를 Pages 아티팩트로 배포합니다. repository Pages라면 custom domain이 없어도 `https://<user>.github.io/<repo>/`에서 동작합니다.
+
+custom domain은 선택 사항입니다. 도메인을 쓰려면 GitHub Pages 설정에서 domain을 등록하고 DNS를 연결하면 됩니다. 단, custom domain은 `index.html` 위치 문제를 해결하지 않으므로 데모 빌드는 그대로 필요합니다.
+
+### 27. 배포 전 확인 사항
 
 - `npm test`
 - `npm run build`
+- `npm run build:demo`
 - 실제 데이터셋으로 스크롤, 정렬, 필터, 라이브 업데이트 수동 점검
 - 서버 모드 사용 시 `fetchPage`, `onLoadMore`, `onLoadChildren` 응답 구조 확인
 
@@ -1250,9 +1263,22 @@ npm run dev
 
 The example app includes a floating control panel for display modes, live updates, column state, and quick benchmark actions.
 
-### 26. Before You Ship
+### 26. GitHub Pages Deployment
+
+GitHub Pages should serve the built demo site, not the library build entry from `src/index.js`.
+
+```bash
+npm run build:demo
+```
+
+This creates `dist-pages/index.html`. The `.github/workflows/pages.yml` workflow uploads that folder as the Pages artifact. For a repository Page, the default URL `https://<user>.github.io/<repo>/` works without a custom domain.
+
+A custom domain is optional. If you use one, configure it in GitHub Pages settings and point DNS to GitHub Pages. It does not fix the `index.html` location by itself, so the demo build is still required.
+
+### 27. Before You Ship
 
 - `npm test`
 - `npm run build`
+- `npm run build:demo`
 - manually verify scrolling, sorting, filtering, and live updates with real datasets
 - validate response shapes for `fetchPage`, `onLoadMore`, and `onLoadChildren` when using server mode
