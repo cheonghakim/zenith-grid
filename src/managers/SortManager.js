@@ -136,7 +136,7 @@ export class SortManager {
   _detectType(value) {
     if (typeof value === 'number') return 'number';
     if (value instanceof Date) return 'date';
-    if (typeof value === 'string' && !isNaN(Date.parse(value)) && value.includes('-')) return 'date';
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]*)?$/.test(value)) return 'date';
     return 'string';
   }
 

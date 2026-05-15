@@ -1,4 +1,4 @@
-# Awesome Grid Implementation Roadmap
+# HighGrid Implementation Roadmap
 
 이 문서는 엔터프라이즈급 DataGrid/Table 라이브러리 설계 프롬프트를 실제 구현 작업으로 옮기기 위한 실전형 로드맵이다. 현재 저장소에 이미 존재하는 코어 클래스 초안을 기준으로, MVP에서 반드시 닫아야 할 범위와 이후 확장 범위를 분리한다.
 
@@ -223,7 +223,7 @@ raw rows
 브라우저에서 아래 코드가 동작해야 한다.
 
 ```js
-import { createGrid } from 'awesome-grid';
+import { createGrid } from 'highgrid';
 
 const grid = createGrid(document.getElementById('app'), {
   columns: [

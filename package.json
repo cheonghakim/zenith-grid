@@ -1,27 +1,57 @@
 {
-  "name": "awesome-grid",
+  "name": "highgrid",
   "version": "0.1.0",
-  "description": "Enterprise-grade DataGrid library in Vanilla JavaScript",
-  "main": "dist/awesome-grid.js",
-  "module": "dist/awesome-grid.js",
+  "description": "Production-ready data grid library in vanilla JavaScript",
+  "main": "dist/highgrid.umd.cjs",
+  "module": "dist/highgrid.js",
+  "types": "./index.d.ts",
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/awesome-grid.js",
-      "default": "./dist/awesome-grid.js"
+      "types": "./index.d.ts",
+      "import": "./dist/highgrid.js",
+      "require": "./dist/highgrid.umd.cjs",
+      "default": "./dist/highgrid.js"
     },
-    "./styles/grid.css": "./src/styles/grid.css"
+    "./vue": {
+      "types": "./dist/highgrid-vue.d.ts",
+      "import": "./dist/highgrid-vue.js",
+      "default": "./dist/highgrid-vue.js"
+    },
+    "./styles/grid.css": "./dist/assets/grid.css",
+    "./styles/tokens.css": "./src/styles/tokens.css"
   },
   "scripts": {
     "dev": "vite examples",
     "build": "vite build",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "build:vue": "vite build --config vite.vue.config.js",
+    "build:all": "npm run build && npm run build:vue",
+    "test": "vitest run --config vitest.config.js",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:ci": "npm test && npm run test:e2e && npm run build:all"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "jsdom": "^26.1.0",
     "vite": "^5.0.0",
-    "vitest": "^1.0.0"
+    "vitest": "^1.0.0",
+    "vue": "^3.4.0"
   },
-  "keywords": ["datagrid", "table", "virtual-scroll", "enterprise"],
+  "keywords": [
+    "datagrid",
+    "table",
+    "virtual-scroll",
+    "enterprise"
+  ],
   "license": "MIT"
 }

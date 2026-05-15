@@ -21,7 +21,7 @@ export class ColumnStateManager {
     this._tableId = tableId;
     this._storageType = options.storage ?? 'localStorage';
     this._serverStorage = options.serverStorage ?? null;
-    this._storageKey = `awesome-grid:${tableId}:columns`;
+    this._storageKey = `highgrid:${tableId}:columns`;
     this._memoryStore = null;
   }
 
@@ -47,7 +47,11 @@ export class ColumnStateManager {
         break;
       case 'server':
         if (this._serverStorage) {
-          await this._serverStorage.set(this._storageKey, columnState);
+          try {
+            await this._serverStorage.set(this._storageKey, columnState);
+          } catch (e) {
+            console.warn('[ColumnStateManager] server storage save failed:', e);
+          }
         }
         break;
       case 'memory':

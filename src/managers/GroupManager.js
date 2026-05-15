@@ -172,6 +172,7 @@ export class GroupManager {
         _depth: depth,
         _childCount: group.rows.length,
         _isExpanded: !this._collapsedGroups.has(group.key),
+        _descendantRowKeys: group.rows.map((row, index) => String(row._rowKey ?? row.id ?? `${group.key}-${index}`)),
         _aggregations: aggregations,
         // 그룹 헤더 행에 집계값도 표시 가능하도록 포함
         [group.field]: group.value,

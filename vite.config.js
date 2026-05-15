@@ -6,8 +6,8 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/index.js'),
       name: 'AwesomeGrid',
-      fileName: 'awesome-grid',
-      formats: ['es'],
+      fileName: 'highgrid',
+      formats: ['es', 'umd'],
     },
     rollupOptions: {
       output: {

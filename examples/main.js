@@ -19,8 +19,12 @@ const infiniteValueEl = document.getElementById('infiniteValue');
 const pluginsValueEl = document.getElementById('pluginsValue');
 const columnStateValueEl = document.getElementById('columnStateValue');
 const eventLogEl = document.getElementById('eventLog');
+const benchmarkLogEl = document.getElementById('benchmarkLog');
 
 const datasetSelect = document.getElementById('datasetSelect');
+const datasetRadios = document.querySelectorAll('input[name="datasetMode"]');
+const structureRadios = document.querySelectorAll('input[name="structureMode"]');
+const scenarioRadios = document.querySelectorAll('input[name="scenarioMode"]');
 const quickFilterInput = document.getElementById('quickFilterInput');
 const statusFilterSelect = document.getElementById('statusFilterSelect');
 const pageSizeSelect = document.getElementById('pageSizeSelect');
@@ -51,15 +55,25 @@ const updateFirstRowButton = document.getElementById('updateFirstRowButton');
 const patchFirstRowButton = document.getElementById('patchFirstRowButton');
 const removeLastRowButton = document.getElementById('removeLastRowButton');
 const liveButton = document.getElementById('liveButton');
+const startStreamButton = document.getElementById('startStreamButton');
+const stopStreamButton = document.getElementById('stopStreamButton');
+const streamBurstInput = document.getElementById('streamBurstInput');
+const streamIntervalInput = document.getElementById('streamIntervalInput');
+const streamMaxRowsInput = document.getElementById('streamMaxRowsInput');
 const pauseLiveButton = document.getElementById('pauseLiveButton');
-const resumeLiveButton = document.getElementById('resumeLiveButton');
+const liveAnimationButton = document.getElementById('liveAnimationButton');
 const uppercasePluginButton = document.getElementById('uppercasePluginButton');
 const scorePluginButton = document.getElementById('scorePluginButton');
 const applyColumnButton = document.getElementById('applyColumnButton');
 const saveColumnStateButton = document.getElementById('saveColumnStateButton');
 const loadColumnStateButton = document.getElementById('loadColumnStateButton');
 const clearColumnStateButton = document.getElementById('clearColumnStateButton');
+const benchmarkRenderButton = document.getElementById('benchmarkRenderButton');
+const benchmarkScenarioButton = document.getElementById('benchmarkScenarioButton');
+const benchmarkScrollButton = document.getElementById('benchmarkScrollButton');
 const gridHost = document.getElementById('gridApp');
+
+document.getElementById('resumeLiveButton')?.remove();
 
 const TEAM_NAMES = ['Red', 'Blue', 'Gold', 'Green'];
 const STATUS_NAMES = ['Active', 'Paused', 'Review'];
@@ -75,16 +89,100 @@ const NOTE_FRAGMENTS = [
   'Used to verify wrapped cells, sticky pinned columns, and horizontal virtualization together.',
 ];
 
+const koreanLocale = {
+  sidePanel: {
+    tabs: {
+      columns: '컬럼',
+      filters: '필터',
+      plugins: '플러그인',
+      view: '보기',
+    },
+    close: '닫기',
+    noPin: '고정 안 함',
+    pinLeft: '왼쪽 고정',
+    pinRight: '오른쪽 고정',
+    quickFilter: '빠른 필터',
+    quickFilterPlaceholder: '현재 보이는 데이터 검색...',
+    filterPlaceholder: '{label} 필터',
+    clearAllFilters: '필터 모두 지우기',
+    noPlugins: '이 그리드에는 기본 플러그인이 등록되어 있지 않습니다.',
+    groupBy: '그룹 기준',
+    disabled: '사용 안 함',
+    treeMode: '트리 모드',
+    enabled: '사용 중',
+    variableRowHeight: '가변 행 높이',
+    adaptive: '자동 조절',
+    fixed: '고정',
+    rowMotion: '행 애니메이션',
+    animated: '애니메이션 켜짐',
+    static: '애니메이션 꺼짐',
+    on: '켜짐',
+    off: '꺼짐',
+  },
+  grid: {
+    badges: {
+      group: 'GROUP',
+      tree: 'TREE',
+    },
+    loading: {
+      data: '데이터를 불러오는 중...',
+      page: '페이지 데이터를 불러오는 중...',
+      moreRows: '행을 더 불러오는 중...',
+      childRows: '하위 행을 불러오는 중...',
+      infiniteSpinner: '행을 더 불러오는 중',
+    },
+    empty: {
+      noRows: '표시할 행이 없습니다.',
+      processFailed: '데이터 처리 중 오류가 발생했습니다.',
+    },
+    live: {
+      waiting: '새 행 {count}개가 도착했습니다. 클릭하면 현재 화면에 반영됩니다.',
+    },
+    pagination: {
+      first: '처음',
+      prev: '이전',
+      next: '다음',
+      last: '마지막',
+      page: '{page} / {totalPages} 페이지',
+      summary: '{startRow}-{endRow} / 총 {totalCount}개',
+    },
+  },
+};
+
+function renderStatusBadge({ value }) {
+  const badge = document.createElement('span');
+  badge.className = 'demo-status-badge';
+  badge.dataset.status = String(value ?? '').toLowerCase();
+  badge.textContent = value == null ? 'Unknown' : String(value);
+  return badge;
+}
+
+function renderScoreCell({ value }) {
+  const wrap = document.createElement('span');
+  wrap.className = 'demo-score-cell';
+
+  const meter = document.createElement('span');
+  meter.className = 'demo-score-meter';
+  meter.style.width = `${Math.max(8, Math.min(100, Math.round((Number(value) || 0) / 100)))}%`;
+
+  const text = document.createElement('strong');
+  text.textContent = value == null ? '0' : String(value);
+
+  wrap.appendChild(meter);
+  wrap.appendChild(text);
+  return wrap;
+}
+
 const columns = [
   { id: 'id', field: 'id', header: 'ID', width: 84, type: 'number', align: 'right' },
   { id: 'name', field: 'name', header: 'Operator', width: 220 },
-  { id: 'team', field: 'team', header: 'Team', width: 140 },
-  { id: 'status', field: 'status', header: 'Status', width: 120 },
-  { id: 'score', field: 'score', header: 'Score', width: 120, type: 'number', align: 'right' },
-  { id: 'region', field: 'region', header: 'Region', width: 160 },
-  { id: 'severity', field: 'severity', header: 'Severity', width: 140 },
-  { id: 'owner', field: 'owner', header: 'Owner', width: 150 },
-  { id: 'queue', field: 'queue', header: 'Queue', width: 160 },
+  { id: 'team', field: 'team', header: 'Team', width: 140, filterType: 'select', filterOptions: TEAM_NAMES },
+  { id: 'status', field: 'status', header: 'Status', width: 120, filterType: 'select', filterOptions: STATUS_NAMES, renderer: renderStatusBadge },
+  { id: 'score', field: 'score', header: 'Score', width: 140, type: 'number', align: 'right', renderer: renderScoreCell },
+  { id: 'region', field: 'region', header: 'Region', width: 160, filterType: 'select', filterOptions: REGIONS },
+  { id: 'severity', field: 'severity', header: 'Severity', width: 140, filterType: 'select', filterOptions: SEVERITIES },
+  { id: 'owner', field: 'owner', header: 'Owner', width: 150, filterType: 'select', filterOptions: OWNERS },
+  { id: 'queue', field: 'queue', header: 'Queue', width: 160, filterType: 'select', filterOptions: QUEUES },
   { id: 'lastAction', field: 'lastAction', header: 'Last Action', width: 220 },
   { id: 'notes', field: 'notes', header: 'Notes', width: 420 },
   { id: 'updatedAt', field: 'updatedAt', header: 'Updated At', width: 180, type: 'date' },
@@ -207,6 +305,63 @@ function cloneRows(rows) {
   return structuredClone(rows);
 }
 
+function matchServerColumnFilter(row, filterDef) {
+  const { type = 'text', operator = 'contains', value, field } = filterDef ?? {};
+  const cellValue = row?.[field];
+
+  if (cellValue == null) {
+    return false;
+  }
+
+  switch (type) {
+    case 'number': {
+      const numeric = Number(cellValue);
+      switch (operator) {
+        case 'equals': return numeric === Number(value);
+        case 'notEquals': return numeric !== Number(value);
+        case 'greaterThan': return numeric > Number(value);
+        case 'greaterThanOrEqual': return numeric >= Number(value);
+        case 'lessThan': return numeric < Number(value);
+        case 'lessThanOrEqual': return numeric <= Number(value);
+        case 'between':
+          return Array.isArray(value) && numeric >= Number(value[0]) && numeric <= Number(value[1]);
+        default:
+          return true;
+      }
+    }
+    case 'date': {
+      const cellDate = new Date(cellValue);
+      const filterDate = new Date(value);
+      switch (operator) {
+        case 'equals': return cellDate.toDateString() === filterDate.toDateString();
+        case 'notEquals': return cellDate.toDateString() !== filterDate.toDateString();
+        case 'before': return cellDate < filterDate;
+        case 'after': return cellDate > filterDate;
+        case 'between':
+          return Array.isArray(value) && cellDate >= new Date(value[0]) && cellDate <= new Date(value[1]);
+        default:
+          return true;
+      }
+    }
+    case 'select': {
+      return Array.isArray(value) ? value.includes(String(cellValue)) || value.includes(cellValue) : cellValue === value;
+    }
+    default: {
+      const cell = String(cellValue).toLowerCase();
+      const filter = String(value ?? '').toLowerCase();
+      switch (operator) {
+        case 'contains': return cell.includes(filter);
+        case 'startsWith': return cell.startsWith(filter);
+        case 'endsWith': return cell.endsWith(filter);
+        case 'equals': return cell === filter;
+        case 'notEquals': return cell !== filter;
+        case 'notContains': return !cell.includes(filter);
+        default: return cell.includes(filter);
+      }
+    }
+  }
+}
+
 function applyServerTransforms(rows, { filters, sort }) {
   let result = [...rows];
 
@@ -219,10 +374,9 @@ function applyServerTransforms(rows, { filters, sort }) {
     }));
   }
 
-  const statusFilter = filters?.columnFilters?.status?.value;
-  if (statusFilter) {
-    const acceptedValues = Array.isArray(statusFilter) ? statusFilter : [statusFilter];
-    result = result.filter((row) => acceptedValues.includes(row.status));
+  const columnFilters = Object.values(filters?.columnFilters ?? {});
+  if (columnFilters.length > 0) {
+    result = result.filter((row) => columnFilters.every((filterDef) => matchServerColumnFilter(row, filterDef)));
   }
 
   if (Array.isArray(sort) && sort.length > 0) {
@@ -287,6 +441,10 @@ let groupingEnabled = false;
 let treeEnabled = false;
 let livePaused = false;
 let variableRowHeightEnabled = false;
+let liveRowAnimationEnabled = true;
+let streamTimer = null;
+let streamRowCounter = 0;
+let streamRunning = false;
 let paginationSource = 'client';
 let infiniteSource = 'client';
 const eventLines = [];
@@ -296,8 +454,9 @@ const grid = createGrid(gridHost, {
   rows: currentRows,
   rowKey: 'id',
   rowHeight: 40,
+  locale: koreanLocale,
   variableRowHeight: variableRowHeightEnabled,
-  tableId: 'awesome-grid-testbench',
+  tableId: 'highgrid-demo',
   pagination: {
     mode: paginationSource,
     pageSize: Number(pageSizeSelect.value),
@@ -311,6 +470,8 @@ const grid = createGrid(gridHost, {
   },
   liveUpdates: {
     enabled: true,
+    maxRows: 1000,
+    rowAnimationEnabled: liveRowAnimationEnabled,
   },
   availablePlugins: [
     {
@@ -399,9 +560,42 @@ function syncToggleButtons() {
   setToggleState(treeButton, treeEnabled);
   setToggleState(pauseLiveButton, livePaused);
   setToggleState(variableHeightButton, variableRowHeightEnabled);
+  setToggleState(liveAnimationButton, liveRowAnimationEnabled);
+  setToggleState(startStreamButton, streamRunning);
   syncModeButtons();
   syncPluginButtons();
   syncSourceButtons();
+}
+
+function getScenarioValue() {
+  return grid.getDisplayMode() === 'client'
+    ? 'client'
+    : grid.getDisplayMode() === 'paginated'
+      ? `paginated-${paginationSource}`
+      : `infinite-${infiniteSource}`;
+}
+
+function getStructureMode() {
+  if (treeEnabled) {
+    return 'tree';
+  }
+  if (groupingEnabled) {
+    return 'grouped';
+  }
+  return 'flat';
+}
+
+function syncScenarioRadios() {
+  const scenario = getScenarioValue();
+  scenarioRadios.forEach((radio) => {
+    radio.checked = radio.value === scenario;
+  });
+  datasetRadios.forEach((radio) => {
+    radio.checked = radio.value === currentDataset;
+  });
+  structureRadios.forEach((radio) => {
+    radio.checked = radio.value === getStructureMode();
+  });
 }
 
 function getMaxTreeDepth(rows = grid.getFlatRows()) {
@@ -409,6 +603,7 @@ function getMaxTreeDepth(rows = grid.getFlatRows()) {
 }
 
 function refreshInspector() {
+  liveRowAnimationEnabled = grid.isLiveRowAnimationEnabled();
   modeValueEl.textContent = grid.getDisplayMode();
   datasetValueEl.textContent = currentDataset;
   groupingValueEl.textContent = groupingEnabled ? 'on' : 'off';
@@ -417,10 +612,10 @@ function refreshInspector() {
   variableHeightValueEl.textContent = variableRowHeightEnabled ? 'on' : 'off';
 
   const pagination = grid.getPaginationState();
-  paginationValueEl.textContent = `${pagination.mode} · ${pagination.page + 1}/${pagination.totalPages} · size ${pagination.pageSize} · total ${pagination.totalCount}`;
+  paginationValueEl.textContent = `${pagination.mode} | ${pagination.page + 1}/${pagination.totalPages} | size ${pagination.pageSize} | total ${pagination.totalCount}`;
 
   const infinite = grid.getInfiniteScrollState();
-  infiniteValueEl.textContent = `${infinite.mode} · loaded ${infinite.loadedCount} · total ${infinite.totalCount ?? 'unknown'} · hasMore ${String(infinite.hasMore)}`;
+  infiniteValueEl.textContent = `${infinite.mode} | loaded ${infinite.loadedCount} | total ${infinite.totalCount ?? 'unknown'} | hasMore ${String(infinite.hasMore)}`;
 
   const columnState = grid.getColumnState();
   columnStateValueEl.textContent = `${columnState.columns.length} columns tracked`;
@@ -429,6 +624,8 @@ function refreshInspector() {
   pluginsValueEl.textContent = installedPlugins.length ? installedPlugins.join(', ') : 'none';
 
   syncToggleButtons();
+  syncScenarioRadios();
+  syncRuntimeSummaryText();
 }
 
 function syncColumnControls() {
@@ -498,6 +695,82 @@ function setDataset(kind) {
   logEvent('dataset-change', { kind });
 }
 
+function setStructureMode(mode) {
+  if (mode === 'tree') {
+    groupingEnabled = false;
+    treeEnabled = true;
+    grid.disableGrouping();
+
+    if (currentDataset !== 'tree') {
+      datasetSelect.value = 'tree';
+      currentRows = createTreeRows();
+      currentDataset = 'tree';
+      grid.setData(currentRows);
+    }
+
+    grid.enableTree({
+      treeMode: 'children',
+      childrenField: 'children',
+      hasChildrenField: 'hasChildren',
+      onLoadChildren: createLazyChildren,
+    });
+    refreshInspector();
+    logEvent('structure-change', { mode: 'tree' });
+    return;
+  }
+
+  treeEnabled = false;
+  grid.disableTree();
+
+  if (mode === 'grouped') {
+    groupingEnabled = true;
+    if (currentDataset === 'tree') {
+      datasetSelect.value = 'flat';
+      currentRows = getDefaultFlatRows();
+      currentDataset = 'flat';
+      grid.setData(currentRows);
+    }
+    grid.enableGrouping(['team'], {
+      aggregations: {
+        score: [{ type: 'avg' }],
+      },
+    });
+    refreshInspector();
+    logEvent('structure-change', { mode: 'grouped' });
+    return;
+  }
+
+  groupingEnabled = false;
+  grid.disableGrouping();
+  refreshInspector();
+  logEvent('structure-change', { mode: 'flat' });
+}
+
+function waitForNextRender() {
+  return new Promise((resolve) => {
+    grid.on('render', resolve, { once: true });
+  });
+}
+
+function setScenario(scenario) {
+  if (scenario === 'client') {
+    grid.setDisplayMode('client');
+    return;
+  }
+
+  const [mode, source] = scenario.split('-');
+  if (mode === 'paginated') {
+    paginationSource = source;
+    grid.setPaginationMode(source);
+    grid.setDisplayMode('paginated');
+    return;
+  }
+
+  infiniteSource = source;
+  grid.setInfiniteScrollMode(source);
+  grid.enableInfiniteScroll();
+}
+
 function guardFlatClientMutation(button, label) {
   if (currentDataset === 'tree') {
     flashActionButton(button);
@@ -537,7 +810,42 @@ grid.on('cell-click', ({ colId, row }) => {
   logEvent('cell-click', { colId, rowKey: row._rowKey });
 });
 
+datasetRadios.forEach((radio) => {
+  radio.addEventListener('change', (event) => {
+    if (event.target.checked) {
+      datasetSelect.value = event.target.value;
+      setDataset(event.target.value);
+    }
+  });
+});
+
+structureRadios.forEach((radio) => {
+  radio.addEventListener('change', (event) => {
+    if (event.target.checked) {
+      setStructureMode(event.target.value);
+    }
+  });
+});
+
+scenarioRadios.forEach((radio) => {
+  radio.addEventListener('change', (event) => {
+    if (!event.target.checked) {
+      return;
+    }
+    const scenario = event.target.value;
+    if (scenario.endsWith('server')) {
+      ensureFlatDatasetForRemote(scenario);
+    }
+    setScenario(scenario);
+    refreshInspector();
+    logEvent('scenario-change', { scenario });
+  });
+});
+
 datasetSelect.addEventListener('change', (event) => {
+  datasetRadios.forEach((radio) => {
+    radio.checked = radio.value === event.target.value;
+  });
   setDataset(event.target.value);
 });
 
@@ -564,43 +872,11 @@ reloadButton.addEventListener('click', () => {
 });
 
 groupButton.addEventListener('click', () => {
-  groupingEnabled = !groupingEnabled;
-  if (groupingEnabled) {
-    treeEnabled = false;
-    grid.disableTree();
-    grid.enableGrouping(['team'], {
-      aggregations: {
-        score: [{ type: 'avg' }],
-      },
-    });
-  } else {
-    grid.disableGrouping();
-  }
-  refreshInspector();
-  logEvent('group-toggle', { enabled: groupingEnabled });
+  setStructureMode(groupingEnabled ? 'flat' : 'grouped');
 });
 
 treeButton.addEventListener('click', () => {
-  treeEnabled = !treeEnabled;
-  if (treeEnabled) {
-    groupingEnabled = false;
-    grid.disableGrouping();
-    if (currentDataset !== 'tree') {
-      datasetSelect.value = 'tree';
-      setDataset('tree');
-    } else {
-      grid.enableTree({
-        treeMode: 'children',
-        childrenField: 'children',
-        hasChildrenField: 'hasChildren',
-        onLoadChildren: createLazyChildren,
-      });
-    }
-  } else {
-    grid.disableTree();
-  }
-  refreshInspector();
-  logEvent('tree-toggle', { enabled: treeEnabled });
+  setStructureMode(treeEnabled ? 'flat' : 'tree');
 });
 
 expandTreeButton.addEventListener('click', () => {
@@ -815,34 +1091,74 @@ removeLastRowButton.addEventListener('click', () => {
   logEvent('remove-row', { id: last.id });
 });
 
-liveButton.addEventListener('click', () => {
-  if (!guardFlatClientMutation(liveButton, 'live')) {
-    return;
-  }
-
-  const nextId = currentRows.length + 1;
-  const rows = Array.from({ length: 3 }, (_, offset) => {
-    const id = nextId + offset;
+function makeLiveRows(count) {
+  return Array.from({ length: count }, () => {
+    const id = ++streamRowCounter + 100000;
     return {
       id,
-      name: `Live Operator ${String(id).padStart(4, '0')}`,
+      name: `Stream Op ${String(id).padStart(6, '0')}`,
       team: TEAM_NAMES[id % TEAM_NAMES.length],
       status: STATUS_NAMES[id % STATUS_NAMES.length],
-      score: 3000 + id * 9,
+      score: 3000 + (id * 9) % 9000,
       region: REGIONS[id % REGIONS.length],
       severity: SEVERITIES[id % SEVERITIES.length],
       owner: OWNERS[id % OWNERS.length],
       queue: QUEUES[id % QUEUES.length],
       lastAction: 'Queued as live arrival',
-      notes: `Live stream row ${id}. ${createNotes(id)}`,
+      notes: `Stream row ${streamRowCounter}. ${createNotes(id)}`,
       updatedAt: toTimestamp(Date.now()),
     };
   });
+}
 
-  currentRows = [...currentRows, ...rows];
+liveButton.addEventListener('click', () => {
+  if (!guardFlatClientMutation(liveButton, 'live')) {
+    return;
+  }
+
+  const rows = makeLiveRows(3);
   grid.liveAddRows(rows);
   flashActionButton(liveButton);
   logEvent('live-add', { count: rows.length });
+});
+
+function stopStream() {
+  if (streamTimer !== null) {
+    window.clearInterval(streamTimer);
+    streamTimer = null;
+  }
+  streamRunning = false;
+  syncToggleButtons();
+}
+
+startStreamButton.addEventListener('click', () => {
+  if (streamRunning) {
+    stopStream();
+    logEvent('stream-stop', { totalPushed: streamRowCounter });
+    return;
+  }
+
+  if (!guardFlatClientMutation(startStreamButton, 'stream')) {
+    return;
+  }
+
+  const maxRows = Number(streamMaxRowsInput.value) || 1000;
+  grid.setLiveMaxRows(maxRows);
+
+  streamRunning = true;
+  syncToggleButtons();
+  logEvent('stream-start', { burst: Number(streamBurstInput.value), interval: Number(streamIntervalInput.value), maxRows });
+
+  streamTimer = window.setInterval(() => {
+    const burst = Math.max(1, Number(streamBurstInput.value) || 10);
+    const rows = makeLiveRows(burst);
+    grid.liveAddRows(rows);
+  }, Math.max(50, Number(streamIntervalInput.value) || 200));
+});
+
+stopStreamButton.addEventListener('click', () => {
+  stopStream();
+  logEvent('stream-stop', { totalPushed: streamRowCounter });
 });
 
 pauseLiveButton.addEventListener('click', () => {
@@ -856,12 +1172,11 @@ pauseLiveButton.addEventListener('click', () => {
   logEvent('live-toggle', { paused: livePaused });
 });
 
-resumeLiveButton.addEventListener('click', () => {
-  livePaused = false;
-  grid.resumeLiveUpdates();
-  flashActionButton(resumeLiveButton);
+liveAnimationButton.addEventListener('click', () => {
+  liveRowAnimationEnabled = !liveRowAnimationEnabled;
+  grid.setLiveRowAnimationEnabled(liveRowAnimationEnabled);
   refreshInspector();
-  logEvent('live-resume');
+  logEvent('live-animation-toggle', { enabled: liveRowAnimationEnabled });
 });
 
 uppercasePluginButton.addEventListener('click', () => {
@@ -925,6 +1240,140 @@ clearColumnStateButton.addEventListener('click', async () => {
   logEvent('column-state-clear');
 });
 
+benchmarkRenderButton.addEventListener('click', async () => {
+  const start = performance.now();
+  const renderPromise = waitForNextRender();
+  setDataset(currentDataset);
+  await renderPromise;
+  flashActionButton(benchmarkRenderButton);
+  logBenchmark('Reload dataset', performance.now() - start, `${currentDataset}`);
+});
+
+benchmarkScenarioButton.addEventListener('click', async () => {
+  const nextScenario = getScenarioValue() === 'client' ? 'paginated-server' : 'client';
+  if (nextScenario.endsWith('server')) {
+    ensureFlatDatasetForRemote(nextScenario);
+  }
+  const start = performance.now();
+  const renderPromise = waitForNextRender();
+  setScenario(nextScenario);
+  await renderPromise;
+  flashActionButton(benchmarkScenarioButton);
+  logBenchmark('Switch scenario', performance.now() - start, nextScenario);
+});
+
+benchmarkScrollButton.addEventListener('click', async () => {
+  const viewport = gridHost.querySelector('.ag-body-viewport');
+  if (!viewport) {
+    return;
+  }
+  const start = performance.now();
+  viewport.scrollTop = Math.min(viewport.scrollTop + 420, viewport.scrollHeight);
+  await new Promise((resolve) => requestAnimationFrame(resolve));
+  flashActionButton(benchmarkScrollButton);
+  logBenchmark('Scroll step', performance.now() - start, `top=${Math.round(viewport.scrollTop)}`);
+});
+
+function syncRuntimeSummaryText() {
+  const pagination = grid.getPaginationState();
+  paginationValueEl.textContent = `${pagination.mode} | ${pagination.page + 1}/${pagination.totalPages} | size ${pagination.pageSize} | total ${pagination.totalCount}`;
+
+  const infinite = grid.getInfiniteScrollState();
+  infiniteValueEl.textContent = `${infinite.mode} | loaded ${infinite.loadedCount} | total ${infinite.totalCount ?? 'unknown'} | hasMore ${String(infinite.hasMore)}`;
+}
+
+function logBenchmark(label, duration, details = '') {
+  const line = `${label}: ${duration.toFixed(1)}ms${details ? ` | ${details}` : ''}`;
+  const existingLines = benchmarkLogEl.textContent
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item) => item !== '아직 벤치마크 실행 없음.');
+
+  benchmarkLogEl.textContent = [line, ...existingLines].slice(0, 6).join('\n');
+}
+
 syncColumnControls();
 refreshInspector();
 logEvent('ready', { dataset: currentDataset, mode: grid.getDisplayMode() });
+
+// ── Multi-level header demo ────────────────────────────────────
+
+// Sample data for the grouped-header demo
+const multiHeaderColumns = [
+  { id: 'rank', field: 'rank', headerName: '#', width: 52, type: 'number', align: 'right', sortable: true, resizable: false },
+  { id: 'name', field: 'name', headerName: 'Player', width: 180, sortable: true },
+  { id: 'country', field: 'country', headerName: 'Country', width: 110, sortable: true },
+  {
+    id: 'season',
+    headerName: 'Season Stats',
+    children: [
+      { id: 'goals', field: 'goals', headerName: 'Goals', width: 80, type: 'number', align: 'right', sortable: true },
+      { id: 'assists', field: 'assists', headerName: 'Assists', width: 88, type: 'number', align: 'right', sortable: true },
+      { id: 'matches', field: 'matches', headerName: 'Matches', width: 92, type: 'number', align: 'right', sortable: true },
+      { id: 'rating', field: 'rating', headerName: 'Rating', width: 84, type: 'number', align: 'right', sortable: true },
+    ],
+  },
+  {
+    id: 'form',
+    headerName: 'Recent Form',
+    children: [
+      { id: 'wins', field: 'wins', headerName: 'W', width: 58, type: 'number', align: 'right', sortable: true },
+      { id: 'draws', field: 'draws', headerName: 'D', width: 58, type: 'number', align: 'right', sortable: true },
+      { id: 'losses', field: 'losses', headerName: 'L', width: 58, type: 'number', align: 'right', sortable: true },
+      { id: 'pts', field: 'pts', headerName: 'Pts', width: 68, type: 'number', align: 'right', sortable: true },
+    ],
+  },
+  {
+    id: 'transfer',
+    headerName: 'Transfer',
+    children: [
+      { id: 'value', field: 'value', headerName: 'Value (M€)', width: 108, type: 'number', align: 'right', sortable: true },
+      { id: 'contract', field: 'contract', headerName: 'Contract', width: 110, sortable: true },
+    ],
+  },
+];
+
+const COUNTRIES = ['Spain', 'France', 'England', 'Germany', 'Brazil', 'Argentina', 'Portugal', 'Italy', 'Netherlands', 'Belgium'];
+const PLAYER_NAMES = [
+  'Luca Moretti', 'Kai Hoffmann', 'Mateo Vidal', 'Oliver Crane', 'Hugo Renard',
+  'Enzo Ferrara', 'Daan Vermeer', 'Samir Nasri', 'Bruno Alves', 'Timo Bauer',
+  'Carlos Reyes', 'James Thornton', 'Yannick Dumont', 'Piero Giannini', 'Noah Schultz',
+  'Alexei Petrov', 'Marcus Bell', 'Fabio Conti', 'Rafael Sousa', 'Diego Campos',
+];
+
+function createMultiHeaderRows() {
+  return PLAYER_NAMES.map((name, index) => {
+    const id = index + 1;
+    const goals = Math.floor(Math.random() * 28);
+    const assists = Math.floor(Math.random() * 18);
+    const matches = 20 + Math.floor(Math.random() * 18);
+    const wins = Math.floor(Math.random() * 12);
+    const draws = Math.floor(Math.random() * 6);
+    const losses = Math.max(0, 15 - wins - draws);
+    return {
+      id,
+      rank: id,
+      name,
+      country: COUNTRIES[index % COUNTRIES.length],
+      goals,
+      assists,
+      matches,
+      rating: Number((6.0 + Math.random() * 3.5).toFixed(1)),
+      wins,
+      draws,
+      losses,
+      pts: wins * 3 + draws,
+      value: Number((5 + Math.random() * 145).toFixed(1)),
+      contract: `${2025 + Math.floor(Math.random() * 4)}-06-30`,
+    };
+  });
+}
+
+const multiHeaderGrid = createGrid(document.getElementById('multiHeaderGrid'), {
+  columns: multiHeaderColumns,
+  rows: createMultiHeaderRows(),
+  rowKey: 'id',
+  rowHeight: 40,
+  tableId: 'multi-header-demo',
+});

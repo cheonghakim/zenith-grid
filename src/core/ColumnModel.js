@@ -84,6 +84,11 @@ export class ColumnModel {
       // 기능 플래그
       sortable: def.sortable ?? true,
       filterable: def.filterable ?? true,
+      filterType: def.filterType ?? this._inferFilterType(def),
+      filterOperators: Array.isArray(def.filterOperators) ? [...def.filterOperators] : null,
+      filterOptions: Array.isArray(def.filterOptions) ? [...def.filterOptions] : null,
+      filterMultiple: def.filterMultiple ?? null,
+      filterPlaceholder: def.filterPlaceholder ?? null,
       resizable: def.resizable ?? true,
       reorderable: def.reorderable ?? true,
       // 너비
@@ -98,6 +103,18 @@ export class ColumnModel {
       // 원본 def 보존
       _raw: def,
     };
+  }
+
+  _inferFilterType(def) {
+    if (Array.isArray(def.filterOptions) && def.filterOptions.length > 0) {
+      return 'select';
+    }
+
+    if (def.type === 'number' || def.type === 'date') {
+      return def.type;
+    }
+
+    return 'text';
   }
 
   _createState(colId, def) {

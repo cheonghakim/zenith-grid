@@ -57,23 +57,34 @@ export class InfiniteScrollManager {
   }
 
   async maybeLoadMore(viewModel) {
-    if (!this._hasMore || this._loading || !this._onLoadMore) {
-      return;
-    }
+    if (!this._hasMore || this._loading) return;
 
     const { totalHeight } = viewModel.getVerticalRange();
     const scrollBottom = viewModel.getScrollTop() + viewModel.getViewportHeight();
-    const distanceFromBottom = totalHeight - scrollBottom;
+    if (totalHeight - scrollBottom > this._scrollThreshold) return;
 
-    if (distanceFromBottom > this._scrollThreshold) {
-      return;
+    if (this._mode === 'server') {
+      if (!this._onLoadMore) return;
+      await this.loadMore();
+    } else {
+      this._loadClientMore();
     }
+  }
 
-    await this.loadMore();
+  _loadClientMore() {
+    if (!this._hasMore || this._loading) return;
+    const nextCount = this._loadedCount + this._loadMoreSize;
+    this._loadedCount = this._totalCount != null
+      ? Math.min(nextCount, this._totalCount)
+      : nextCount;
+    if (this._totalCount != null) {
+      this._hasMore = this._loadedCount < this._totalCount;
+    }
+    this._onChanged({ action: 'clientLoadMore' });
   }
 
   async loadMore() {
-    if (!this._hasMore || this._loading || !this._onLoadMore) {
+    if (this._mode !== 'server' || !this._hasMore || this._loading || !this._onLoadMore) {
       return;
     }
 

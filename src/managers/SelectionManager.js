@@ -42,12 +42,14 @@ export class SelectionManager {
 
     // 현재 표시 중인 flat rows (shift 선택, 전체 선택에 필요)
     this._currentFlatRows = [];
+    this._rowKeyMap = new Map();
   }
 
   // ─── 현재 행 업데이트 ─────────────────────────────────────
 
   setCurrentRows(flatRows) {
     this._currentFlatRows = flatRows;
+    this._rowKeyMap = new Map(flatRows.map((r) => [r._rowKey, r]));
   }
 
   // ─── 기본 선택 ─────────────────────────────────────────────
@@ -176,6 +178,41 @@ export class SelectionManager {
     this._onChanged(this._buildChangePayload('clearAll', removed));
   }
 
+  setRowsSelected(rowKeys, selected, action = 'bulk') {
+    const keys = [...new Set((Array.isArray(rowKeys) ? rowKeys : [rowKeys]).map(String))];
+    const changed = [];
+
+    if (this._mode === 'single' && selected && keys.length > 0) {
+      this._selectedKeys.clear();
+    }
+
+    for (const key of keys) {
+      const row = this._findRow(key);
+      if (row && !this._isSelectable(row)) {
+        continue;
+      }
+
+      if (selected) {
+        if (!this._selectedKeys.has(key)) {
+          this._selectedKeys.add(key);
+          changed.push(key);
+        }
+      } else if (this._selectedKeys.delete(key)) {
+        changed.push(key);
+      }
+    }
+
+    if (changed.length === 0) {
+      return;
+    }
+
+    if (this._propagateToParent) {
+      this._updateParentStates();
+    }
+
+    this._onChanged(this._buildChangePayload(action, changed));
+  }
+
   // ─── 조회 ──────────────────────────────────────────────────
 
   isSelected(rowKey) {
@@ -184,6 +221,52 @@ export class SelectionManager {
 
   isIndeterminate(rowKey) {
     return this._parentCheckState.get(String(rowKey)) === 'indeterminate';
+  }
+
+  isRowChecked(rowOrKey) {
+    const row = typeof rowOrKey === 'object'
+      ? rowOrKey
+      : this._findRow(String(rowOrKey));
+
+    if (!row) {
+      return false;
+    }
+
+    if (Array.isArray(row._descendantRowKeys) && row._descendantRowKeys.length > 0) {
+      return row._descendantRowKeys.every((key) => this._selectedKeys.has(String(key)));
+    }
+
+    return this._selectedKeys.has(String(row._rowKey ?? rowOrKey));
+  }
+
+  isSelectableRow(rowOrKey) {
+    const row = typeof rowOrKey === 'object'
+      ? rowOrKey
+      : this._findRow(String(rowOrKey));
+
+    if (!row) {
+      return true;
+    }
+
+    return this._isSelectable(row);
+  }
+
+  isRowIndeterminate(rowOrKey) {
+    const row = typeof rowOrKey === 'object'
+      ? rowOrKey
+      : this._findRow(String(rowOrKey));
+
+    if (!row) {
+      return false;
+    }
+
+    if (Array.isArray(row._descendantRowKeys) && row._descendantRowKeys.length > 0) {
+      const total = row._descendantRowKeys.length;
+      const selected = row._descendantRowKeys.filter((key) => this._selectedKeys.has(String(key))).length;
+      return selected > 0 && selected < total;
+    }
+
+    return this.isIndeterminate(String(row._rowKey ?? rowOrKey));
   }
 
   getSelectedKeys() {
@@ -202,6 +285,15 @@ export class SelectionManager {
 
   getSelectedCount() {
     return this._selectedKeys.size;
+  }
+
+  getState() {
+    return {
+      selectedKeys: new Set(this._selectedKeys),
+      selectedCount: this._selectedKeys.size,
+      allSelected: this.isAllSelected(),
+      someSelected: this.isSomeSelected(),
+    };
   }
 
   isAllSelected(scopeRows = null) {
@@ -277,7 +369,7 @@ export class SelectionManager {
   }
 
   _findRow(key) {
-    return this._currentFlatRows.find((r) => r._rowKey === key) ?? null;
+    return this._rowKeyMap.get(key) ?? null;
   }
 
   _buildChangePayload(action, keys) {
@@ -305,5 +397,6 @@ export class SelectionManager {
     this._selectedKeys.clear();
     this._parentCheckState.clear();
     this._currentFlatRows = [];
+    this._rowKeyMap.clear();
   }
 }

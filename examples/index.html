@@ -1,33 +1,33 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Awesome Grid Testbench</title>
+    <title>HighGrid Demo</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <div class="demo-shell">
       <header class="demo-hero">
         <div>
-          <p class="eyebrow">Awesome Grid</p>
-          <h1>Interactive feature testbench</h1>
+          <p class="eyebrow">HighGrid</p>
+          <h1>HighGrid Demo</h1>
           <p class="subtitle">
-            Validate horizontal virtualization, variable row height, grouped rows, multi-depth trees,
-            client and server paging, infinite scroll, plugins, and runtime mutations from one screen.
+            스크롤, 그룹핑, 트리 데이터, 페이징, 무한 로딩, 라이브 업데이트를 한
+            화면에서 바로 확인할 수 있습니다.
           </p>
         </div>
         <div class="hero-stats">
           <div class="stat-card">
-            <span class="stat-label">Total Rows</span>
+            <span class="stat-label">전체 행 수</span>
             <strong id="rowCount">0</strong>
           </div>
           <div class="stat-card">
-            <span class="stat-label">Visible Rows</span>
+            <span class="stat-label">표시 행 수</span>
             <strong id="visibleCount">0</strong>
           </div>
           <div class="stat-card">
-            <span class="stat-label">Selected</span>
+            <span class="stat-label">선택됨</span>
             <strong id="selectedCount">0</strong>
           </div>
         </div>
@@ -35,49 +35,187 @@
 
       <section class="control-grid">
         <article class="control-card">
-          <h2>Data</h2>
+          <h2>데이터</h2>
+          <div class="choice-group">
+            <span class="choice-group-label">데이터셋 프리셋</span>
+            <div class="choice-row" id="datasetRadioGroup">
+              <label class="choice-chip">
+                <input type="radio" name="datasetMode" value="flat" checked />
+                <span>플랫 데이터셋</span>
+              </label>
+              <label class="choice-chip">
+                <input type="radio" name="datasetMode" value="tree" />
+                <span>딥 트리</span>
+              </label>
+            </div>
+          </div>
+          <div class="choice-group">
+            <span class="choice-group-label">구조 모드</span>
+            <div class="choice-row" id="structureRadioGroup">
+              <label class="choice-chip">
+                <input type="radio" name="structureMode" value="flat" checked />
+                <span>평면 행</span>
+              </label>
+              <label class="choice-chip">
+                <input type="radio" name="structureMode" value="grouped" />
+                <span>팀별 그룹</span>
+              </label>
+              <label class="choice-chip">
+                <input type="radio" name="structureMode" value="tree" />
+                <span>트리 탐색기</span>
+              </label>
+            </div>
+          </div>
           <div class="control-row">
-            <label class="toolbar-field">
-              <span>Dataset</span>
+            <label class="toolbar-field redundant-control">
+              <span>데이터셋</span>
               <select id="datasetSelect">
-                <option value="flat">Flat Wide Dataset</option>
-                <option value="tree">Deep Tree Dataset</option>
+                <option value="flat">플랫 와이드 데이터셋</option>
+                <option value="tree">딥 트리 데이터셋</option>
               </select>
             </label>
             <label class="toolbar-field redundant-control">
-              <span>Quick filter</span>
-              <input id="quickFilterInput" type="search" placeholder="Search operator, team, region, notes..." />
+              <span>빠른 검색</span>
+              <input
+                id="quickFilterInput"
+                type="search"
+                placeholder="오퍼레이터, 팀, 지역, 메모 검색..."
+              />
             </label>
             <label class="toolbar-field redundant-control">
-              <span>Status</span>
+              <span>상태</span>
               <select id="statusFilterSelect">
-                <option value="">All</option>
-                <option value="Active">Active</option>
-                <option value="Paused">Paused</option>
-                <option value="Review">Review</option>
+                <option value="">전체</option>
+                <option value="Active">활성</option>
+                <option value="Paused">일시정지</option>
+                <option value="Review">검토</option>
               </select>
             </label>
           </div>
           <div class="toolbar-actions">
-            <button id="reloadButton" type="button" data-button-kind="action">Reload Dataset</button>
-            <button id="groupButton" type="button" data-button-kind="toggle">Group by Team</button>
-            <button id="treeButton" type="button" data-button-kind="toggle">Tree Mode</button>
-            <button id="expandTreeButton" type="button" data-button-kind="action">Expand All Tree</button>
-            <button id="collapseTreeButton" type="button" data-button-kind="action">Collapse All Tree</button>
+            <button id="reloadButton" type="button" data-button-kind="action">
+              데이터셋 새로고침
+            </button>
+            <button
+              id="groupButton"
+              type="button"
+              data-button-kind="toggle"
+              class="redundant-control"
+            >
+              팀별 그룹화
+            </button>
+            <button
+              id="treeButton"
+              type="button"
+              data-button-kind="toggle"
+              class="redundant-control"
+            >
+              트리 모드
+            </button>
+            <button
+              id="expandTreeButton"
+              type="button"
+              data-button-kind="action"
+            >
+              트리 전체 펼치기
+            </button>
+            <button
+              id="collapseTreeButton"
+              type="button"
+              data-button-kind="action"
+            >
+              트리 전체 접기
+            </button>
           </div>
+          <p class="control-copy">
+            행 선택, 그룹 선택, 부모-자식 선택을 여기서 확인하세요.
+          </p>
         </article>
 
         <article class="control-card">
-          <h2>Display Modes</h2>
+          <h2>표시 모드</h2>
+          <div class="choice-group">
+            <span class="choice-group-label">시나리오</span>
+            <div class="choice-grid" id="scenarioRadioGroup">
+              <label class="choice-chip">
+                <input
+                  type="radio"
+                  name="scenarioMode"
+                  value="client"
+                  checked
+                />
+                <span>클라이언트 그리드</span>
+              </label>
+              <label class="choice-chip">
+                <input
+                  type="radio"
+                  name="scenarioMode"
+                  value="paginated-client"
+                />
+                <span>로컬 페이지네이션</span>
+              </label>
+              <label class="choice-chip">
+                <input
+                  type="radio"
+                  name="scenarioMode"
+                  value="paginated-server"
+                />
+                <span>서버 페이지네이션</span>
+              </label>
+              <label class="choice-chip">
+                <input
+                  type="radio"
+                  name="scenarioMode"
+                  value="infinite-client"
+                />
+                <span>로컬 무한 스크롤</span>
+              </label>
+              <label class="choice-chip">
+                <input
+                  type="radio"
+                  name="scenarioMode"
+                  value="infinite-server"
+                />
+                <span>서버 무한 스크롤</span>
+              </label>
+            </div>
+          </div>
           <div class="control-row compact">
-            <button id="clientModeButton" type="button" data-button-kind="mode">Client</button>
-            <button id="paginationButton" type="button" data-button-kind="mode">Pagination</button>
-            <button id="infiniteButton" type="button" data-button-kind="mode">Infinite</button>
-            <button id="nextPageButton" type="button" data-button-kind="action">Next Page</button>
-            <button id="prevPageButton" type="button" data-button-kind="action">Prev Page</button>
-            <button id="loadMoreButton" type="button" data-button-kind="action">Load More</button>
+            <button
+              id="clientModeButton"
+              type="button"
+              data-button-kind="mode"
+              class="redundant-control"
+            >
+              클라이언트
+            </button>
+            <button
+              id="paginationButton"
+              type="button"
+              data-button-kind="mode"
+              class="redundant-control"
+            >
+              페이지네이션
+            </button>
+            <button
+              id="infiniteButton"
+              type="button"
+              data-button-kind="mode"
+              class="redundant-control"
+            >
+              무한 스크롤
+            </button>
+            <button id="nextPageButton" type="button" data-button-kind="action">
+              다음 페이지
+            </button>
+            <button id="prevPageButton" type="button" data-button-kind="action">
+              이전 페이지
+            </button>
+            <button id="loadMoreButton" type="button" data-button-kind="action">
+              더 불러오기
+            </button>
             <label class="toolbar-field small">
-              <span>Page Size</span>
+              <span>페이지 크기</span>
               <select id="pageSizeSelect">
                 <option value="10">10</option>
                 <option value="25" selected>25</option>
@@ -87,108 +225,361 @@
             </label>
           </div>
           <div class="toolbar-actions">
-            <button id="paginationClientButton" type="button" data-button-kind="toggle">Pagination Local</button>
-            <button id="paginationServerButton" type="button" data-button-kind="toggle">Pagination Server</button>
-            <button id="infiniteClientButton" type="button" data-button-kind="toggle">Infinite Local</button>
-            <button id="infiniteServerButton" type="button" data-button-kind="toggle">Infinite Server</button>
+            <button
+              id="paginationClientButton"
+              type="button"
+              data-button-kind="toggle"
+              class="redundant-control"
+            >
+              로컬 페이지네이션
+            </button>
+            <button
+              id="paginationServerButton"
+              type="button"
+              data-button-kind="toggle"
+              class="redundant-control"
+            >
+              서버 페이지네이션
+            </button>
+            <button
+              id="infiniteClientButton"
+              type="button"
+              data-button-kind="toggle"
+              class="redundant-control"
+            >
+              로컬 무한 스크롤
+            </button>
+            <button
+              id="infiniteServerButton"
+              type="button"
+              data-button-kind="toggle"
+              class="redundant-control"
+            >
+              서버 무한 스크롤
+            </button>
+            <button
+              id="variableHeightButton"
+              type="button"
+              data-button-kind="toggle"
+            >
+              가변 행 높이
+            </button>
           </div>
         </article>
 
         <article class="control-card">
-          <h2>Mutations</h2>
+          <h2>벤치마크</h2>
+          <p class="control-copy">
+            리로드 시간, 모드 전환, 스크롤 응답을 빠르게 측정합니다.
+          </p>
           <div class="toolbar-actions">
-            <button id="appendRowsButton" type="button" data-button-kind="action">Append 5 Rows</button>
-            <button id="updateFirstRowButton" type="button" data-button-kind="action">Update First Row</button>
-            <button id="patchFirstRowButton" type="button" data-button-kind="action">Patch First Row</button>
-            <button id="removeLastRowButton" type="button" data-button-kind="action">Remove Last Row</button>
-            <button id="liveButton" type="button" data-button-kind="action">Push Live Rows</button>
-            <button id="pauseLiveButton" type="button" data-button-kind="toggle">Pause Live</button>
-            <button id="resumeLiveButton" type="button" data-button-kind="action">Resume Live</button>
+            <button
+              id="benchmarkRenderButton"
+              type="button"
+              data-button-kind="action"
+            >
+              리로드 측정
+            </button>
+            <button
+              id="benchmarkScenarioButton"
+              type="button"
+              data-button-kind="action"
+            >
+              시나리오 전환 측정
+            </button>
+            <button
+              id="benchmarkScrollButton"
+              type="button"
+              data-button-kind="action"
+            >
+              스크롤 측정
+            </button>
+          </div>
+          <pre id="benchmarkLog" class="benchmark-log">
+아직 벤치마크 실행 없음.</pre
+          >
+        </article>
+
+        <article class="control-card">
+          <h2>데이터 조작</h2>
+          <div class="toolbar-actions">
+            <button
+              id="appendRowsButton"
+              type="button"
+              data-button-kind="action"
+            >
+              행 5개 추가
+            </button>
+            <button
+              id="updateFirstRowButton"
+              type="button"
+              data-button-kind="action"
+            >
+              첫 번째 행 업데이트
+            </button>
+            <button
+              id="patchFirstRowButton"
+              type="button"
+              data-button-kind="action"
+            >
+              첫 번째 행 패치
+            </button>
+            <button
+              id="removeLastRowButton"
+              type="button"
+              data-button-kind="action"
+            >
+              마지막 행 삭제
+            </button>
+          </div>
+          <div class="control-row" style="margin-top: 10px">
+            <label class="toolbar-field small">
+              <span>행/버스트</span>
+              <input
+                id="streamBurstInput"
+                type="number"
+                min="1"
+                max="500"
+                step="1"
+                value="10"
+              />
+            </label>
+            <label class="toolbar-field small">
+              <span>간격 (ms)</span>
+              <input
+                id="streamIntervalInput"
+                type="number"
+                min="50"
+                max="5000"
+                step="50"
+                value="200"
+              />
+            </label>
+            <label class="toolbar-field small">
+              <span>최대 행 수</span>
+              <input
+                id="streamMaxRowsInput"
+                type="number"
+                min="0"
+                max="100000"
+                step="100"
+                value="1000"
+              />
+            </label>
+          </div>
+          <div class="toolbar-actions" style="margin-top: 8px">
+            <button id="liveButton" type="button" data-button-kind="action">
+              라이브 행 추가
+            </button>
+            <button
+              id="startStreamButton"
+              type="button"
+              data-button-kind="toggle"
+            >
+              스트림 시작
+            </button>
+            <button
+              id="stopStreamButton"
+              type="button"
+              data-button-kind="action"
+            >
+              스트림 중지
+            </button>
+            <button
+              id="pauseLiveButton"
+              type="button"
+              data-button-kind="toggle"
+            >
+              라이브 일시정지
+            </button>
+            <button
+              id="resumeLiveButton"
+              type="button"
+              data-button-kind="action"
+            >
+              라이브 재개
+            </button>
+            <button
+              id="liveAnimationButton"
+              type="button"
+              data-button-kind="toggle"
+            >
+              라이브 애니메이션
+            </button>
+          </div>
+          <p class="control-copy">
+            스트림은 타이머로 행을 추가합니다. 최대 행 수에 도달하면 오래된 행부터 삭제됩니다.
+          </p>
+        </article>
+
+        <article class="control-card redundant-control">
+          <h2>플러그인</h2>
+          <div class="toolbar-actions">
+            <button
+              id="uppercasePluginButton"
+              type="button"
+              data-button-kind="toggle"
+            >
+              팀 대문자 플러그인
+            </button>
+            <button
+              id="scorePluginButton"
+              type="button"
+              data-button-kind="toggle"
+            >
+              점수 접두사 플러그인
+            </button>
           </div>
         </article>
 
         <article class="control-card redundant-control">
-          <h2>Plugins</h2>
-          <div class="toolbar-actions">
-            <button id="uppercasePluginButton" type="button" data-button-kind="toggle">Uppercase Team Plugin</button>
-            <button id="scorePluginButton" type="button" data-button-kind="toggle">Score Prefix Plugin</button>
-          </div>
-        </article>
-
-        <article class="control-card redundant-control">
-          <h2>Columns</h2>
+          <h2>컬럼</h2>
           <div class="control-row">
             <label class="toolbar-field small">
-              <span>Target Column</span>
+              <span>대상 컬럼</span>
               <select id="columnSelect">
                 <option value="id">ID</option>
-                <option value="name" selected>Operator</option>
-                <option value="team">Team</option>
-                <option value="status">Status</option>
-                <option value="score">Score</option>
-                <option value="region">Region</option>
-                <option value="severity">Severity</option>
-                <option value="owner">Owner</option>
-                <option value="queue">Queue</option>
-                <option value="lastAction">Last Action</option>
-                <option value="notes">Notes</option>
-                <option value="updatedAt">Updated At</option>
+                <option value="name" selected>오퍼레이터</option>
+                <option value="team">팀</option>
+                <option value="status">상태</option>
+                <option value="score">점수</option>
+                <option value="region">지역</option>
+                <option value="severity">심각도</option>
+                <option value="owner">담당자</option>
+                <option value="queue">큐</option>
+                <option value="lastAction">최근 작업</option>
+                <option value="notes">메모</option>
+                <option value="updatedAt">수정일시</option>
               </select>
             </label>
             <label class="toolbar-field small">
-              <span>Pin</span>
+              <span>고정</span>
               <select id="pinSelect">
-                <option value="">None</option>
-                <option value="left">Left</option>
-                <option value="right">Right</option>
+                <option value="">없음</option>
+                <option value="left">왼쪽</option>
+                <option value="right">오른쪽</option>
               </select>
             </label>
             <label class="toolbar-field small">
-              <span>Width</span>
-              <input id="widthInput" type="number" min="50" step="10" value="220" />
+              <span>너비</span>
+              <input
+                id="widthInput"
+                type="number"
+                min="50"
+                step="10"
+                value="220"
+              />
             </label>
             <label class="checkbox-field">
               <input id="visibleCheckbox" type="checkbox" checked />
-              <span>Visible</span>
+              <span>표시</span>
             </label>
           </div>
           <div class="toolbar-actions">
-            <button id="applyColumnButton" type="button" data-button-kind="action">Apply Column State</button>
-            <button id="saveColumnStateButton" type="button" data-button-kind="action">Save Column State</button>
-            <button id="loadColumnStateButton" type="button" data-button-kind="action">Load Column State</button>
-            <button id="clearColumnStateButton" type="button" data-button-kind="action">Clear Saved State</button>
+            <button
+              id="applyColumnButton"
+              type="button"
+              data-button-kind="action"
+            >
+              컬럼 상태 적용
+            </button>
+            <button
+              id="saveColumnStateButton"
+              type="button"
+              data-button-kind="action"
+            >
+              컬럼 상태 저장
+            </button>
+            <button
+              id="loadColumnStateButton"
+              type="button"
+              data-button-kind="action"
+            >
+              컬럼 상태 불러오기
+            </button>
+            <button
+              id="clearColumnStateButton"
+              type="button"
+              data-button-kind="action"
+            >
+              저장된 상태 초기화
+            </button>
           </div>
         </article>
       </section>
 
       <section class="grid-panel">
         <div class="panel-header">
-          <h2>Operations Table</h2>
-          <p>Scroll horizontally to confirm only center columns render, expand the deep tree, and use the built-in right overlay panel for columns, filters, plugins, and view settings.</p>
+          <h2>메인 테스트 그리드</h2>
+          <p>
+            이 그리드에서는 스크롤, 고정 컬럼, 트리 확장, 그룹핑, 사이드 패널
+            동작을 확인할 수 있습니다.
+          </p>
         </div>
         <div id="gridApp" class="grid-host"></div>
       </section>
 
+      <section class="grid-panel">
+        <div class="panel-header">
+          <h2>그룹 헤더 테스트 그리드</h2>
+          <p>
+            시즌 기록, 최근 폼, 이적 정보는 각각 그룹 헤더로 묶여 있으며, 하위
+            컬럼은 개별적으로 정렬할 수 있습니다.
+          </p>
+        </div>
+        <div id="multiHeaderGrid" class="grid-host"></div>
+      </section>
+
       <section class="inspector-grid">
         <article class="inspector-card">
-          <h2>Runtime State</h2>
+          <h2>현재 상태</h2>
           <dl class="state-list">
-            <div><dt>Mode</dt><dd id="modeValue">client</dd></div>
-            <div><dt>Dataset</dt><dd id="datasetValue">flat</dd></div>
-            <div><dt>Grouping</dt><dd id="groupingValue">off</dd></div>
-            <div><dt>Tree</dt><dd id="treeValue">off</dd></div>
-            <div><dt>Tree Depth</dt><dd id="treeDepthValue">0</dd></div>
-            <div><dt>Variable Height</dt><dd id="variableHeightValue">off</dd></div>
-            <div><dt>Pagination</dt><dd id="paginationValue">n/a</dd></div>
-            <div><dt>Infinite</dt><dd id="infiniteValue">n/a</dd></div>
-            <div><dt>Plugins</dt><dd id="pluginsValue">none</dd></div>
-            <div><dt>Column State</dt><dd id="columnStateValue">default</dd></div>
+            <div>
+              <dt>모드</dt>
+              <dd id="modeValue">client</dd>
+            </div>
+            <div>
+              <dt>데이터셋</dt>
+              <dd id="datasetValue">flat</dd>
+            </div>
+            <div>
+              <dt>그룹핑</dt>
+              <dd id="groupingValue">off</dd>
+            </div>
+            <div>
+              <dt>트리</dt>
+              <dd id="treeValue">off</dd>
+            </div>
+            <div>
+              <dt>트리 깊이</dt>
+              <dd id="treeDepthValue">0</dd>
+            </div>
+            <div>
+              <dt>가변 높이</dt>
+              <dd id="variableHeightValue">off</dd>
+            </div>
+            <div>
+              <dt>페이지네이션</dt>
+              <dd id="paginationValue">n/a</dd>
+            </div>
+            <div>
+              <dt>무한 스크롤</dt>
+              <dd id="infiniteValue">n/a</dd>
+            </div>
+            <div>
+              <dt>플러그인</dt>
+              <dd id="pluginsValue">none</dd>
+            </div>
+            <div>
+              <dt>컬럼 상태</dt>
+              <dd id="columnStateValue">default</dd>
+            </div>
           </dl>
         </article>
 
         <article class="inspector-card">
-          <h2>Event Log</h2>
-          <pre id="eventLog" class="event-log">Waiting for grid events...</pre>
+          <h2>이벤트 로그</h2>
+          <pre id="eventLog" class="event-log">이벤트가 여기에 표시됩니다.</pre>
         </article>
       </section>
     </div>

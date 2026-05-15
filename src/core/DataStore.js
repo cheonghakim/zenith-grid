@@ -104,6 +104,7 @@ export class DataStore {
     if (added.length > 0) {
       this._onChanged({ type: 'append', affectedKeys: added });
     }
+    return added.length;
   }
 
   prependRows(rows) {
@@ -235,6 +236,21 @@ export class DataStore {
     this._rebuildIndex();
     this._onChanged({ type: 'remove', affectedKeys: [strKey] });
     return true;
+  }
+
+  // 오래된 행(앞쪽)을 잘라내어 cap 이하로 유지 — live 모드 maxRows 용
+  trimToMax(cap) {
+    const excess = this._rows.length - cap;
+    if (excess <= 0) return;
+
+    const removed = this._rows.splice(0, excess);
+    for (const row of removed) {
+      const key = this.getRowKey(row);
+      this._indexMap.delete(key);
+      this._removedKeys.add(key);
+    }
+    this._rebuildIndex();
+    this._onChanged({ type: 'trim', affectedKeys: null });
   }
 
   removeRows(keys) {

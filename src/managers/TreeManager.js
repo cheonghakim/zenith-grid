@@ -1,26 +1,4 @@
-/**
- * TreeManager - 트리 구조 관리 및 flatten
- *
- * 지원 구조:
- * 1. children 방식: row.children = [...childRows]
- * 2. parentId 방식: row.parentId 기반 관계 구성
- * 3. lazy loading: children이 null이지만 hasChildren=true인 경우
- *
- * 핵심 위험 지점:
- * - lazy loaded 자식의 선택 상태
- * - 접힌 자식 행의 선택 유지
- * - parentId flat 구조에서 트리 재구성
- */
 export class TreeManager {
-  /**
-   * @param {Object} options
-   * @param {'children'|'parentId'} [options.treeMode='children']
-   * @param {string} [options.childrenField='children']
-   * @param {string} [options.parentIdField='parentId']
-   * @param {string} [options.hasChildrenField='hasChildren']
-   * @param {Function} [options.onLoadChildren] - async (row) => children[]
-   * @param {Function} [options.onChanged]
-   */
   constructor(options = {}) {
     this._treeMode = options.treeMode ?? 'children';
     this._childrenField = options.childrenField ?? 'children';
@@ -30,13 +8,8 @@ export class TreeManager {
     this._onChanged = options.onChanged ?? (() => {});
     this._enabled = false;
 
-    /** @type {Set<string>} 펼쳐진 row key Set */
     this._expandedKeys = new Set();
-
-    /** @type {Set<string>} 로딩 중인 row key Set */
     this._loadingKeys = new Set();
-
-    /** @type {Map<string, Object[]>} lazy-loaded 자식 캐시 */
     this._childrenCache = new Map();
   }
 
@@ -54,8 +27,6 @@ export class TreeManager {
   isEnabled() {
     return this._enabled;
   }
-
-  // ─── 접기/펼치기 ────────────────────────────────────────────
 
   expand(rowKey) {
     this._expandedKeys.add(String(rowKey));
@@ -97,12 +68,10 @@ export class TreeManager {
     return this._loadingKeys.has(String(rowKey));
   }
 
-  // ─── Lazy Loading ──────────────────────────────────────────
-
   async loadChildren(rowKey, row) {
-    if (!this._onLoadChildren) return;
-    if (this._loadingKeys.has(rowKey)) return;
-    if (this._childrenCache.has(rowKey)) return;
+    if (!this._onLoadChildren || this._loadingKeys.has(rowKey) || this._childrenCache.has(rowKey)) {
+      return;
+    }
 
     this._loadingKeys.add(rowKey);
     this._onChanged({ action: 'loadingStart', rowKey });
@@ -113,23 +82,16 @@ export class TreeManager {
       this._loadingKeys.delete(rowKey);
       this._expandedKeys.add(rowKey);
       this._onChanged({ action: 'loadingComplete', rowKey, children });
-    } catch (err) {
+    } catch (error) {
       this._loadingKeys.delete(rowKey);
-      this._onChanged({ action: 'loadingError', rowKey, error: err.message });
-      console.error(`[TreeManager] Failed to load children for "${rowKey}":`, err);
+      this._onChanged({ action: 'loadingError', rowKey, error: error.message });
+      console.error(`[TreeManager] Failed to load children for "${rowKey}":`, error);
     }
   }
 
-  // ─── Flatten ───────────────────────────────────────────────
-
-  /**
-   * 트리 구조를 flat 배열로 변환
-   * @param {Object[]} rows - 원본 rows (DataStore에서 온 것)
-   * @returns {FlatRow[]}
-   */
   flatten(rows) {
     if (!this._enabled) {
-      return rows.map((r, i) => this._toFlatRow(r, null, 0, i));
+      return rows.map((row, index) => this._toFlatRow(row, null, 0, index));
     }
 
     if (this._treeMode === 'parentId') {
@@ -137,10 +99,7 @@ export class TreeManager {
       return this._flattenTree(tree, null, 0);
     }
 
-    // children 방식
-    const rootRows = rows.filter(
-      (r) => !r[this._parentIdField] || this._treeMode === 'children'
-    );
+    const rootRows = rows.filter((row) => !row[this._parentIdField] || this._treeMode === 'children');
     return this._flattenTree(rootRows, null, 0);
   }
 
@@ -148,22 +107,26 @@ export class TreeManager {
     const rowMap = new Map();
     const roots = [];
 
-    for (const row of rows) {
-      const key = this._getKey(row);
-      rowMap.set(key, { ...row, _treeChildren: [] });
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const key = String(row.id ?? i);
+      rowMap.set(key, { ...row, _treeKey: key, _treeChildren: [] });
     }
 
-    for (const row of rows) {
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const key = String(row.id ?? i);
       const parentId = row[this._parentIdField];
+      const current = rowMap.get(key);
       if (parentId != null) {
         const parent = rowMap.get(String(parentId));
         if (parent) {
-          parent._treeChildren.push(rowMap.get(this._getKey(row)));
+          parent._treeChildren.push(current);
         } else {
-          roots.push(rowMap.get(this._getKey(row)));
+          roots.push(current);
         }
       } else {
-        roots.push(rowMap.get(this._getKey(row)));
+        roots.push(current);
       }
     }
 
@@ -188,13 +151,13 @@ export class TreeManager {
       flatRow._isExpanded = isExpanded;
       flatRow._isLoading = isLoading;
       flatRow._isParent = hasChildren;
+      flatRow._children = rawChildren;
+      flatRow._descendantRowKeys = this._collectDescendantRowKeys(rawChildren);
       flat.push(flatRow);
 
       if (isExpanded && rawChildren.length > 0) {
-        const childFlat = this._flattenTree(rawChildren, key, depth + 1);
-        flat.push(...childFlat);
+        flat.push(...this._flattenTree(rawChildren, key, depth + 1));
       } else if (isLoading) {
-        // 로딩 중 플레이스홀더
         flat.push({
           _type: 'tree-loading',
           _rowKey: `__loading__${key}`,
@@ -217,16 +180,33 @@ export class TreeManager {
       _hasChildren: false,
       _isExpanded: false,
       _isParent: false,
-      _children: row[this._childrenField] ?? null, // selection 전파용
+      _children: row[this._childrenField] ?? null,
+      _descendantRowKeys: [],
       ...row,
     };
   }
 
-  _getKey(row) {
-    return String(row.id ?? row[this._parentIdField] ?? Math.random());
+  _collectDescendantRowKeys(rows) {
+    const keys = [];
+    const visit = (items) => {
+      for (const item of items ?? []) {
+        const key = this._getKey(item);
+        keys.push(key);
+        const children = this._treeMode === 'parentId'
+          ? (item._treeChildren ?? [])
+          : (item[this._childrenField] ?? this._childrenCache.get(key) ?? []);
+        if (children.length > 0) {
+          visit(children);
+        }
+      }
+    };
+    visit(rows);
+    return keys;
   }
 
-  // ─── 상태 직렬화 ───────────────────────────────────────────
+  _getKey(row) {
+    return String(row._treeKey ?? row.id ?? '');
+  }
 
   serializeState() {
     return {

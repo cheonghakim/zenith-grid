@@ -260,6 +260,16 @@ export class ViewModel {
     return totalHeight - this._scrollTop - this._viewportHeight <= threshold;
   }
 
+  getHeightBeforeIndex(index) {
+    const safeIndex = Math.max(0, index);
+    if (!this._variableRowHeight) {
+      return safeIndex * this._rowHeight;
+    }
+
+    const cumulativeHeights = this._getCumulativeHeights();
+    return cumulativeHeights[safeIndex] ?? safeIndex * this._rowHeight;
+  }
+
   _invalidateCache() {
     this._cachedVerticalRange = null;
     this._cachedHorizontalRange = null;

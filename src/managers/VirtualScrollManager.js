@@ -144,10 +144,16 @@ export class VirtualScrollManager {
     this._bodyViewport.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  scrollToBottom() {
+  scrollToBottom(options = { behavior: 'smooth' }) {
     if (!this._bodyViewport) return;
     const { totalHeight } = this._viewModel.getVerticalRange();
-    this._bodyViewport.scrollTo({ top: totalHeight, behavior: 'smooth' });
+    this._bodyViewport.scrollTo({ top: totalHeight, behavior: options.behavior ?? 'smooth' });
+  }
+
+  setScrollTop(scrollTop) {
+    if (!this._bodyViewport) return;
+    this._bodyViewport.scrollTop = Math.max(0, scrollTop);
+    this._processScroll();
   }
 
   setAutoScroll(enabled) {
@@ -159,7 +165,7 @@ export class VirtualScrollManager {
     if (this._userScrolling) return;
     const isNearBottom = this._viewModel.isAtBottom(this._autoScrollThreshold);
     if (isNearBottom) {
-      this.scrollToBottom();
+      this.scrollToBottom({ behavior: 'auto' });
     }
   }
 

@@ -20,6 +20,7 @@ import { DOMRenderer } from '../renderer/DOMRenderer.js';
 import { HeaderRenderer } from '../renderer/HeaderRenderer.js';
 import { BodyRenderer } from '../renderer/BodyRenderer.js';
 import { SettingsPanelRenderer } from '../renderer/SettingsPanelRenderer.js';
+import { DEFAULT_LOCALE } from './defaultLocale.js';
 
 export class GridCore {
   constructor(container, options = {}) {
@@ -36,6 +37,10 @@ export class GridCore {
     this._rowMeasureFrame = null;
     this._serverPageRequestId = 0;
     this._serverInfiniteRequestId = 0;
+    this._suspendDataStoreRefresh = false;
+    this._pendingDataStoreRefresh = false;
+    this._pendingLiveViewportAdjustment = null;
+    this._locale = this._mergeLocale(DEFAULT_LOCALE, options.locale ?? {});
 
     this._getRowKey = this._createRowKeyGetter(options.rowKey);
     this._pluginManager = new PluginManager(this);
@@ -78,6 +83,7 @@ export class GridCore {
 
     this._selectionManager = new SelectionManager({
       mode: options.selectionMode ?? 'multiple',
+      isSelectable: options.isRowSelectable ?? (() => true),
       onChanged: (payload) => {
         this._events.emit('selection-change', payload);
         options.onSelectionChange?.(payload);
@@ -87,7 +93,7 @@ export class GridCore {
     this._groupManager = new GroupManager({
       onChanged: () => {
         this._emitStateChanged('group');
-        void this.refresh();
+        this._refreshFlatten();
       },
     });
 
@@ -95,7 +101,7 @@ export class GridCore {
       ...(options.tree ?? {}),
       onChanged: () => {
         this._emitStateChanged('tree');
-        void this.refresh();
+        this._refreshFlatten();
       },
     });
 
@@ -122,9 +128,15 @@ export class GridCore {
         displayMode: this._displayMode,
       }),
       onChanged: (payload) => {
+        if (payload?.action === 'loadingStart' && this._displayMode === 'infinite') {
+          this._dom.showInfiniteLoader();
+        }
         if (payload?.action === 'loadingComplete' && Array.isArray(payload.rows)) {
-          this._dataStore.appendRows(payload.rows);
-          this._infiniteScrollManager.onRowsAppended(payload.rows.length);
+          const addedCount = this._dataStore.appendRows(payload.rows);
+          this._infiniteScrollManager.onRowsAppended(addedCount);
+          this._dom.hideInfiniteLoader();
+        } else if (payload?.action === 'loadingError') {
+          this._dom.hideInfiniteLoader();
         }
         this._emitStateChanged('infinite-scroll');
         void this.refresh();
@@ -159,7 +171,11 @@ export class GridCore {
       onNewDataNotification: (count) => {
         if (count > 0) {
           this._dom.showLiveBanner(
-            `${count} new rows are waiting. Click to apply focus.`,
+            this.getLocaleText(
+              'grid.live.waiting',
+              '{count} new rows are waiting. Click to review.',
+              { count }
+            ),
             () => {
               this._liveUpdateManager.clearPendingCount();
               this._dom.hideLiveBanner();
@@ -205,6 +221,23 @@ export class GridCore {
         onColumnResize: ({ colId, width, commit }) => {
           this._applyColumnResize(colId, width, { commit });
         },
+        getColumnFilter: (colId) => this._filterManager.getColumnFilter(colId),
+        onColumnFilterChange: (colId, filterDef) => {
+          this.setColumnFilter(colId, filterDef);
+        },
+        onColumnFilterClear: (colId) => {
+          this.clearColumnFilter(colId);
+        },
+        getColumnFilterChoices: (colId) => this.getColumnFilterChoices(colId),
+        getLocaleText: (key, fallback, params) => this.getLocaleText(key, fallback, params),
+        rowHeight: options.rowHeight ?? 40,
+        selectionEnabled: options.selectable !== false,
+        selectionColumnWidth: 44,
+        isAllSelected: () => this._selectionManager.isAllSelected(this._displayRows),
+        isSomeSelected: () => this._selectionManager.isSomeSelected(this._displayRows),
+        onToggleSelectAll: () => {
+          this.toggleSelectAll();
+        },
       }
     );
 
@@ -214,14 +247,16 @@ export class GridCore {
       this._viewModel,
       {
         selectionManager: this._selectionManager,
+        selectionEnabled: options.selectable !== false,
+        selectionColumnWidth: 44,
         onRowClick: ({ row, event }) => {
-          if (options.selectable !== false) {
+          if (options.selectable !== false && this._selectionManager.isSelectableRow(row)) {
             if (event.shiftKey) {
               this._selectionManager.shiftSelect(row._rowKey);
             } else {
               this._selectionManager.toggleRow(row._rowKey);
             }
-            void this.refresh();
+            this._refreshSelection();
           }
 
           this._events.emit('row-click', { row, event });
@@ -247,6 +282,9 @@ export class GridCore {
           }
           this._events.emit('tree-toggle', { rowKey, row });
         },
+        onRowSelectionToggle: ({ row, checked }) => {
+          this.setRowSelected(row._rowKey, checked, { includeDescendants: true });
+        },
         onRowMeasured: ({ flatIndex, height }) => {
           const changed = this._viewModel.setRowHeightAt(flatIndex, height);
           if (changed) {
@@ -254,6 +292,13 @@ export class GridCore {
           }
         },
         getRowHeight: options.getRowHeight ?? null,
+        isRowSelectable: (row) => this._selectionManager.isSelectableRow(row),
+        getRowClassName: options.getRowClassName ?? null,
+        getRowStyle: options.getRowStyle ?? null,
+        hooks: options.hooks ?? {},
+        shouldAnimateRow: (rowKey) => this._liveUpdateManager.shouldAnimateRow(rowKey),
+        getRowAnimationDuration: () => this._liveUpdateManager.getRowAnimationDuration(),
+        getLocaleText: (key, fallback, params) => this.getLocaleText(key, fallback, params),
       }
     );
 
@@ -280,6 +325,10 @@ export class GridCore {
     this._dataStore = new DataStore({
       rowKey: options.rowKey ?? 'id',
       onChanged: () => {
+        if (this._suspendDataStoreRefresh) {
+          this._pendingDataStoreRefresh = true;
+          return;
+        }
         void this.refresh();
       },
     });
@@ -315,7 +364,17 @@ export class GridCore {
     if (this._destroyed) return;
 
     const version = ++this._renderVersion;
-    const result = await this._pipeline.process(this._dataStore.getAll());
+    let result;
+    try {
+      result = await this._pipeline.process(this._dataStore.getAll());
+    } catch (error) {
+      console.error('[GridCore] Pipeline processing failed:', error);
+      if (!this._destroyed && version === this._renderVersion) {
+        this._dom.showEmpty(this._options.emptyMessage ?? this.getLocaleText('grid.empty.processFailed', 'Failed to process data.'));
+        this._dom.hideInfiniteLoader();
+      }
+      return;
+    }
     if (this._destroyed || version !== this._renderVersion) return;
 
     this._flatRows = result.flatRows;
@@ -336,11 +395,17 @@ export class GridCore {
 
     if (result.displayRows.length === 0) {
       this._bodyRenderer.clear();
-      this._dom.showEmpty(this._options.emptyMessage ?? 'No rows to display.');
+      this._dom.showEmpty(this._options.emptyMessage ?? this.getLocaleText('grid.empty.noRows', 'No rows available.'));
+      this._dom.hideInfiniteLoader();
     } else {
       this._dom.hideOverlay();
+      if (!(this._displayMode === 'infinite' && this._infiniteScrollManager.getState().loading)) {
+        this._dom.hideInfiniteLoader();
+      }
       this._bodyRenderer.render(result.displayRows, this._currentRangeBundle);
     }
+
+    this._applyPendingLiveViewportAdjustment();
 
     this._events.emit('render', {
       rows: result.displayRows,
@@ -437,11 +502,13 @@ export class GridCore {
     });
     this._invalidateMeasuredRows();
     this._treeManager.enable();
+    void this.refresh();
   }
 
   disableTree() {
     this._invalidateMeasuredRows();
     this._treeManager.disable();
+    void this.refresh();
   }
 
   toggleTreeRow(rowKey) {
@@ -464,12 +531,36 @@ export class GridCore {
     this._sortManager.clearSort();
   }
 
+  toggleSelectAll() {
+    const keys = this._displayRows.flatMap((row) => this._collectSelectionKeysForRow(row));
+    const selectedKeys = this._selectionManager.getSelectedKeys();
+    const allSelected = keys.length > 0 && keys.every((key) => selectedKeys.has(String(key)));
+
+    if (allSelected) {
+      this._selectionManager.clearSelection();
+    } else {
+      this._selectionManager.setRowsSelected(keys, true, 'selectAll');
+    }
+    this._refreshSelection();
+  }
+
+  setRowSelected(rowKey, selected, options = {}) {
+    const row = this._flatRows.find((item) => item._rowKey === String(rowKey));
+    const keys = this._collectSelectionKeysForRow(row, options);
+    this._selectionManager.setRowsSelected(keys, selected, selected ? 'select' : 'deselect');
+    this._refreshSelection();
+  }
+
   on(eventName, handler, options) {
     return this._events.on(eventName, handler, options);
   }
 
   getSelectedKeys() {
     return this._selectionManager.getSelectedKeys();
+  }
+
+  getSelectionState() {
+    return this._selectionManager.getState();
   }
 
   getDisplayMode() {
@@ -508,6 +599,46 @@ export class GridCore {
 
   getFilterState() {
     return this._filterManager.getState();
+  }
+
+  getColumnFilterChoices(colId) {
+    const def = this._columns.getDef(colId);
+    if (!def) {
+      return [];
+    }
+
+    const configured = def.filterOptions ?? def._raw?.filterOptions;
+    if (Array.isArray(configured) && configured.length > 0) {
+      return configured.map((option) => (
+        option && typeof option === 'object' && 'value' in option
+          ? {
+            value: option.value,
+            label: option.label ?? String(option.value),
+          }
+          : {
+            value: option,
+            label: String(option),
+          }
+      ));
+    }
+
+    const values = new Map();
+    for (const row of this._dataStore.getAll()) {
+      const value = row?.[def.field];
+      if (value == null) {
+        continue;
+      }
+
+      const key = typeof value === 'object' ? JSON.stringify(value) : String(value);
+      if (!values.has(key)) {
+        values.set(key, {
+          value,
+          label: String(value),
+        });
+      }
+    }
+
+    return [...values.values()];
   }
 
   getGroupingState() {
@@ -661,6 +792,33 @@ export class GridCore {
     this._liveUpdateManager.resume();
   }
 
+  setLiveRowAnimationEnabled(enabled) {
+    const normalized = Boolean(enabled);
+    this._options.liveUpdates = {
+      ...(this._options.liveUpdates ?? {}),
+      rowAnimationEnabled: normalized,
+    };
+    this._liveUpdateManager.setRowAnimationEnabled(normalized);
+    void this.refresh();
+  }
+
+  isLiveRowAnimationEnabled() {
+    return this._liveUpdateManager.isRowAnimationEnabled();
+  }
+
+  setLocale(locale = {}) {
+    this._locale = this._mergeLocale(DEFAULT_LOCALE, locale);
+    this._settingsPanel?.render();
+    this._renderFooter();
+    void this.refresh();
+  }
+
+  getLocaleText(key, fallback, params = {}) {
+    const value = key.split('.').reduce((current, part) => current?.[part], this._locale);
+    const template = typeof value === 'string' ? value : fallback;
+    return String(template).replace(/\{(\w+)\}/g, (_, token) => String(params[token] ?? `{${token}}`));
+  }
+
   async saveColumnState() {
     if (!this._columnStateManager) return;
     await this._columnStateManager.save(this._columns.serializeState());
@@ -737,7 +895,12 @@ export class GridCore {
 
   _syncColumnWidths() {
     const pinnedWidths = this._columns.getPinnedWidths();
-    this._dom.updateColumnWidths(pinnedWidths);
+    const selectionWidth = this._options.selectable === false ? 0 : 44;
+    this._dom.updateColumnWidths({
+      leftWidth: pinnedWidths.leftWidth + selectionWidth,
+      centerWidth: pinnedWidths.centerWidth,
+      rightWidth: pinnedWidths.rightWidth,
+    });
     const centerWidths = this._columns.getColumnsByPin().center.map((column) => column.state.width ?? 0);
     this._viewModel.setColumnWidths(centerWidths);
   }
@@ -747,6 +910,12 @@ export class GridCore {
   }
 
   _applyLiveBatch(batch) {
+    const maxRows = this._options.liveUpdates?.maxRows ?? 1000;
+    const viewportAdjustment = this._captureLiveViewportAdjustment(batch, maxRows);
+
+    this._suspendDataStoreRefresh = true;
+    this._pendingDataStoreRefresh = false;
+
     if (batch.added.length > 0) {
       this._dataStore.appendRows(batch.added);
     }
@@ -763,10 +932,28 @@ export class GridCore {
       this._dataStore.removeRows(batch.removed);
     }
 
+    if (maxRows > 0) {
+      this._dataStore.trimToMax(maxRows);
+    }
+
+    this._suspendDataStoreRefresh = false;
+    if (viewportAdjustment) {
+      this._pendingLiveViewportAdjustment = viewportAdjustment;
+    }
+
     const newCount = batch.added.length + batch.upserted.length;
     if (this._displayMode === 'paginated' && this._paginationManager.getState().page > 0 && newCount > 0) {
       this._liveUpdateManager.notifyNewData(newCount);
     }
+
+    if (this._pendingDataStoreRefresh) {
+      this._pendingDataStoreRefresh = false;
+      void this.refresh();
+    }
+  }
+
+  setLiveMaxRows(n) {
+    this._options.liveUpdates = { ...(this._options.liveUpdates ?? {}), maxRows: n };
   }
 
   async _restoreColumnState() {
@@ -791,17 +978,29 @@ export class GridCore {
 
     const summary = document.createElement('div');
     summary.className = 'ag-footer-summary';
-    summary.textContent = `${state.startRow}-${state.endRow} of ${state.totalCount}`;
+    summary.textContent = this.getLocaleText(
+      'grid.pagination.summary',
+      '{startRow}-{endRow} of {totalCount}',
+      state
+    );
 
     const controls = document.createElement('div');
     controls.className = 'ag-footer-controls';
 
     const buttons = [
-      { label: 'First', disabled: state.isFirst, onClick: () => this._paginationManager.firstPage() },
-      { label: 'Prev', disabled: state.isFirst, onClick: () => this._paginationManager.prevPage() },
-      { label: `Page ${state.page + 1} / ${state.totalPages}`, disabled: true, onClick: null },
-      { label: 'Next', disabled: state.isLast, onClick: () => this._paginationManager.nextPage() },
-      { label: 'Last', disabled: state.isLast, onClick: () => this._paginationManager.lastPage() },
+      { label: this.getLocaleText('grid.pagination.first', 'First'), disabled: state.isFirst, onClick: () => this._paginationManager.firstPage() },
+      { label: this.getLocaleText('grid.pagination.prev', 'Prev'), disabled: state.isFirst, onClick: () => this._paginationManager.prevPage() },
+      {
+        label: this.getLocaleText(
+          'grid.pagination.page',
+          'Page {page} / {totalPages}',
+          { page: state.page + 1, totalPages: state.totalPages }
+        ),
+        disabled: true,
+        onClick: null,
+      },
+      { label: this.getLocaleText('grid.pagination.next', 'Next'), disabled: state.isLast, onClick: () => this._paginationManager.nextPage() },
+      { label: this.getLocaleText('grid.pagination.last', 'Last'), disabled: state.isLast, onClick: () => this._paginationManager.lastPage() },
     ];
 
     buttons.forEach((config) => {
@@ -836,7 +1035,7 @@ export class GridCore {
     if (typeof fetchPage !== 'function') return;
 
     const requestId = ++this._serverPageRequestId;
-    this._dom.showLoading('Loading page...');
+    this._dom.showLoading(this.getLocaleText('grid.loading.page', 'Loading page data...'));
     const result = await fetchPage({
       page,
       pageSize,
@@ -860,8 +1059,35 @@ export class GridCore {
     this._invalidateMeasuredRows();
     this._dataStore.setData([]);
     this._infiniteScrollManager.reset();
-    this._dom.showLoading('Loading rows...');
+    this._dom.showLoading(this.getLocaleText('grid.loading.moreRows', 'Loading more rows...'));
     await this._infiniteScrollManager.loadMore();
+  }
+
+  _mergeLocale(base, overrides) {
+    if (!overrides || typeof overrides !== 'object') {
+      return structuredClone(base);
+    }
+
+    const merge = (left, right) => {
+      const result = { ...left };
+      for (const [key, value] of Object.entries(right)) {
+        if (
+          value &&
+          typeof value === 'object' &&
+          !Array.isArray(value) &&
+          left?.[key] &&
+          typeof left[key] === 'object' &&
+          !Array.isArray(left[key])
+        ) {
+          result[key] = merge(left[key], value);
+        } else {
+          result[key] = value;
+        }
+      }
+      return result;
+    };
+
+    return merge(base, overrides);
   }
 
   _reloadActiveRemoteData() {
@@ -950,6 +1176,155 @@ export class GridCore {
         };
       })
       .filter(Boolean);
+  }
+
+  _collectSelectionKeysForRow(row, options = {}) {
+    if (!row) {
+      return [];
+    }
+
+    const includeDescendants = options.includeDescendants !== false;
+    const keys = row._type === 'group-header' ? [] : [row._rowKey];
+
+    if (includeDescendants && Array.isArray(row._descendantRowKeys) && row._descendantRowKeys.length > 0) {
+      keys.push(...row._descendantRowKeys);
+    }
+
+    return [...new Set(keys)];
+  }
+
+  // 선택 상태만 변경 시: 파이프라인 재실행 없이 헤더/바디만 재렌더링
+  // Re-render the header and body when only selection state changed.
+  _refreshSelection() {
+    if (this._destroyed || !this._displayRows) return;
+    ++this._renderVersion;
+    this._headerRenderer.render(this._currentRangeBundle);
+    this._bodyRenderer.render(this._displayRows, this._currentRangeBundle);
+  }
+
+  // 그룹/트리 토글 시: filter/sort를 건너뛰고 flatten+paginate만 재실행
+  _refreshFlatten() {
+    if (this._destroyed) return;
+
+    const result = this._pipeline.flattenFromLastBase();
+    if (!result) {
+      void this.refresh();
+      return;
+    }
+
+    ++this._renderVersion;
+    this._flatRows = result.flatRows;
+    this._displayRows = result.displayRows;
+    this._selectionManager.setCurrentRows(result.displayRows);
+    this._viewModel.setTotalCount(result.displayRows.length);
+    this._headerModel.rebuild();
+    this._currentRangeBundle = {
+      vertical: this._viewModel.getVerticalRange(),
+      horizontal: this._viewModel.getHorizontalRange(),
+    };
+
+    this._pluginManager.callHook('beforeRender', result);
+    this._syncColumnWidths();
+    this._headerRenderer.render(this._currentRangeBundle);
+    this._headerRenderer.updateSortIndicators();
+    this._renderFooter();
+
+    if (result.displayRows.length === 0) {
+      this._bodyRenderer.clear();
+      this._dom.showEmpty(this._options.emptyMessage ?? this.getLocaleText('grid.empty.noRows', 'No rows available.'));
+    } else {
+      this._dom.hideOverlay();
+      this._bodyRenderer.render(result.displayRows, this._currentRangeBundle);
+    }
+
+    this._events.emit('render', {
+      rows: result.displayRows,
+      flatRows: result.flatRows,
+      totalCount: result.totalCount,
+      visibleCount: result.displayRows.length,
+      displayMode: this._displayMode,
+    });
+    this._pluginManager.callHook('afterRender', result);
+    this._settingsPanel?.render();
+  }
+
+  _applyPendingLiveViewportAdjustment() {
+    const pending = this._pendingLiveViewportAdjustment;
+    if (!pending) {
+      return;
+    }
+
+    this._pendingLiveViewportAdjustment = null;
+
+    if (pending.type === 'preserve') {
+      this._virtualScrollManager.setScrollTop(pending.scrollTop);
+      return;
+    }
+
+    if (pending.type === 'bottom') {
+      this._virtualScrollManager.scrollToBottom({ behavior: 'auto' });
+    }
+  }
+
+  _captureLiveViewportAdjustment(batch, maxRows) {
+    const liveOptions = this._options.liveUpdates ?? {};
+    const autoScrollEnabled = liveOptions.autoScroll ?? false;
+    const autoScrollThreshold = liveOptions.autoScrollThreshold ?? 100;
+    const wasNearBottom = this._viewModel.isAtBottom(autoScrollThreshold);
+    const isUserScrolling = this._virtualScrollManager.isUserScrolling();
+
+    if (isUserScrolling) {
+      return null;
+    }
+
+    if (autoScrollEnabled && wasNearBottom) {
+      return { type: 'bottom' };
+    }
+
+    if (maxRows <= 0) {
+      return null;
+    }
+
+    const trimmedCount = this._estimateTrimmedRowCount(batch, maxRows);
+    if (trimmedCount <= 0) {
+      return null;
+    }
+
+    const trimmedHeight = this._viewModel.getHeightBeforeIndex(trimmedCount);
+    return {
+      type: 'preserve',
+      scrollTop: Math.max(0, this._viewModel.getScrollTop() - trimmedHeight),
+    };
+  }
+
+  _estimateTrimmedRowCount(batch, maxRows) {
+    const existingKeys = new Set(this._dataStore.getAll().map((row) => this._dataStore.getRowKey(row)));
+    let projectedSize = this._dataStore.size;
+
+    for (const key of batch.removed) {
+      const normalized = String(key);
+      if (existingKeys.delete(normalized)) {
+        projectedSize -= 1;
+      }
+    }
+
+    for (const row of batch.added) {
+      const key = this._dataStore.getRowKey(row);
+      if (!existingKeys.has(key)) {
+        existingKeys.add(key);
+        projectedSize += 1;
+      }
+    }
+
+    for (const row of batch.upserted) {
+      const key = this._dataStore.getRowKey(row);
+      if (!existingKeys.has(key)) {
+        existingKeys.add(key);
+        projectedSize += 1;
+      }
+    }
+
+    return Math.max(0, projectedSize - maxRows);
   }
 
   _createRowKeyGetter(rowKey) {

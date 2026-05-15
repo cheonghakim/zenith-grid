@@ -52,7 +52,11 @@ export class FilterManager {
    * { type: 'text'|'number'|'date'|'select'|'custom', value, operator?, fn? }
    */
   setColumnFilter(colId, filterDef) {
-    if (!filterDef || filterDef.value === '' || filterDef.value == null) {
+    const value = filterDef?.value;
+    const isEmptyArray = Array.isArray(value) && value.length === 0;
+    const isEmptyRange = Array.isArray(value) && value.length === 2 && value.every((entry) => entry === '' || entry == null);
+
+    if (!filterDef || value === '' || value == null || isEmptyArray || isEmptyRange) {
       this._columnFilters.delete(colId);
     } else {
       this._columnFilters.set(colId, {
@@ -178,6 +182,7 @@ export class FilterManager {
     const filterDate = new Date(value);
     switch (operator) {
       case 'equals': return cellDate.toDateString() === filterDate.toDateString();
+      case 'notEquals': return cellDate.toDateString() !== filterDate.toDateString();
       case 'before': return cellDate < filterDate;
       case 'after': return cellDate > filterDate;
       case 'between':

@@ -43,6 +43,15 @@ export class DOMRenderer {
     body.appendChild(bodyRight);
     bodyViewport.appendChild(body);
 
+    const infiniteLoader = this._createElement('div', 'ag-infinite-loader');
+    infiniteLoader.style.display = 'none';
+    const infiniteSpinner = this._createElement('span', 'ag-infinite-loader-spinner');
+    const infiniteLabel = this._createElement('span', 'ag-infinite-loader-label');
+    infiniteLabel.textContent = this._getLocaleText('grid.loading.infiniteSpinner', 'Loading more rows');
+    infiniteLoader.appendChild(infiniteSpinner);
+    infiniteLoader.appendChild(infiniteLabel);
+    bodyViewport.appendChild(infiniteLoader);
+
     const footer = this._createElement('div', 'ag-footer');
     const overlay = this._createElement('div', 'ag-overlay');
     overlay.style.display = 'none';
@@ -50,12 +59,13 @@ export class DOMRenderer {
     banner.style.display = 'none';
     const sidePanel = this._createElement('div', 'ag-side-panel-host');
 
+    bodyViewport.appendChild(overlay);
+
     this._container.appendChild(banner);
     this._container.appendChild(header);
     this._container.appendChild(bodyViewport);
     this._container.appendChild(footer);
     this._container.appendChild(sidePanel);
-    this._container.appendChild(overlay);
 
     this._els = {
       header,
@@ -70,6 +80,7 @@ export class DOMRenderer {
       bodyCenterContainer,
       rows,
       bodyRight,
+      infiniteLoader,
       spacerTop,
       spacerBottom,
       overlay,
@@ -89,19 +100,19 @@ export class DOMRenderer {
 
   updateColumnWidths({ leftWidth = 0, centerWidth = 0, rightWidth = 0 }) {
     this._els.headerLeft.style.width = `${leftWidth}px`;
-    this._els.bodyLeft.style.width = `${leftWidth}px`;
+    this._els.bodyLeft.style.width = '0px';
     this._els.headerCenterContainer.style.width = `${centerWidth}px`;
-    this._els.bodyCenterContainer.style.width = `${centerWidth}px`;
+    this._els.bodyCenterContainer.style.width = `${leftWidth + centerWidth + rightWidth}px`;
     this._els.headerRight.style.width = `${rightWidth}px`;
-    this._els.bodyRight.style.width = `${rightWidth}px`;
+    this._els.bodyRight.style.width = '0px';
   }
 
-  showLoading(message = 'Loading...') {
+  showLoading(message = 'Loading data...') {
     this._els.overlay.style.display = 'flex';
     this._els.overlay.textContent = message;
   }
 
-  showEmpty(message = 'No rows to display.') {
+  showEmpty(message = 'No rows available.') {
     this._els.overlay.style.display = 'flex';
     this._els.overlay.textContent = message;
   }
@@ -181,6 +192,42 @@ export class DOMRenderer {
     return this._els.footer;
   }
 
+  showInfiniteLoader() {
+    if (!this._els.infiniteLoader) return;
+    clearTimeout(this._loaderHideTimer);
+    this._loaderHideTimer = null;
+    this._loaderShownAt = Date.now();
+    const el = this._els.infiniteLoader;
+    el.style.transition = 'none';
+    el.style.display = 'inline-flex';
+    el.style.opacity = '1';
+  }
+
+  hideInfiniteLoader(minMs = 700) {
+    if (!this._els.infiniteLoader) return;
+    const elapsed = Date.now() - (this._loaderShownAt ?? 0);
+    const delay = Math.max(0, minMs - elapsed);
+    clearTimeout(this._loaderHideTimer);
+    this._loaderHideTimer = setTimeout(() => {
+      const el = this._els.infiniteLoader;
+      if (!el) return;
+      el.style.transition = '';
+      el.style.opacity = '0';
+      this._loaderHideTimer = setTimeout(() => {
+        el.style.display = 'none';
+        el.style.opacity = '1';
+      }, 220);
+    }, delay);
+  }
+
+  _getLocaleText(key, fallback, params = {}) {
+    const getter = this._options.getLocaleText;
+    if (typeof getter !== 'function') {
+      return fallback;
+    }
+    return getter(key, fallback, params);
+  }
+
   getRoot() {
     return this._container;
   }
@@ -196,6 +243,8 @@ export class DOMRenderer {
   }
 
   destroy() {
+    clearTimeout(this._loaderHideTimer);
+    this._loaderHideTimer = null;
     this._container.innerHTML = '';
     this._container.classList.remove('ag-root');
     this._els = {};

@@ -27,6 +27,17 @@ export class Pipeline {
       current = await this._runSort(current);
     }
 
+    this._lastBaseRows = [...current];
+    return this._flattenAndPaginate(current);
+  }
+
+  // filter/sort를 건너뛰고 마지막 base rows에서 flatten+paginate만 재실행 (그룹/트리 토글 최적화)
+  flattenFromLastBase() {
+    if (!this._lastBaseRows) return null;
+    return this._flattenAndPaginate([...this._lastBaseRows]);
+  }
+
+  _flattenAndPaginate(current) {
     let flatRows = current.map((row, index) => ({
       ...row,
       _type: 'data',

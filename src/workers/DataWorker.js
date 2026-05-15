@@ -137,6 +137,7 @@ function matchColumnFilter(row, field, filterDef) {
         case 'startsWith': return cell.startsWith(filter);
         case 'endsWith': return cell.endsWith(filter);
         case 'equals': return cell === filter;
+        case 'notEquals': return cell !== filter;
         case 'notContains': return !cell.includes(filter);
         default: return cell.includes(filter);
       }
@@ -145,10 +146,26 @@ function matchColumnFilter(row, field, filterDef) {
       const num = Number(cellValue);
       switch (operator) {
         case 'equals': return num === Number(value);
+        case 'notEquals': return num !== Number(value);
         case 'greaterThan': return num > Number(value);
+        case 'greaterThanOrEqual': return num >= Number(value);
         case 'lessThan': return num < Number(value);
+        case 'lessThanOrEqual': return num <= Number(value);
         case 'between':
           return Array.isArray(value) && num >= Number(value[0]) && num <= Number(value[1]);
+        default: return true;
+      }
+    }
+    case 'date': {
+      const cellDate = new Date(cellValue);
+      const filterDate = new Date(value);
+      switch (operator) {
+        case 'equals': return cellDate.toDateString() === filterDate.toDateString();
+        case 'notEquals': return cellDate.toDateString() !== filterDate.toDateString();
+        case 'before': return cellDate < filterDate;
+        case 'after': return cellDate > filterDate;
+        case 'between':
+          return Array.isArray(value) && cellDate >= new Date(value[0]) && cellDate <= new Date(value[1]);
         default: return true;
       }
     }
