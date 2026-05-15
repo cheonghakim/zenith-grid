@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGrid } from '../src/index.js';
-import { uppercaseTeamPlugin } from '../src/plugins/index.js';
+import { createContextMenuPlugin, uppercaseTeamPlugin } from '../src/plugins/index.js';
 
 function flush() {
   return new Promise((resolve) => setTimeout(resolve, 0));
@@ -80,6 +80,33 @@ describe('GridCore DOM smoke', () => {
     await flush();
 
     expect(grid.getRows()[0].team).toBe('RED');
+
+    grid.destroy();
+  });
+
+  it('accepts a selector string container and keeps grid accessibility metadata in sync', async () => {
+    const host = document.createElement('div');
+    host.id = 'grid-host';
+    document.body.appendChild(host);
+
+    const grid = createGrid('#grid-host', {
+      rowKey: 'id',
+      rows: [
+        { id: 1, name: 'Alpha', team: 'Red' },
+        { id: 2, name: 'Beta', team: 'Blue' },
+      ],
+      columns: [
+        { id: 'name', field: 'name', headerName: 'Name', width: 180 },
+        { id: 'team', field: 'team', headerName: 'Team', width: 140 },
+      ],
+    });
+
+    await flush();
+    await flush();
+
+    expect(host.getAttribute('role')).toBe('grid');
+    expect(host.getAttribute('aria-rowcount')).toBe('2');
+    expect(host.getAttribute('aria-colcount')).toBe('3');
 
     grid.destroy();
   });
@@ -230,6 +257,191 @@ describe('GridCore DOM smoke', () => {
     await flush();
 
     expect(document.body.querySelector('.ag-header-filter-popover')).not.toBeNull();
+
+    grid.destroy();
+  });
+
+  it('renders custom loading, empty, and error overlays', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const fetchPage = vi.fn()
+      .mockResolvedValueOnce({ rows: [], totalCount: 0 })
+      .mockRejectedValueOnce(new Error('remote failed'));
+
+    const grid = createGrid(host, {
+      rowKey: 'id',
+      columns: [
+        { id: 'name', field: 'name', headerName: 'Name', width: 160 },
+      ],
+      rows: [],
+      displayMode: 'paginated',
+      pagination: {
+        mode: 'server',
+        pageSize: 10,
+        fetchPage,
+      },
+      renderLoadingState: ({ kind }) => {
+        const el = document.createElement('div');
+        el.dataset.overlayKind = kind;
+        el.textContent = 'loading overlay';
+        return el;
+      },
+      renderEmptyState: ({ kind }) => {
+        const el = document.createElement('div');
+        el.dataset.overlayKind = kind;
+        el.textContent = 'empty overlay';
+        return el;
+      },
+      renderErrorState: ({ kind }) => {
+        const el = document.createElement('div');
+        el.dataset.overlayKind = kind;
+        el.textContent = 'error overlay';
+        return el;
+      },
+    });
+
+    await vi.waitFor(() => {
+      expect(fetchPage).toHaveBeenCalledTimes(1);
+      expect(host.querySelector('[data-overlay-kind="empty"]')).not.toBeNull();
+    });
+
+    fetchPage.mockRejectedValueOnce(new Error('retry failed'));
+    await grid._loadServerPage(1, 10);
+
+    await vi.waitFor(() => {
+      expect(host.querySelector('[data-overlay-kind="error"]')).not.toBeNull();
+      expect(host.querySelector('.ag-overlay-action')?.textContent).toBe('Retry');
+    });
+
+    grid.destroy();
+  });
+
+  it('supports basic keyboard navigation between header and cells', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+
+    const grid = createGrid(host, {
+      rowKey: 'id',
+      rows: [
+        { id: 1, name: 'Alpha', team: 'Red' },
+        { id: 2, name: 'Beta', team: 'Blue' },
+      ],
+      columns: [
+        { id: 'name', field: 'name', headerName: 'Name', width: 160 },
+        { id: 'team', field: 'team', headerName: 'Team', width: 140 },
+      ],
+    });
+
+    await flush();
+    await flush();
+
+    const firstHeader = host.querySelector('[data-grid-focusable="header"][data-col-index="0"]');
+    expect(firstHeader).not.toBeNull();
+
+    firstHeader.focus();
+    grid._moveHeaderFocus(firstHeader, 'ArrowDown', { preventDefault() {} });
+    await flush();
+    expect(document.activeElement?.getAttribute('data-grid-focusable')).toBe('cell');
+    expect(document.activeElement?.getAttribute('data-row-index')).toBe('0');
+    expect(document.activeElement?.getAttribute('data-col-index')).toBe('0');
+
+    grid._moveCellFocus(document.activeElement, 'ArrowRight', { preventDefault() {} });
+    await flush();
+    expect(document.activeElement?.getAttribute('data-col-index')).toBe('1');
+
+    grid._moveCellFocus(document.activeElement, 'ArrowDown', { preventDefault() {} });
+    await flush();
+    expect(document.activeElement?.getAttribute('data-row-index')).toBe('1');
+
+    grid._moveCellFocus(document.activeElement, 'ArrowUp', { preventDefault() {} });
+    await flush();
+    expect(document.activeElement?.getAttribute('data-row-index')).toBe('0');
+    expect(document.activeElement?.getAttribute('data-col-index')).toBe('1');
+
+    grid._moveCellFocus(document.activeElement, 'ArrowLeft', { preventDefault() {} });
+    await flush();
+    expect(document.activeElement?.getAttribute('data-col-index')).toBe('0');
+
+    grid._moveCellFocus(document.activeElement, 'ArrowUp', { preventDefault() {} });
+    await flush();
+    expect(document.activeElement?.getAttribute('data-grid-focusable')).toBe('header');
+
+    grid.destroy();
+  });
+
+  it('keeps filter popovers scoped to the correct grid and closes them on escape', async () => {
+    const firstHost = document.createElement('div');
+    const secondHost = document.createElement('div');
+    document.body.append(firstHost, secondHost);
+
+    const options = {
+      rowKey: 'id',
+      rows: [{ id: 1, name: 'Alpha' }],
+      columns: [{ id: 'name', field: 'name', headerName: 'Name', width: 160 }],
+    };
+
+    const firstGrid = createGrid(firstHost, options);
+    const secondGrid = createGrid(secondHost, options);
+
+    await flush();
+    await flush();
+
+    secondHost.querySelector('.ag-header-filter-button')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flush();
+
+    const popover = document.body.querySelector('.ag-header-filter-popover');
+    expect(popover).not.toBeNull();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await flush();
+
+    expect(document.body.querySelector('.ag-header-filter-popover')).toBeNull();
+
+    firstGrid.destroy();
+    secondGrid.destroy();
+  });
+
+  it('exports visible rows to csv and supports context-menu plugins', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const menuPlugin = createContextMenuPlugin({
+      getItems: ({ row }) => [
+        {
+          label: `Inspect ${row.name}`,
+          onSelect: () => {},
+        },
+      ],
+    });
+
+    const grid = createGrid(host, {
+      rowKey: 'id',
+      rows: [
+        { id: 1, name: 'Alpha', team: 'Red' },
+        { id: 2, name: 'Beta', team: 'Blue' },
+      ],
+      columns: [
+        { id: 'name', field: 'name', headerName: 'Name', width: 160 },
+        { id: 'team', field: 'team', headerName: 'Team', width: 140 },
+      ],
+      plugins: [menuPlugin],
+    });
+
+    await flush();
+    await flush();
+
+    const csv = grid.exportCsv({ scope: 'all', columns: ['name', 'team'] });
+    expect(csv).toContain('Name,Team');
+    expect(csv).toContain('Alpha,Red');
+
+    host.querySelector('.ag-cell[data-col-id="name"]')?.dispatchEvent(new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      clientX: 120,
+      clientY: 80,
+    }));
+    await flush();
+
+    expect(document.body.querySelector('.ag-context-menu-item')?.textContent).toContain('Inspect Alpha');
 
     grid.destroy();
   });

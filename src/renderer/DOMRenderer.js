@@ -4,15 +4,21 @@ export class DOMRenderer {
     this._options = options;
     this._els = {};
     this._built = false;
+    this._overlayActionHandler = null;
   }
 
   build() {
     if (this._built) return;
 
     this._container.classList.add('ag-root');
+    this._container.setAttribute('role', 'grid');
+    this._container.setAttribute('aria-rowcount', '0');
+    this._container.setAttribute('aria-colcount', '0');
+    this._container.setAttribute('aria-busy', 'false');
     this._container.innerHTML = '';
 
     const header = this._createElement('div', 'ag-header');
+    header.setAttribute('role', 'rowgroup');
     const headerLeft = this._createElement('div', 'ag-header-left-pinned');
     const headerCenterViewport = this._createElement('div', 'ag-header-center-viewport');
     const headerCenterContainer = this._createElement('div', 'ag-header-center-container');
@@ -24,12 +30,15 @@ export class DOMRenderer {
     header.appendChild(headerRight);
 
     const bodyViewport = this._createElement('div', 'ag-body-viewport');
+    bodyViewport.setAttribute('role', 'presentation');
     const body = this._createElement('div', 'ag-body');
+    body.setAttribute('role', 'rowgroup');
     const bodyLeft = this._createElement('div', 'ag-body-left-pinned');
     const bodyCenterViewport = this._createElement('div', 'ag-body-center-viewport');
     const bodyCenterContainer = this._createElement('div', 'ag-body-center-container');
     const spacerTop = this._createElement('div', 'ag-virtual-spacer-top');
     const rows = this._createElement('div', 'ag-rows');
+    rows.setAttribute('role', 'presentation');
     const spacerBottom = this._createElement('div', 'ag-virtual-spacer-bottom');
     const bodyRight = this._createElement('div', 'ag-body-right-pinned');
 
@@ -55,6 +64,28 @@ export class DOMRenderer {
     const footer = this._createElement('div', 'ag-footer');
     const overlay = this._createElement('div', 'ag-overlay');
     overlay.style.display = 'none';
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    const overlayCard = this._createElement('div', 'ag-overlay-card');
+    const overlayTitle = this._createElement('strong', 'ag-overlay-title');
+    const overlayMessage = this._createElement('p', 'ag-overlay-message');
+    const overlayCustom = this._createElement('div', 'ag-overlay-custom');
+    overlayCustom.style.display = 'none';
+    const overlayAction = this._createElement('button', 'ag-overlay-action');
+    overlayAction.type = 'button';
+    overlayAction.style.display = 'none';
+    const overlaySkeleton = this._createElement('div', 'ag-overlay-skeleton');
+    overlaySkeleton.style.display = 'none';
+    for (let index = 0; index < 5; index += 1) {
+      const line = this._createElement('span', 'ag-overlay-skeleton-line');
+      overlaySkeleton.appendChild(line);
+    }
+    overlayCard.appendChild(overlayTitle);
+    overlayCard.appendChild(overlayMessage);
+    overlayCard.appendChild(overlayCustom);
+    overlayCard.appendChild(overlaySkeleton);
+    overlayCard.appendChild(overlayAction);
+    overlay.appendChild(overlayCard);
     const banner = this._createElement('div', 'ag-live-banner');
     banner.style.display = 'none';
     const sidePanel = this._createElement('div', 'ag-side-panel-host');
@@ -84,6 +115,12 @@ export class DOMRenderer {
       spacerTop,
       spacerBottom,
       overlay,
+      overlayCard,
+      overlayTitle,
+      overlayMessage,
+      overlayCustom,
+      overlayAction,
+      overlaySkeleton,
       banner,
       footer,
       sidePanel,
@@ -107,19 +144,91 @@ export class DOMRenderer {
     this._els.bodyRight.style.width = '0px';
   }
 
-  showLoading(message = 'Loading data...') {
-    this._els.overlay.style.display = 'flex';
-    this._els.overlay.textContent = message;
+  showLoading(message = 'Loading data...', options = {}) {
+    this.showOverlay({
+      kind: 'loading',
+      title: options.title ?? this._getLocaleText('grid.loading.title', 'Loading'),
+      message,
+      showSkeleton: options.showSkeleton ?? false,
+      content: options.content ?? null,
+    });
   }
 
-  showEmpty(message = 'No rows available.') {
-    this._els.overlay.style.display = 'flex';
-    this._els.overlay.textContent = message;
+  showEmpty(message = 'No rows available.', options = {}) {
+    this.showOverlay({
+      kind: 'empty',
+      title: options.title ?? this._getLocaleText('grid.empty.title', 'No Data'),
+      message,
+      content: options.content ?? null,
+    });
+  }
+
+  showError(message = 'Something went wrong.', options = {}) {
+    this.showOverlay({
+      kind: 'error',
+      title: options.title ?? this._getLocaleText('grid.error.title', 'Something Went Wrong'),
+      message,
+      actionLabel: options.actionLabel ?? null,
+      onAction: options.onAction ?? null,
+      content: options.content ?? null,
+    });
+  }
+
+  showOverlay({
+    kind = 'info',
+    title = '',
+    message = '',
+    actionLabel = null,
+    onAction = null,
+    showSkeleton = false,
+    content = null,
+  } = {}) {
+    const overlay = this._els.overlay;
+    const action = this._els.overlayAction;
+    overlay.style.display = 'flex';
+    overlay.dataset.kind = kind;
+    overlay.setAttribute('aria-live', kind === 'error' ? 'assertive' : 'polite');
+    this._container.setAttribute('aria-busy', kind === 'loading' ? 'true' : 'false');
+    this._els.overlayTitle.textContent = title;
+    this._els.overlayMessage.textContent = message;
+    this._els.overlayCustom.innerHTML = '';
+    this._els.overlayCustom.style.display = content ? 'block' : 'none';
+    if (content instanceof HTMLElement) {
+      this._els.overlayCustom.appendChild(content);
+    } else if (content != null) {
+      this._els.overlayCustom.innerHTML = String(content);
+    }
+    this._els.overlaySkeleton.style.display = showSkeleton ? 'grid' : 'none';
+    if (this._overlayActionHandler) {
+      action.removeEventListener('click', this._overlayActionHandler);
+      this._overlayActionHandler = null;
+    }
+    if (actionLabel && typeof onAction === 'function') {
+      action.textContent = actionLabel;
+      action.style.display = 'inline-flex';
+      this._overlayActionHandler = onAction;
+      action.addEventListener('click', this._overlayActionHandler);
+    } else {
+      action.style.display = 'none';
+      action.textContent = '';
+    }
   }
 
   hideOverlay() {
     this._els.overlay.style.display = 'none';
-    this._els.overlay.textContent = '';
+    this._els.overlay.dataset.kind = '';
+    this._els.overlayTitle.textContent = '';
+    this._els.overlayMessage.textContent = '';
+    this._els.overlayCustom.innerHTML = '';
+    this._els.overlayCustom.style.display = 'none';
+    this._els.overlaySkeleton.style.display = 'none';
+    this._els.overlayAction.style.display = 'none';
+    this._els.overlayAction.textContent = '';
+    if (this._overlayActionHandler) {
+      this._els.overlayAction.removeEventListener('click', this._overlayActionHandler);
+      this._overlayActionHandler = null;
+    }
+    this._container.setAttribute('aria-busy', 'false');
   }
 
   showLiveBanner(message, onClick) {
@@ -245,9 +354,22 @@ export class DOMRenderer {
   destroy() {
     clearTimeout(this._loaderHideTimer);
     this._loaderHideTimer = null;
+    if (this._overlayActionHandler && this._els.overlayAction) {
+      this._els.overlayAction.removeEventListener('click', this._overlayActionHandler);
+    }
+    this._overlayActionHandler = null;
     this._container.innerHTML = '';
     this._container.classList.remove('ag-root');
+    this._container.removeAttribute('role');
+    this._container.removeAttribute('aria-rowcount');
+    this._container.removeAttribute('aria-colcount');
+    this._container.removeAttribute('aria-busy');
     this._els = {};
     this._built = false;
+  }
+
+  setAccessibilityMeta({ rowCount = 0, colCount = 0 } = {}) {
+    this._container.setAttribute('aria-rowcount', String(Math.max(0, rowCount)));
+    this._container.setAttribute('aria-colcount', String(Math.max(0, colCount)));
   }
 }

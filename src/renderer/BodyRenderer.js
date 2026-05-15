@@ -53,6 +53,9 @@ export class BodyRenderer {
       const rowElement = document.createElement('div');
       rowElement.className = 'ag-row';
       rowElement.dataset.rowKey = row._rowKey;
+      rowElement.dataset.rowIndex = String(index - startIndex);
+      rowElement.setAttribute('role', 'row');
+      rowElement.setAttribute('aria-rowindex', String(index + 1));
       this._applyClassNames(rowElement, this._options.getRowClassName?.(row));
       this._applyInlineStyles(rowElement, this._options.getRowStyle?.(row));
 
@@ -79,6 +82,9 @@ export class BodyRenderer {
       rowElement.addEventListener('click', (event) => {
         this._options.onRowClick?.({ row, event });
       });
+      rowElement.addEventListener('contextmenu', (event) => {
+        this._options.onRowContextMenu?.({ row, event });
+      });
 
       if (row._type === 'group-header') {
         rowElement.classList.add('ag-row-group');
@@ -91,12 +97,15 @@ export class BodyRenderer {
           rowElement.classList.add('ag-row-tree');
         }
 
+        let colIndex = 0;
         if (this._options.selectionEnabled) {
-          rowElement.appendChild(this._createSelectionCell(row));
+          rowElement.appendChild(this._createSelectionCell(row, index - startIndex, colIndex));
+          colIndex += 1;
         }
 
         for (const { def, state } of pinnedGroups.left) {
-          rowElement.appendChild(this._createDataCell(row, def, state, stickyMeta.get(def.id)));
+          rowElement.appendChild(this._createDataCell(row, def, state, stickyMeta.get(def.id), index - startIndex, colIndex));
+          colIndex += 1;
         }
 
         if (centerSlice.leadingSpacer > 0) {
@@ -104,7 +113,8 @@ export class BodyRenderer {
         }
 
         for (const { def, state } of centerSlice.columns) {
-          rowElement.appendChild(this._createDataCell(row, def, state));
+          rowElement.appendChild(this._createDataCell(row, def, state, null, index - startIndex, colIndex));
+          colIndex += 1;
         }
 
         if (centerSlice.trailingSpacer > 0) {
@@ -112,7 +122,8 @@ export class BodyRenderer {
         }
 
         for (const { def, state } of pinnedGroups.right) {
-          rowElement.appendChild(this._createDataCell(row, def, state, stickyMeta.get(def.id)));
+          rowElement.appendChild(this._createDataCell(row, def, state, stickyMeta.get(def.id), index - startIndex, colIndex));
+          colIndex += 1;
         }
       }
 
@@ -211,18 +222,25 @@ export class BodyRenderer {
     this._lastRenderAt = now;
   }
 
-  _createSelectionCell(row) {
+  _createSelectionCell(row, rowIndex, colIndex) {
     const width = this._options.selectionColumnWidth ?? 44;
     const cell = document.createElement('div');
     cell.className = 'ag-cell ag-selection-cell ag-cell-pinned';
+    cell.setAttribute('role', 'gridcell');
     cell.style.width = `${width}px`;
     cell.style.minWidth = `${width}px`;
     cell.style.left = '0px';
     cell.style.zIndex = '5';
+    cell.setAttribute('aria-colindex', String(colIndex + 1));
+    cell.dataset.gridFocusable = 'cell';
+    cell.dataset.rowIndex = String(rowIndex);
+    cell.dataset.colIndex = String(colIndex);
+    cell.tabIndex = 0;
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.className = 'ag-selection-checkbox';
+    checkbox.setAttribute('aria-label', `Select row ${row._rowKey}`);
     checkbox.checked = this._options.selectionManager?.isRowChecked?.(row) ?? false;
     checkbox.indeterminate = this._options.selectionManager?.isRowIndeterminate?.(row) ?? false;
     checkbox.disabled = this._options.isRowSelectable?.(row) === false;
@@ -330,10 +348,16 @@ export class BodyRenderer {
     return cell;
   }
 
-  _createDataCell(row, def, state, stickyStyle = null) {
+  _createDataCell(row, def, state, stickyStyle = null, rowIndex = 0, colIndex = 0) {
     const cell = document.createElement('div');
     cell.className = 'ag-cell';
     cell.dataset.colId = def.id;
+    cell.dataset.gridFocusable = 'cell';
+    cell.dataset.rowIndex = String(rowIndex);
+    cell.dataset.colIndex = String(colIndex);
+    cell.setAttribute('role', 'gridcell');
+    cell.setAttribute('aria-colindex', String(colIndex + 1));
+    cell.tabIndex = 0;
     cell.style.width = `${state.width}px`;
     cell.style.minWidth = `${state.width}px`;
     cell.style.textAlign = def.align ?? 'left';
@@ -398,6 +422,10 @@ export class BodyRenderer {
     cell.addEventListener('click', (event) => {
       event.stopPropagation();
       this._options.onCellClick?.({ row, colId: def.id, value, event });
+    });
+    cell.addEventListener('contextmenu', (event) => {
+      event.stopPropagation();
+      this._options.onCellContextMenu?.({ row, colId: def.id, value, event });
     });
 
     this._options.hooks?.afterCellRender?.({ row, def, state, cell, value });

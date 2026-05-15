@@ -27,6 +27,66 @@ export interface GridCellRenderContext<Row = GridRow> {
   value: any;
 }
 
+export interface GridOverlayRenderContext {
+  kind: 'loading' | 'empty' | 'error';
+  message?: string;
+  error?: unknown;
+}
+
+export interface RowContextMenuPayload<Row = GridRow> {
+  row: Row;
+  event: MouseEvent;
+}
+
+export interface CellContextMenuPayload<Row = GridRow> {
+  row: Row;
+  colId: string;
+  value: any;
+  event: MouseEvent;
+}
+
+export interface CsvExportOptions {
+  delimiter?: string;
+  includeHeaders?: boolean;
+  includeHidden?: boolean;
+  onlySelected?: boolean;
+  scope?: 'displayed' | 'flat' | 'all';
+  columns?: string[];
+  fileName?: string;
+}
+
+export interface ContextMenuItem<Row = GridRow> {
+  label: string;
+  disabled?: boolean;
+  onSelect?: ((payload: {
+    type: 'row' | 'cell';
+    row: Row;
+    colId?: string;
+    value?: any;
+    event: MouseEvent;
+    core: GridCore<Row>;
+  }) => void) | null;
+}
+
+export interface ContextMenuPluginOptions<Row = GridRow> {
+  name?: string;
+  getItems?: ((payload: {
+    type: 'row' | 'cell';
+    row: Row;
+    colId?: string;
+    value?: any;
+    event: MouseEvent;
+    core: GridCore<Row>;
+  }) => ContextMenuItem<Row>[]) | null;
+}
+
+export interface CsvShortcutPluginOptions {
+  name?: string;
+  key?: string;
+  fileName?: string;
+  exportOptions?: CsvExportOptions;
+}
+
 export interface GridHooks<Row = GridRow> {
   beforeRowRender?: ((context: GridRowRenderContext<Row>) => void) | null;
   afterRowRender?: ((context: GridRowRenderContext<Row>) => void) | null;
@@ -196,7 +256,14 @@ export interface GridOptions<Row = GridRow> {
   liveUpdates?: LiveUpdatesOptions;
   tree?: TreeOptions<Row>;
   onLoadChildren?: TreeOptions<Row>['onLoadChildren'];
+  onRowClick?: ((payload: { row: Row; event: MouseEvent }) => void) | null;
+  onCellClick?: ((payload: { row: Row; colId: string; value: any; event: MouseEvent }) => void) | null;
+  onRowContextMenu?: ((payload: RowContextMenuPayload<Row>) => void) | null;
+  onCellContextMenu?: ((payload: CellContextMenuPayload<Row>) => void) | null;
   emptyMessage?: string;
+  renderLoadingState?: ((context: GridOverlayRenderContext) => HTMLElement | string | null | undefined) | null;
+  renderEmptyState?: ((context: GridOverlayRenderContext) => HTMLElement | string | null | undefined) | null;
+  renderErrorState?: ((context: GridOverlayRenderContext) => HTMLElement | string | null | undefined) | null;
   columnState?: any;
   columnStatePersistence?: Record<string, any>;
 }
@@ -275,6 +342,8 @@ export declare class GridCore<Row = GridRow> {
   setLiveRowAnimationEnabled(enabled: boolean): void;
   isLiveRowAnimationEnabled(): boolean;
   setLocale(locale: Record<string, any>): void;
+  exportCsv(options?: CsvExportOptions): string;
+  downloadCsv(options?: CsvExportOptions): string;
   saveColumnState(): Promise<void>;
   loadColumnState(): Promise<void>;
   clearColumnState(): Promise<void>;
@@ -297,7 +366,9 @@ export declare class InfiniteScrollManager<Row = GridRow> {}
 export declare class LiveUpdateManager<Row = GridRow> {}
 export declare class PluginManager<Row = GridRow> {}
 
-export declare function createGrid<Row = GridRow>(container: HTMLElement, options?: GridOptions<Row>): GridCore<Row>;
+export declare function createGrid<Row = GridRow>(container: HTMLElement | string, options?: GridOptions<Row>): GridCore<Row>;
 
 export declare const uppercaseTeamPlugin: GridPlugin;
 export declare const scorePrefixPlugin: GridPlugin;
+export declare function createContextMenuPlugin<Row = GridRow>(options?: ContextMenuPluginOptions<Row>): GridPlugin<Row>;
+export declare function createCsvShortcutPlugin(options?: CsvShortcutPluginOptions): GridPlugin;

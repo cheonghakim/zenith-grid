@@ -46,13 +46,18 @@ const columns = [
   { id: 'score', field: 'score', headerName: 'Score', width: 120, align: 'right' },
 ];
 
-const grid = createGrid(document.getElementById('app'), {
+const grid = createGrid('#app', {
   rowKey: 'id',
   columns,
   rows,
   rowHeight: 40,
 });
 ```
+
+팁:
+- `createGrid('#app', options)`처럼 selector 문자열도 바로 받을 수 있습니다.
+- 컨테이너에는 높이가 있어야 가상 스크롤이 제대로 동작합니다.
+- `rowKey`는 중복되지 않는 값을 쓰는 편이 안전합니다.
 
 ### 4. 컬럼 정의
 
@@ -161,7 +166,24 @@ const grid = createGrid(container, {
 });
 ```
 
-### 7. 데이터 제어 API
+### 7. 상태 UI와 접근성 커스터마이즈
+
+로딩, 빈 상태, 에러 상태를 각각 따로 렌더링할 수 있습니다.
+
+```js
+const grid = createGrid('#app', {
+  rowKey: 'id',
+  columns,
+  rows: [],
+  renderLoadingState: () => '<div>불러오는 중...</div>',
+  renderEmptyState: () => '<div>표시할 데이터가 없습니다.</div>',
+  renderErrorState: ({ message }) => `<div>오류: ${message}</div>`,
+});
+```
+
+HighGrid는 기본적으로 `role="grid"`와 셀/헤더 포커스 이동을 제공합니다. 키보드 사용자는 방향키로 헤더와 셀 사이를 이동할 수 있습니다.
+
+### 8. 데이터 제어 API
 
 ```js
 grid.setRows(rows);
@@ -172,7 +194,7 @@ grid.upsertRows([{ id: 2, score: 1111 }, { id: 4, name: 'Dave' }]);
 grid.removeRows([4]);
 ```
 
-### 8. 정렬 / 필터 / 선택
+### 9. 정렬 / 필터 / 선택
 
 ```js
 grid.sortBy([
@@ -192,7 +214,7 @@ grid.toggleSelectAll();
 grid.setRowSelected(1, true);
 ```
 
-### 9. 그룹핑과 트리
+### 10. 그룹핑과 트리
 
 ```js
 grid.enableGrouping(['team']);
@@ -213,7 +235,7 @@ grid.collapseAllTree();
 grid.disableTree();
 ```
 
-### 10. 페이징과 무한 스크롤
+### 11. 페이징과 무한 스크롤
 
 클라이언트 모드:
 
@@ -255,7 +277,7 @@ const grid = createGrid(container, {
 });
 ```
 
-### 11. 라이브 업데이트
+### 12. 라이브 업데이트
 
 ```js
 grid.liveAddRows([{ id: 1001, name: 'Live Row' }]);
@@ -294,15 +316,65 @@ grid.on('state-change', ({ type }) => {
 });
 ```
 
-### 13. 플러그인
+### 13. CSV 내보내기와 컨텍스트 메뉴
+
+현재 보이는 데이터, 전체 데이터, 선택된 행만 CSV로 내보낼 수 있습니다.
+
+```js
+const csv = grid.exportCsv({
+  scope: 'displayed',
+  columns: ['name', 'team', 'score'],
+});
+
+grid.downloadCsv({
+  scope: 'all',
+  fileName: 'operators.csv',
+});
+```
+
+행/셀 우클릭 이벤트도 바로 받을 수 있습니다.
+
+```js
+const grid = createGrid('#app', {
+  rowKey: 'id',
+  columns,
+  rows,
+  onCellContextMenu: ({ row, colId, event }) => {
+    event.preventDefault();
+    console.log('context menu', row, colId);
+  },
+});
+```
+
+### 14. 플러그인
 
 내장 플러그인은 `uppercaseTeamPlugin`, `scorePrefixPlugin`가 있습니다.
 
 ```js
-import { createGrid, uppercaseTeamPlugin } from 'highgrid';
+import {
+  createGrid,
+  uppercaseTeamPlugin,
+  createContextMenuPlugin,
+  createCsvShortcutPlugin,
+} from 'highgrid';
 
 grid.usePlugin(uppercaseTeamPlugin);
 grid.unusePlugin('uppercase-team');
+
+grid.usePlugin(createCsvShortcutPlugin({
+  fileName: 'operators.csv',
+}));
+
+grid.usePlugin(createContextMenuPlugin({
+  getItems: ({ row, core }) => [
+    {
+      label: `Export ${row.name}`,
+      onSelect: () => {
+        core.downloadCsv({ scope: 'all', fileName: `${row.name}.csv` });
+      },
+    },
+  ],
+}));
 ```
 
 커스텀 플러그인은 hook 기반 객체로 만들 수 있습니다.
@@ -324,7 +396,7 @@ const myPlugin = {
 };
 ```
 
-### 14. 컬럼 상태 저장
+### 15. 컬럼 상태 저장
 
 `tableId`를 주면 컬럼 너비/가시성/핀 상태를 저장하고 다시 불러올 수 있습니다.
 
@@ -334,7 +406,7 @@ await grid.loadColumnState();
 await grid.clearColumnState();
 ```
 
-### 15. 컬럼 런타임 제어
+### 16. 컬럼 런타임 제어
 
 ```js
 grid.setColumnVisible('score', false);
@@ -346,7 +418,7 @@ const allCols = grid.getAllLeafColumns();
 const visibleCols = grid.getVisibleLeafColumns();
 ```
 
-### 16. 가변 행 높이
+### 17. 가변 행 높이
 
 ```js
 const grid = createGrid(container, {
@@ -361,7 +433,7 @@ const grid = createGrid(container, {
 });
 ```
 
-### 17. 헤더 그룹 (컬럼 묶기)
+### 18. 헤더 그룹 (컬럼 묶기)
 
 ```js
 const columns = [
@@ -553,13 +625,18 @@ const columns = [
   { id: 'score', field: 'score', headerName: 'Score', width: 120, align: 'right' },
 ];
 
-const grid = createGrid(document.getElementById('app'), {
+const grid = createGrid('#app', {
   rowKey: 'id',
   columns,
   rows,
   rowHeight: 40,
 });
 ```
+
+Tips:
+- You can pass a selector string directly, like `createGrid('#app', options)`.
+- Give the container an explicit height for virtual scrolling.
+- Use a stable and unique `rowKey` whenever possible.
 
 ### 4. Column Definitions
 
@@ -666,7 +743,22 @@ const grid = createGrid(container, {
 });
 ```
 
-### 7. Data Mutation API
+### 7. Overlay States and Accessibility
+
+```js
+const grid = createGrid('#app', {
+  rowKey: 'id',
+  columns,
+  rows: [],
+  renderLoadingState: () => '<div>Loading...</div>',
+  renderEmptyState: () => '<div>No rows yet.</div>',
+  renderErrorState: ({ message }) => `<div>Error: ${message}</div>`,
+});
+```
+
+HighGrid ships with a default `role="grid"` structure and basic arrow-key navigation between headers and cells.
+
+### 8. Data Mutation API
 
 ```js
 grid.setRows(rows);
@@ -677,7 +769,7 @@ grid.upsertRows([{ id: 2, score: 1111 }, { id: 4, name: 'Dave' }]);
 grid.removeRows([4]);
 ```
 
-### 8. Sorting, Filtering, Selection
+### 9. Sorting, Filtering, Selection
 
 ```js
 grid.sortBy([
@@ -697,7 +789,7 @@ grid.toggleSelectAll();
 grid.setRowSelected(1, true);
 ```
 
-### 9. Grouping and Tree Data
+### 10. Grouping and Tree Data
 
 ```js
 grid.enableGrouping(['team']);
@@ -718,7 +810,7 @@ grid.collapseAllTree();
 grid.disableTree();
 ```
 
-### 10. Pagination and Infinite Scroll
+### 11. Pagination and Infinite Scroll
 
 Client mode:
 
@@ -760,7 +852,7 @@ const grid = createGrid(container, {
 });
 ```
 
-### 11. Live Updates
+### 12. Live Updates
 
 ```js
 grid.liveAddRows([{ id: 1001, name: 'Live Row' }]);
@@ -775,7 +867,7 @@ grid.setLiveMaxRows(2000);
 grid.setLiveRowAnimationEnabled(true);
 ```
 
-### 12. Events
+### 13. Events
 
 ```js
 grid.on('render', (payload) => {
@@ -799,15 +891,61 @@ grid.on('state-change', ({ type }) => {
 });
 ```
 
-### 13. Plugins
+### 14. CSV Export and Context Menus
+
+```js
+const csv = grid.exportCsv({
+  scope: 'displayed',
+  columns: ['name', 'team', 'score'],
+});
+
+grid.downloadCsv({
+  scope: 'all',
+  fileName: 'operators.csv',
+});
+```
+
+```js
+const grid = createGrid('#app', {
+  rowKey: 'id',
+  columns,
+  rows,
+  onCellContextMenu: ({ row, colId, event }) => {
+    event.preventDefault();
+    console.log('context menu', row, colId);
+  },
+});
+```
+
+### 15. Plugins
 
 Built-in plugins include `uppercaseTeamPlugin` and `scorePrefixPlugin`.
 
 ```js
-import { createGrid, uppercaseTeamPlugin } from 'highgrid';
+import {
+  createGrid,
+  uppercaseTeamPlugin,
+  createContextMenuPlugin,
+  createCsvShortcutPlugin,
+} from 'highgrid';
 
 grid.usePlugin(uppercaseTeamPlugin);
 grid.unusePlugin('uppercase-team');
+
+grid.usePlugin(createCsvShortcutPlugin({
+  fileName: 'operators.csv',
+}));
+
+grid.usePlugin(createContextMenuPlugin({
+  getItems: ({ row, core }) => [
+    {
+      label: `Export ${row.name}`,
+      onSelect: () => {
+        core.downloadCsv({ scope: 'all', fileName: `${row.name}.csv` });
+      },
+    },
+  ],
+}));
 ```
 
 You can also create custom hook-based plugins.
@@ -829,7 +967,7 @@ const myPlugin = {
 };
 ```
 
-### 14. Persisting Column State
+### 16. Persisting Column State
 
 When `tableId` is provided, HighGrid can persist and restore column width, visibility, and pin state.
 
@@ -839,7 +977,7 @@ await grid.loadColumnState();
 await grid.clearColumnState();
 ```
 
-### 15. Column Runtime API
+### 17. Column Runtime API
 
 ```js
 grid.setColumnVisible('score', false);
@@ -851,7 +989,7 @@ const allCols = grid.getAllLeafColumns();
 const visibleCols = grid.getVisibleLeafColumns();
 ```
 
-### 16. Variable Row Height
+### 18. Variable Row Height
 
 ```js
 const grid = createGrid(container, {
@@ -863,7 +1001,7 @@ const grid = createGrid(container, {
 });
 ```
 
-### 17. Header Groups
+### 19. Header Groups
 
 ```js
 const columns = [

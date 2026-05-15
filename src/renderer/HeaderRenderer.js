@@ -10,6 +10,7 @@ export class HeaderRenderer {
     this._filterPopover = null;
     this._openFilterColId = null;
     this._handleDocumentPointerDown = this._handleDocumentPointerDown.bind(this);
+    this._handleViewportReposition = this._positionFilterPopover.bind(this);
   }
 
   render(rangeBundle = null) {
@@ -54,6 +55,7 @@ export class HeaderRenderer {
     // ── Single-level (original code) ──────────────────────────
     const row = document.createElement('div');
     row.className = 'ag-header-row';
+    row.setAttribute('role', 'row');
 
     if (pinArea === 'left' && this._options.selectionEnabled) {
       row.appendChild(this._createSelectionHeaderCell());
@@ -110,6 +112,7 @@ export class HeaderRenderer {
     for (let depthIdx = 0; depthIdx < totalDepths; depthIdx++) {
       const row = document.createElement('div');
       row.className = 'ag-header-row ag-header-row-depth';
+      row.setAttribute('role', 'row');
 
       if (pinArea === 'left' && this._options.selectionEnabled) {
         if (depthIdx === 0) {
@@ -236,6 +239,7 @@ export class HeaderRenderer {
 
     const domCell = document.createElement('div');
     domCell.className = 'ag-header-cell';
+    domCell.setAttribute('role', cell.isGroup ? 'presentation' : 'columnheader');
     domCell.dataset.colId = cell.colId;
     domCell.style.width = `${width}px`;
     domCell.style.minWidth = `${width}px`;
@@ -265,6 +269,8 @@ export class HeaderRenderer {
     button.className = 'ag-header-cell-button';
     button.title = cell.headerName;
     button.style.height = '100%';
+    button.dataset.gridFocusable = 'header';
+    button.dataset.colIndex = String(this._getVisibleColumnIndex(cell.colId));
     button.addEventListener('click', (event) => {
       if (cell.def.sortable === false || this._activeResize) return;
       this._options.onSortClick?.({
@@ -326,6 +332,7 @@ export class HeaderRenderer {
   _buildSingleLevelCell(def, state, index, stickyMeta, allColumns) {
     const cell = document.createElement('div');
     cell.className = 'ag-header-cell';
+    cell.setAttribute('role', 'columnheader');
     cell.dataset.colId = def.id;
     cell.style.width = `${state.width}px`;
     cell.style.minWidth = `${state.width}px`;
@@ -381,6 +388,8 @@ export class HeaderRenderer {
     button.type = 'button';
     button.className = 'ag-header-cell-button';
     button.title = def.headerName;
+    button.dataset.gridFocusable = 'header';
+    button.dataset.colIndex = String(this._getVisibleColumnIndex(def.id));
     button.addEventListener('click', (event) => {
       if (def.sortable === false || this._activeResize) return;
       this._options.onSortClick?.({
@@ -442,6 +451,7 @@ export class HeaderRenderer {
     const width = this._options.selectionColumnWidth ?? 44;
     const cell = document.createElement('div');
     cell.className = 'ag-header-cell ag-header-selection-cell ag-header-cell-pinned';
+    cell.setAttribute('role', 'columnheader');
     cell.style.width = `${width}px`;
     cell.style.minWidth = `${width}px`;
     cell.style.left = '0px';
@@ -450,6 +460,7 @@ export class HeaderRenderer {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.className = 'ag-selection-checkbox';
+    checkbox.setAttribute('aria-label', this._getLocaleText('grid.selection.toggleAll', 'Select all rows'));
     checkbox.checked = Boolean(this._options.isAllSelected?.());
     checkbox.indeterminate = !checkbox.checked && Boolean(this._options.isSomeSelected?.());
     checkbox.addEventListener('change', () => {
@@ -597,6 +608,8 @@ export class HeaderRenderer {
     popover.className = 'ag-header-filter-popover';
     popover.dataset.colId = colId;
     popover.setAttribute('role', 'dialog');
+    popover.setAttribute('aria-modal', 'false');
+    popover.tabIndex = -1;
 
     const meta = this._resolveFilterMeta(def, colId);
     const activeFilter = this._options.getColumnFilter?.(colId);
@@ -697,7 +710,16 @@ export class HeaderRenderer {
     document.body.appendChild(popover);
     this._filterPopover = { element: popover, trigger, anchorCell, colId, def };
     document.addEventListener('pointerdown', this._handleDocumentPointerDown);
+    document.addEventListener('keydown', this._handleDocumentPointerDown);
+    window.addEventListener('resize', this._handleViewportReposition);
+    window.addEventListener('scroll', this._handleViewportReposition, true);
     this._positionFilterPopover();
+    queueMicrotask(() => {
+      const firstFocusable = popover.querySelector('input, select, button');
+      if (firstFocusable instanceof HTMLElement) {
+        firstFocusable.focus();
+      }
+    });
   }
 
   _syncOpenFilterPopover() {
@@ -705,7 +727,7 @@ export class HeaderRenderer {
       return;
     }
 
-    const anchorCell = document.querySelector(`.ag-header-cell[data-col-id="${this._openFilterColId}"]`);
+    const anchorCell = this._dom.getRoot()?.querySelector(`.ag-header-cell[data-col-id="${this._openFilterColId}"]`);
     if (!anchorCell) {
       this._closeFilterPopover();
       return;
@@ -733,6 +755,13 @@ export class HeaderRenderer {
       return;
     }
 
+    if (event instanceof KeyboardEvent) {
+      if (event.key === 'Escape') {
+        this._closeFilterPopover({ restoreFocus: true });
+      }
+      return;
+    }
+
     const target = event.target;
     if (this._filterPopover.element.contains(target) || this._filterPopover.trigger?.contains(target)) {
       return;
@@ -743,12 +772,19 @@ export class HeaderRenderer {
 
   _closeFilterPopover(options = {}) {
     document.removeEventListener('pointerdown', this._handleDocumentPointerDown);
+    document.removeEventListener('keydown', this._handleDocumentPointerDown);
+    window.removeEventListener('resize', this._handleViewportReposition);
+    window.removeEventListener('scroll', this._handleViewportReposition, true);
+    const trigger = this._filterPopover?.trigger;
     if (this._filterPopover?.element) {
       this._filterPopover.element.remove();
     }
     this._filterPopover = null;
     if (!options.preserveOpenId) {
       this._openFilterColId = null;
+    }
+    if (options.restoreFocus && trigger instanceof HTMLElement) {
+      trigger.focus();
     }
   }
 
@@ -863,6 +899,11 @@ export class HeaderRenderer {
       </svg>
     `;
     return span;
+  }
+
+  _getVisibleColumnIndex(colId) {
+    const columns = this._columnModel.getVisibleLeafColumns();
+    return columns.findIndex((column) => column.def.id === colId);
   }
 
   _getLocaleText(key, fallback, params = {}) {

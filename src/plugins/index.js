@@ -46,3 +46,6 @@ export const scorePrefixPlugin = {
     },
   },
 };
+
+export { createContextMenuPlugin } from './contextMenuPlugin.js';
+export { createCsvShortcutPlugin } from './csvShortcutPlugin.js';

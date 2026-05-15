@@ -41,6 +41,8 @@ export class GridCore {
     this._pendingDataStoreRefresh = false;
     this._pendingLiveViewportAdjustment = null;
     this._locale = this._mergeLocale(DEFAULT_LOCALE, options.locale ?? {});
+    this._activeCellColIndex = 0;
+    this._handleKeydown = this._handleKeydown.bind(this);
 
     this._getRowKey = this._createRowKeyGetter(options.rowKey);
     this._pluginManager = new PluginManager(this);
@@ -137,6 +139,17 @@ export class GridCore {
           this._dom.hideInfiniteLoader();
         } else if (payload?.action === 'loadingError') {
           this._dom.hideInfiniteLoader();
+          const message = this.getLocaleText('grid.error.moreRowsFailed', 'Failed to load rows.');
+          this._dom.showError(
+            message,
+            {
+              content: this._renderOverlayState('error', { message, error: payload.error }),
+              actionLabel: this.getLocaleText('grid.error.retry', 'Retry'),
+              onAction: () => {
+                void this._infiniteScrollManager.loadMore();
+              },
+            }
+          );
         }
         this._emitStateChanged('infinite-scroll');
         void this.refresh();
@@ -190,6 +203,7 @@ export class GridCore {
 
     this._dom = new DOMRenderer(container, options);
     this._dom.build();
+    this._dom.getRoot()?.addEventListener('keydown', this._handleKeydown);
     this._settingsPanel = new SettingsPanelRenderer(this._dom, this, {
       quickFilterFields: options.sidePanel?.quickFilterFields ?? [],
       defaultTab: options.sidePanel?.defaultTab ?? 'columns',
@@ -265,6 +279,14 @@ export class GridCore {
         onCellClick: (payload) => {
           this._events.emit('cell-click', payload);
           options.onCellClick?.(payload);
+        },
+        onRowContextMenu: ({ row, event }) => {
+          this._events.emit('row-contextmenu', { row, event });
+          options.onRowContextMenu?.({ row, event });
+        },
+        onCellContextMenu: (payload) => {
+          this._events.emit('cell-contextmenu', payload);
+          options.onCellContextMenu?.(payload);
         },
         onGroupToggle: ({ groupKey, row }) => {
           this._groupManager.toggleGroup(groupKey);
@@ -370,7 +392,17 @@ export class GridCore {
     } catch (error) {
       console.error('[GridCore] Pipeline processing failed:', error);
       if (!this._destroyed && version === this._renderVersion) {
-        this._dom.showEmpty(this._options.emptyMessage ?? this.getLocaleText('grid.empty.processFailed', 'Failed to process data.'));
+        const message = this.getLocaleText('grid.error.processFailed', 'Failed to process data.');
+        this._dom.showError(
+          message,
+          {
+            content: this._renderOverlayState('error', { message, error }),
+            actionLabel: this.getLocaleText('grid.error.retry', 'Retry'),
+            onAction: () => {
+              void this.refresh();
+            },
+          }
+        );
         this._dom.hideInfiniteLoader();
       }
       return;
@@ -392,10 +424,17 @@ export class GridCore {
     this._headerRenderer.render(this._currentRangeBundle);
     this._headerRenderer.updateSortIndicators();
     this._renderFooter();
+    this._dom.setAccessibilityMeta({
+      rowCount: result.totalCount ?? result.displayRows.length,
+      colCount: this._columns.getVisibleLeafColumns().length + (this._options.selectable === false ? 0 : 1),
+    });
 
     if (result.displayRows.length === 0) {
       this._bodyRenderer.clear();
-      this._dom.showEmpty(this._options.emptyMessage ?? this.getLocaleText('grid.empty.noRows', 'No rows available.'));
+      const message = this._options.emptyMessage ?? this.getLocaleText('grid.empty.noRows', 'No rows available.');
+      this._dom.showEmpty(message, {
+        content: this._renderOverlayState('empty', { message }),
+      });
       this._dom.hideInfiniteLoader();
     } else {
       this._dom.hideOverlay();
@@ -813,6 +852,53 @@ export class GridCore {
     void this.refresh();
   }
 
+  exportCsv(options = {}) {
+    const delimiter = options.delimiter ?? ',';
+    const includeHeaders = options.includeHeaders !== false;
+    const columns = this._resolveCsvColumns(options);
+    const rows = this._resolveCsvRows(options);
+    const lines = [];
+
+    if (includeHeaders) {
+      lines.push(columns.map((column) => this._escapeCsvValue(column.def.headerName ?? column.def.header ?? column.def.id, delimiter)).join(delimiter));
+    }
+
+    rows.forEach((row) => {
+      lines.push(columns.map(({ def }) => {
+        const value = row?.[def.field];
+        return this._escapeCsvValue(value, delimiter);
+      }).join(delimiter));
+    });
+
+    const csv = lines.join('\n');
+    this._pluginManager.callHook('afterCsvExport', {
+      csv,
+      rows,
+      columns,
+      options,
+    });
+    return csv;
+  }
+
+  downloadCsv(options = {}) {
+    const csv = this.exportCsv(options);
+    if (typeof document === 'undefined' || typeof Blob === 'undefined' || typeof URL?.createObjectURL !== 'function') {
+      return csv;
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = options.fileName ?? 'highgrid-export.csv';
+    anchor.style.display = 'none';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    return csv;
+  }
+
   getLocaleText(key, fallback, params = {}) {
     const value = key.split('.').reduce((current, part) => current?.[part], this._locale);
     const template = typeof value === 'string' ? value : fallback;
@@ -868,6 +954,7 @@ export class GridCore {
       cancelAnimationFrame(this._rowMeasureFrame);
       this._rowMeasureFrame = null;
     }
+    this._dom.getRoot()?.removeEventListener('keydown', this._handleKeydown);
     void this.saveColumnState();
     this._virtualScrollManager.destroy();
     this._bodyRenderer.destroy();
@@ -1035,20 +1122,43 @@ export class GridCore {
     if (typeof fetchPage !== 'function') return;
 
     const requestId = ++this._serverPageRequestId;
-    this._dom.showLoading(this.getLocaleText('grid.loading.page', 'Loading page data...'));
-    const result = await fetchPage({
-      page,
-      pageSize,
-      filters: this._filterManager.getWorkerPayload(),
-      sort: this._sortManager.getState().sortDefs,
-      displayMode: this._displayMode,
+    this._dom.showLoading(this.getLocaleText('grid.loading.page', 'Loading page data...'), {
+      showSkeleton: true,
+      content: this._renderOverlayState('loading', {
+        message: this.getLocaleText('grid.loading.page', 'Loading page data...'),
+      }),
     });
-    if (requestId !== this._serverPageRequestId || this._destroyed) {
-      return;
+    try {
+      const result = await fetchPage({
+        page,
+        pageSize,
+        filters: this._filterManager.getWorkerPayload(),
+        sort: this._sortManager.getState().sortDefs,
+        displayMode: this._displayMode,
+      });
+      if (requestId !== this._serverPageRequestId || this._destroyed) {
+        return;
+      }
+      this._invalidateMeasuredRows();
+      this._paginationManager.setTotalCount(result.totalCount ?? 0, { silent: true });
+      this._dataStore.setData(result.rows ?? []);
+    } catch (error) {
+      if (requestId !== this._serverPageRequestId || this._destroyed) {
+        return;
+      }
+      console.error('[GridCore] Failed to load server page:', error);
+      const message = this.getLocaleText('grid.error.pageLoadFailed', 'Failed to load page data.');
+      this._dom.showError(
+        message,
+        {
+          content: this._renderOverlayState('error', { message, error }),
+          actionLabel: this.getLocaleText('grid.error.retry', 'Retry'),
+          onAction: () => {
+            void this._loadServerPage(page, pageSize);
+          },
+        }
+      );
     }
-    this._invalidateMeasuredRows();
-    this._paginationManager.setTotalCount(result.totalCount ?? 0, { silent: true });
-    this._dataStore.setData(result.rows ?? []);
   }
 
   async _loadInitialInfiniteRows() {
@@ -1059,8 +1169,28 @@ export class GridCore {
     this._invalidateMeasuredRows();
     this._dataStore.setData([]);
     this._infiniteScrollManager.reset();
-    this._dom.showLoading(this.getLocaleText('grid.loading.moreRows', 'Loading more rows...'));
-    await this._infiniteScrollManager.loadMore();
+    this._dom.showLoading(this.getLocaleText('grid.loading.moreRows', 'Loading more rows...'), {
+      showSkeleton: true,
+      content: this._renderOverlayState('loading', {
+        message: this.getLocaleText('grid.loading.moreRows', 'Loading more rows...'),
+      }),
+    });
+    try {
+      await this._infiniteScrollManager.loadMore();
+    } catch (error) {
+      console.error('[GridCore] Failed to initialize infinite rows:', error);
+      const message = this.getLocaleText('grid.error.moreRowsFailed', 'Failed to load rows.');
+      this._dom.showError(
+        message,
+        {
+          content: this._renderOverlayState('error', { message, error }),
+          actionLabel: this.getLocaleText('grid.error.retry', 'Retry'),
+          onAction: () => {
+            void this._loadInitialInfiniteRows();
+          },
+        }
+      );
+    }
   }
 
   _mergeLocale(base, overrides) {
@@ -1228,10 +1358,17 @@ export class GridCore {
     this._headerRenderer.render(this._currentRangeBundle);
     this._headerRenderer.updateSortIndicators();
     this._renderFooter();
+    this._dom.setAccessibilityMeta({
+      rowCount: result.totalCount ?? result.displayRows.length,
+      colCount: this._columns.getVisibleLeafColumns().length + (this._options.selectable === false ? 0 : 1),
+    });
 
     if (result.displayRows.length === 0) {
       this._bodyRenderer.clear();
-      this._dom.showEmpty(this._options.emptyMessage ?? this.getLocaleText('grid.empty.noRows', 'No rows available.'));
+      const message = this._options.emptyMessage ?? this.getLocaleText('grid.empty.noRows', 'No rows available.');
+      this._dom.showEmpty(message, {
+        content: this._renderOverlayState('empty', { message }),
+      });
     } else {
       this._dom.hideOverlay();
       this._bodyRenderer.render(result.displayRows, this._currentRangeBundle);
@@ -1337,5 +1474,158 @@ export class GridCore {
       const value = row?.[field];
       return value == null ? String(index) : String(value);
     };
+  }
+
+  _renderOverlayState(kind, context = {}) {
+    const rendererMap = {
+      loading: this._options.renderLoadingState,
+      empty: this._options.renderEmptyState,
+      error: this._options.renderErrorState,
+    };
+    const renderer = rendererMap[kind];
+    if (typeof renderer !== 'function') {
+      return null;
+    }
+    try {
+      return renderer({
+        kind,
+        ...context,
+      });
+    } catch (error) {
+      console.error(`[GridCore] Failed to render ${kind} overlay:`, error);
+      return null;
+    }
+  }
+
+  _handleKeydown(event) {
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || !this._container.contains(target)) {
+      return;
+    }
+
+    const focusable = target.closest('[data-grid-focusable]');
+    if (!(focusable instanceof HTMLElement)) {
+      return;
+    }
+
+    const key = event.key;
+    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key)) {
+      return;
+    }
+
+    const kind = focusable.dataset.gridFocusable;
+    if (kind === 'header') {
+      this._moveHeaderFocus(focusable, key, event);
+      return;
+    }
+
+    if (kind === 'cell') {
+      this._moveCellFocus(focusable, key, event);
+    }
+  }
+
+  _moveHeaderFocus(current, key, event) {
+    const currentCol = Number(current.dataset.colIndex ?? 0);
+    const headerButtons = [...this._container.querySelectorAll('[data-grid-focusable="header"]')];
+    if (headerButtons.length === 0) {
+      return;
+    }
+
+    let nextCol = currentCol;
+    if (key === 'ArrowRight') nextCol += 1;
+    if (key === 'ArrowLeft') nextCol -= 1;
+    if (key === 'Home') nextCol = 0;
+    if (key === 'End') nextCol = headerButtons.length - 1;
+    if (key === 'ArrowDown') {
+      const firstCell = this._container.querySelector(`[data-grid-focusable="cell"][data-col-index="${currentCol}"]`);
+      if (firstCell instanceof HTMLElement) {
+        event.preventDefault();
+        firstCell.focus();
+      }
+      return;
+    }
+
+    const next = headerButtons.find((element) => Number(element.dataset.colIndex ?? -1) === nextCol);
+    if (next instanceof HTMLElement) {
+      event.preventDefault();
+      next.focus();
+    }
+  }
+
+  _moveCellFocus(current, key, event) {
+    const rowIndex = Number(current.dataset.rowIndex ?? 0);
+    const colIndex = Number(current.dataset.colIndex ?? 0);
+    let nextRow = rowIndex;
+    let nextCol = colIndex;
+
+    if (key === 'ArrowUp') nextRow -= 1;
+    if (key === 'ArrowDown') nextRow += 1;
+    if (key === 'ArrowLeft') nextCol -= 1;
+    if (key === 'ArrowRight') nextCol += 1;
+    if (key === 'Home') nextCol = 0;
+    if (key === 'End') {
+      nextCol = this._columns.getVisibleLeafColumns().length + (this._options.selectable === false ? -1 : 0);
+    }
+
+    if (key === 'ArrowUp' && nextRow < 0) {
+      const headerTarget = this._container.querySelector(`[data-grid-focusable="header"][data-col-index="${colIndex}"]`);
+      if (headerTarget instanceof HTMLElement) {
+        event.preventDefault();
+        headerTarget.focus();
+      }
+      return;
+    }
+
+    const next = this._container.querySelector(
+      `[data-grid-focusable="cell"][data-row-index="${nextRow}"][data-col-index="${nextCol}"]`
+    );
+    if (next instanceof HTMLElement) {
+      event.preventDefault();
+      next.focus();
+    }
+  }
+
+  _resolveCsvColumns(options = {}) {
+    const requested = Array.isArray(options.columns) && options.columns.length > 0
+      ? new Set(options.columns.map(String))
+      : null;
+    const source = options.includeHidden === true
+      ? this._columns.getAllLeafColumns()
+      : this._columns.getVisibleLeafColumns();
+
+    return requested
+      ? source.filter((column) => requested.has(column.def.id))
+      : source;
+  }
+
+  _resolveCsvRows(options = {}) {
+    if (options.onlySelected === true) {
+      const selected = this._selectionManager.getSelectedKeys();
+      return this.getFlatRows().filter((row) => row?._type == null && selected.has(String(row._rowKey)));
+    }
+
+    const scope = options.scope ?? 'displayed';
+    if (scope === 'all') {
+      return this._dataStore.getAll();
+    }
+    if (scope === 'flat') {
+      return this.getFlatRows().filter((row) => row?._type == null);
+    }
+    return this.getRows().filter((row) => row?._type == null);
+  }
+
+  _escapeCsvValue(value, delimiter) {
+    if (value == null) {
+      return '';
+    }
+    const normalized = typeof value === 'string'
+      ? value
+      : typeof value === 'number' || typeof value === 'boolean'
+        ? String(value)
+        : JSON.stringify(value);
+    if (normalized.includes('"') || normalized.includes('\n') || normalized.includes('\r') || normalized.includes(delimiter)) {
+      return `"${normalized.replace(/"/g, '""')}"`;
+    }
+    return normalized;
   }
 }

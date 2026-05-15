@@ -56,6 +56,7 @@ export const DEFAULT_LOCALE = {
       tree: 'TREE',
     },
     loading: {
+      title: 'Loading',
       data: 'Loading data...',
       page: 'Loading page data...',
       moreRows: 'Loading more rows...',
@@ -63,8 +64,16 @@ export const DEFAULT_LOCALE = {
       infiniteSpinner: 'Loading more rows',
     },
     empty: {
+      title: 'No Data',
       noRows: 'No rows available.',
       processFailed: 'Failed to process data.',
+    },
+    error: {
+      title: 'Something Went Wrong',
+      retry: 'Retry',
+      processFailed: 'Failed to process data.',
+      pageLoadFailed: 'Failed to load page data.',
+      moreRowsFailed: 'Failed to load rows.',
     },
     live: {
       waiting: '{count} new rows are waiting. Click to review.',
@@ -79,6 +88,9 @@ export const DEFAULT_LOCALE = {
     },
     filter: {
       active: 'Filtered',
+    },
+    selection: {
+      toggleAll: 'Select all rows',
     },
   },
 };
