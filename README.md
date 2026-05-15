@@ -5,6 +5,12 @@ It covers the pieces you usually need in a real table: virtual scrolling, paging
 
 ---
 
+## Demo
+
+[데모 사이트(Demo site) 바로가기](https://cheonghakim.github.io/high-grid/)
+
+---
+
 ## 한국어
 
 ### 1. 소개
@@ -21,8 +27,8 @@ npm install highgrid
 스타일도 함께 로드해야 합니다.
 
 ```js
-import { createGrid } from 'highgrid';
-import 'highgrid/styles/grid.css';
+import { createGrid } from "highgrid";
+import "highgrid/styles/grid.css";
 ```
 
 ### 3. 가장 빠른 시작 예제
@@ -32,22 +38,28 @@ import 'highgrid/styles/grid.css';
 ```
 
 ```js
-import { createGrid } from 'highgrid';
-import 'highgrid/styles/grid.css';
+import { createGrid } from "highgrid";
+import "highgrid/styles/grid.css";
 
 const rows = [
-  { id: 1, name: 'Alice', team: 'Red', score: 1200 },
-  { id: 2, name: 'Bob', team: 'Blue', score: 980 },
+  { id: 1, name: "Alice", team: "Red", score: 1200 },
+  { id: 2, name: "Bob", team: "Blue", score: 980 },
 ];
 
 const columns = [
-  { id: 'name', field: 'name', headerName: 'Name', width: 180 },
-  { id: 'team', field: 'team', headerName: 'Team', width: 120 },
-  { id: 'score', field: 'score', headerName: 'Score', width: 120, align: 'right' },
+  { id: "name", field: "name", headerName: "Name", width: 180 },
+  { id: "team", field: "team", headerName: "Team", width: 120 },
+  {
+    id: "score",
+    field: "score",
+    headerName: "Score",
+    width: 120,
+    align: "right",
+  },
 ];
 
-const grid = createGrid('#app', {
-  rowKey: 'id',
+const grid = createGrid("#app", {
+  rowKey: "id",
   columns,
   rows,
   rowHeight: 40,
@@ -55,6 +67,7 @@ const grid = createGrid('#app', {
 ```
 
 팁:
+
 - `createGrid('#app', options)`처럼 selector 문자열도 바로 받을 수 있습니다.
 - 컨테이너에는 높이가 있어야 가상 스크롤이 제대로 동작합니다.
 - `rowKey`는 중복되지 않는 값을 쓰는 편이 안전합니다.
@@ -78,14 +91,14 @@ const grid = createGrid('#app', {
 
 ```js
 const columns = [
-  { id: 'name', field: 'name', headerName: 'Name', width: 180 },
+  { id: "name", field: "name", headerName: "Name", width: 180 },
   {
-    id: 'status',
-    field: 'status',
-    headerName: 'Status',
+    id: "status",
+    field: "status",
+    headerName: "Status",
     width: 140,
     renderer: ({ value }) => {
-      const badge = document.createElement('span');
+      const badge = document.createElement("span");
       badge.textContent = value;
       badge.className = `status status-${String(value).toLowerCase()}`;
       return badge;
@@ -108,22 +121,22 @@ const columns = [
 
 ```js
 const scoreColumn = {
-  id: 'score',
-  field: 'score',
-  headerName: 'Score',
+  id: "score",
+  field: "score",
+  headerName: "Score",
   renderer: ({ value }) => {
-    const wrap = document.createElement('div');
-    wrap.style.display = 'flex';
-    wrap.style.justifyContent = 'space-between';
+    const wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.justifyContent = "space-between";
 
-    const label = document.createElement('strong');
+    const label = document.createElement("strong");
     label.textContent = String(value);
 
-    const meter = document.createElement('span');
+    const meter = document.createElement("span");
     meter.style.width = `${Math.min(100, Number(value) / 20)}%`;
-    meter.style.height = '6px';
-    meter.style.background = '#0f4c81';
-    meter.style.borderRadius = '999px';
+    meter.style.height = "6px";
+    meter.style.background = "#0f4c81";
+    meter.style.borderRadius = "999px";
 
     wrap.append(label, meter);
     return wrap;
@@ -135,26 +148,26 @@ const scoreColumn = {
 
 ```js
 const grid = createGrid(container, {
-  rowKey: 'id',
+  rowKey: "id",
   columns,
   rows,
   rowHeight: 40,
   variableRowHeight: false,
   selectable: true,
-  selectionMode: 'multiple',
-  tableId: 'orders-grid',
+  selectionMode: "multiple",
+  tableId: "orders-grid",
   sidePanel: {
     enabled: true,
-    defaultTab: 'columns',
+    defaultTab: "columns",
     defaultOpen: false,
-    quickFilterFields: ['name', 'team', 'status'],
+    quickFilterFields: ["name", "team", "status"],
   },
   pagination: {
-    mode: 'client',
+    mode: "client",
     pageSize: 25,
   },
   infiniteScroll: {
-    mode: 'client',
+    mode: "client",
     initialLoadSize: 100,
     loadMoreSize: 50,
   },
@@ -171,12 +184,12 @@ const grid = createGrid(container, {
 로딩, 빈 상태, 에러 상태를 각각 따로 렌더링할 수 있습니다.
 
 ```js
-const grid = createGrid('#app', {
-  rowKey: 'id',
+const grid = createGrid("#app", {
+  rowKey: "id",
   columns,
   rows: [],
-  renderLoadingState: () => '<div>불러오는 중...</div>',
-  renderEmptyState: () => '<div>표시할 데이터가 없습니다.</div>',
+  renderLoadingState: () => "<div>불러오는 중...</div>",
+  renderEmptyState: () => "<div>표시할 데이터가 없습니다.</div>",
   renderErrorState: ({ message }) => `<div>오류: ${message}</div>`,
 });
 ```
@@ -187,27 +200,28 @@ HighGrid는 기본적으로 `role="grid"`와 셀/헤더 포커스 이동을 제�
 
 ```js
 grid.setRows(rows);
-grid.appendRows([{ id: 3, name: 'Carol' }]);
-grid.updateRows([{ id: 1, name: 'Alice Updated' }]);
+grid.appendRows([{ id: 3, name: "Carol" }]);
+grid.updateRows([{ id: 1, name: "Alice Updated" }]);
 grid.patchRow(1, { score: 1500 });
-grid.upsertRows([{ id: 2, score: 1111 }, { id: 4, name: 'Dave' }]);
+grid.upsertRows([
+  { id: 2, score: 1111 },
+  { id: 4, name: "Dave" },
+]);
 grid.removeRows([4]);
 ```
 
 ### 9. 정렬 / 필터 / 선택
 
 ```js
-grid.sortBy([
-  { field: 'score', direction: 'desc', type: 'number' },
-]);
+grid.sortBy([{ field: "score", direction: "desc", type: "number" }]);
 
 grid.clearSort();
-grid.setQuickFilter('alice', ['name', 'team']);
-grid.setColumnFilter('status', {
-  type: 'text',
-  field: 'status',
-  operator: 'contains',
-  value: 'Active',
+grid.setQuickFilter("alice", ["name", "team"]);
+grid.setColumnFilter("status", {
+  type: "text",
+  field: "status",
+  operator: "contains",
+  value: "Active",
 });
 grid.clearFilters();
 grid.toggleSelectAll();
@@ -217,16 +231,16 @@ grid.setRowSelected(1, true);
 ### 10. 그룹핑과 트리
 
 ```js
-grid.enableGrouping(['team']);
-grid.toggleGroup('team:Red');
+grid.enableGrouping(["team"]);
+grid.toggleGroup("team:Red");
 grid.disableGrouping();
 
 grid.enableTree({
-  treeMode: 'children',
-  childrenField: 'children',
-  hasChildrenField: 'hasChildren',
+  treeMode: "children",
+  childrenField: "children",
+  hasChildrenField: "hasChildren",
   onLoadChildren: async (row) => {
-    return [{ id: `${row.id}-1`, name: 'Child', hasChildren: false }];
+    return [{ id: `${row.id}-1`, name: "Child", hasChildren: false }];
   },
 });
 
@@ -240,7 +254,7 @@ grid.disableTree();
 클라이언트 모드:
 
 ```js
-grid.setDisplayMode('paginated');
+grid.setDisplayMode("paginated");
 grid.setPageSize(50);
 grid.nextPage();
 
@@ -252,14 +266,19 @@ grid.loadMoreInfinite();
 
 ```js
 const grid = createGrid(container, {
-  rowKey: 'id',
+  rowKey: "id",
   columns,
   rows: [],
   pagination: {
-    mode: 'server',
+    mode: "server",
     pageSize: 25,
     fetchPage: async ({ page, pageSize, filters, sort }) => {
-      const result = await fetchPageFromServer({ page, pageSize, filters, sort });
+      const result = await fetchPageFromServer({
+        page,
+        pageSize,
+        filters,
+        sort,
+      });
       return {
         rows: result.rows,
         totalCount: result.totalCount,
@@ -267,7 +286,7 @@ const grid = createGrid(container, {
     },
   },
   infiniteScroll: {
-    mode: 'server',
+    mode: "server",
     initialLoadSize: 50,
     loadMoreSize: 50,
     onLoadMore: async ({ offset, loadSize, filters, sort }) => {
@@ -280,10 +299,10 @@ const grid = createGrid(container, {
 ### 12. 라이브 업데이트
 
 ```js
-grid.liveAddRows([{ id: 1001, name: 'Live Row' }]);
-grid.liveUpdateRows([{ id: 1, name: 'Updated in live mode' }]);
-grid.livePatchRow(2, { status: 'Review' });
-grid.liveUpsertRows([{ id: 5, name: 'Upserted' }]);
+grid.liveAddRows([{ id: 1001, name: "Live Row" }]);
+grid.liveUpdateRows([{ id: 1, name: "Updated in live mode" }]);
+grid.livePatchRow(2, { status: "Review" });
+grid.liveUpsertRows([{ id: 5, name: "Upserted" }]);
 grid.liveRemoveRows([5]);
 
 grid.pauseLiveUpdates();
@@ -303,19 +322,20 @@ const stats = await grid.benchmarkLiveUpdates({
 
 ```js
 const columns = [
-  { id: 'name', field: 'name', headerName: '이름', editable: true },
+  { id: "name", field: "name", headerName: "이름", editable: true },
   {
-    id: 'score',
-    field: 'score',
-    headerName: '점수',
-    type: 'number',
+    id: "score",
+    field: "score",
+    headerName: "점수",
+    type: "number",
     editable: true,
-    validator: ({ value }) => Number(value) >= 0 || '점수는 0 이상이어야 합니다.',
+    validator: ({ value }) =>
+      Number(value) >= 0 || "점수는 0 이상이어야 합니다.",
   },
 ];
 
-grid.beginCellEdit(1, 'name');
-grid.setCellValue(1, 'score', 120);
+grid.beginCellEdit(1, "name");
+grid.setCellValue(1, "score", 120);
 grid.validateRows();
 
 const errors = grid.getValidationErrors();
@@ -327,40 +347,40 @@ const errors = grid.getValidationErrors();
 grid.setRowSelected(1, true);
 
 const text = grid.copySelectionToClipboard({
-  columns: ['name', 'score'],
+  columns: ["name", "score"],
 });
 
-grid.pasteFromClipboard('Alice\t140', {
+grid.pasteFromClipboard("Alice\t140", {
   startRowKey: 1,
-  columns: ['name', 'score'],
+  columns: ["name", "score"],
 });
 ```
 
 ### 14. 이벤트
 
 ```js
-grid.on('render', (payload) => {
-  console.log('render', payload);
+grid.on("render", (payload) => {
+  console.log("render", payload);
 });
 
-grid.on('row-click', ({ row, event }) => {
-  console.log('row click', row);
+grid.on("row-click", ({ row, event }) => {
+  console.log("row click", row);
 });
 
-grid.on('cell-click', ({ row, colId, value }) => {
-  console.log('cell click', row, colId, value);
+grid.on("cell-click", ({ row, colId, value }) => {
+  console.log("cell click", row, colId, value);
 });
 
-grid.on('cell-value-change', ({ rowKey, colId, value }) => {
-  console.log('cell value changed', rowKey, colId, value);
+grid.on("cell-value-change", ({ rowKey, colId, value }) => {
+  console.log("cell value changed", rowKey, colId, value);
 });
 
-grid.on('selection-change', (payload) => {
-  console.log('selection changed', payload);
+grid.on("selection-change", (payload) => {
+  console.log("selection changed", payload);
 });
 
-grid.on('state-change', ({ type }) => {
-  console.log('state changed', type);
+grid.on("state-change", ({ type }) => {
+  console.log("state changed", type);
 });
 ```
 
@@ -370,36 +390,36 @@ grid.on('state-change', ({ type }) => {
 
 ```js
 const csv = grid.exportCsv({
-  scope: 'displayed',
-  columns: ['name', 'team', 'score'],
+  scope: "displayed",
+  columns: ["name", "team", "score"],
 });
 
 grid.downloadCsv({
-  scope: 'all',
-  fileName: 'operators.csv',
+  scope: "all",
+  fileName: "operators.csv",
 });
 
 const excelHtml = grid.exportExcel({
-  scope: 'all',
-  columns: ['name', 'team', 'score'],
+  scope: "all",
+  columns: ["name", "team", "score"],
 });
 
 grid.downloadExcel({
-  scope: 'all',
-  fileName: 'operators.xls',
+  scope: "all",
+  fileName: "operators.xls",
 });
 ```
 
 행/셀 우클릭 이벤트도 바로 받을 수 있습니다.
 
 ```js
-const grid = createGrid('#app', {
-  rowKey: 'id',
+const grid = createGrid("#app", {
+  rowKey: "id",
   columns,
   rows,
   onCellContextMenu: ({ row, colId, event }) => {
     event.preventDefault();
-    console.log('context menu', row, colId);
+    console.log("context menu", row, colId);
   },
 });
 ```
@@ -414,32 +434,36 @@ import {
   uppercaseTeamPlugin,
   createContextMenuPlugin,
   createCsvShortcutPlugin,
-} from 'highgrid';
+} from "highgrid";
 
 grid.usePlugin(uppercaseTeamPlugin);
-grid.unusePlugin('uppercase-team');
+grid.unusePlugin("uppercase-team");
 
-grid.usePlugin(createCsvShortcutPlugin({
-  fileName: 'operators.csv',
-}));
+grid.usePlugin(
+  createCsvShortcutPlugin({
+    fileName: "operators.csv",
+  }),
+);
 
-grid.usePlugin(createContextMenuPlugin({
-  getItems: ({ row, core }) => [
-    {
-      label: `Export ${row.name}`,
-      onSelect: () => {
-        core.downloadCsv({ scope: 'all', fileName: `${row.name}.csv` });
+grid.usePlugin(
+  createContextMenuPlugin({
+    getItems: ({ row, core }) => [
+      {
+        label: `Export ${row.name}`,
+        onSelect: () => {
+          core.downloadCsv({ scope: "all", fileName: `${row.name}.csv` });
+        },
       },
-    },
-  ],
-}));
+    ],
+  }),
+);
 ```
 
 커스텀 플러그인은 hook 기반 객체로 만들 수 있습니다.
 
 ```js
 const myPlugin = {
-  name: 'my-plugin',
+  name: "my-plugin",
   hooks: {
     afterDataProcess(result) {
       return {
@@ -467,10 +491,10 @@ await grid.clearColumnState();
 ### 18. 컬럼 런타임 제어
 
 ```js
-grid.setColumnVisible('score', false);
-grid.setColumnWidth('score', 160);
-grid.setColumnPinned('name', 'left');
-grid.moveColumn('score', 2);
+grid.setColumnVisible("score", false);
+grid.setColumnWidth("score", 160);
+grid.setColumnPinned("name", "left");
+grid.moveColumn("score", 2);
 
 const allCols = grid.getAllLeafColumns();
 const visibleCols = grid.getVisibleLeafColumns();
@@ -480,12 +504,12 @@ const visibleCols = grid.getVisibleLeafColumns();
 
 ```js
 const grid = createGrid(container, {
-  rowKey: 'id',
+  rowKey: "id",
   columns,
   rows,
   variableRowHeight: true,
   getRowHeight: (row) => {
-    if (row.type === 'detail') return 80;
+    if (row.type === "detail") return 80;
     return 40;
   },
 });
@@ -495,13 +519,13 @@ const grid = createGrid(container, {
 
 ```js
 const columns = [
-  { id: 'name', field: 'name', headerName: '이름', width: 160 },
+  { id: "name", field: "name", headerName: "이름", width: 160 },
   {
-    id: 'location-group',
-    headerName: '위치',
+    id: "location-group",
+    headerName: "위치",
     children: [
-      { id: 'region', field: 'region', headerName: '지역', width: 120 },
-      { id: 'country', field: 'country', headerName: '국가', width: 100 },
+      { id: "region", field: "region", headerName: "지역", width: 120 },
+      { id: "country", field: "country", headerName: "국가", width: 100 },
     ],
   },
 ];
@@ -527,7 +551,7 @@ npm install highgrid
 </template>
 
 <script setup>
-import { HighGrid } from 'highgrid/vue';
+import { HighGrid } from "highgrid/vue";
 </script>
 ```
 
@@ -539,11 +563,14 @@ Composable 방식:
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useHighGrid } from 'highgrid/vue';
+import { ref, onMounted } from "vue";
+import { useHighGrid } from "highgrid/vue";
 
 const containerRef = ref(null);
-const { grid, state, init, setRows } = useHighGrid(containerRef, { columns, rows });
+const { grid, state, init, setRows } = useHighGrid(containerRef, {
+  columns,
+  rows,
+});
 
 onMounted(() => init());
 </script>
@@ -554,8 +581,8 @@ onMounted(() => init());
 `tokens.css`를 가져오면 CSS 변수 하나로 전체 스타일을 제어할 수 있습니다.
 
 ```js
-import 'highgrid/styles/tokens.css';
-import 'highgrid/styles/grid.css';
+import "highgrid/styles/tokens.css";
+import "highgrid/styles/grid.css";
 ```
 
 ```css
@@ -591,7 +618,7 @@ import 'highgrid/styles/grid.css';
 `index.d.ts`가 포함되어 있어 별도 설치 없이 타입 추론이 됩니다.
 
 ```ts
-import { createGrid, GridOptions, ColumnDef } from 'highgrid';
+import { createGrid, GridOptions, ColumnDef } from "highgrid";
 
 interface Row {
   id: number;
@@ -600,12 +627,12 @@ interface Row {
 }
 
 const columns: ColumnDef<Row>[] = [
-  { id: 'name', field: 'name', headerName: 'Name' },
-  { id: 'score', field: 'score', headerName: 'Score', type: 'number' },
+  { id: "name", field: "name", headerName: "Name" },
+  { id: "score", field: "score", headerName: "Score", type: "number" },
 ];
 
-const grid = createGrid<Row>(document.getElementById('app')!, {
-  rowKey: 'id',
+const grid = createGrid<Row>(document.getElementById("app")!, {
+  rowKey: "id",
   columns,
   rows: [],
 });
@@ -614,14 +641,14 @@ const grid = createGrid<Row>(document.getElementById('app')!, {
 ### 24. 상태 조회 API
 
 ```js
-grid.getFilterState();     // 현재 필터 상태
-grid.getGroupingState();   // 그룹핑 상태
-grid.getTreeState();       // 트리 상태
-grid.getColumnState();     // 컬럼 너비/핀/순서 상태
-grid.getSelectionState();  // 선택 상태
+grid.getFilterState(); // 현재 필터 상태
+grid.getGroupingState(); // 그룹핑 상태
+grid.getTreeState(); // 트리 상태
+grid.getColumnState(); // 컬럼 너비/핀/순서 상태
+grid.getSelectionState(); // 선택 상태
 grid.getPaginationState(); // 페이징 상태
-grid.getRows();            // 전체 원본 행
-grid.getFlatRows();        // 평탄화된 표시 행 (그룹/트리 포함)
+grid.getRows(); // 전체 원본 행
+grid.getFlatRows(); // 평탄화된 표시 행 (그룹/트리 포함)
 ```
 
 ### 25. 예제 실행
@@ -671,8 +698,8 @@ npm install highgrid
 Import both the library and the stylesheet.
 
 ```js
-import { createGrid } from 'highgrid';
-import 'highgrid/styles/grid.css';
+import { createGrid } from "highgrid";
+import "highgrid/styles/grid.css";
 ```
 
 ### 3. Quick Start
@@ -682,22 +709,28 @@ import 'highgrid/styles/grid.css';
 ```
 
 ```js
-import { createGrid } from 'highgrid';
-import 'highgrid/styles/grid.css';
+import { createGrid } from "highgrid";
+import "highgrid/styles/grid.css";
 
 const rows = [
-  { id: 1, name: 'Alice', team: 'Red', score: 1200 },
-  { id: 2, name: 'Bob', team: 'Blue', score: 980 },
+  { id: 1, name: "Alice", team: "Red", score: 1200 },
+  { id: 2, name: "Bob", team: "Blue", score: 980 },
 ];
 
 const columns = [
-  { id: 'name', field: 'name', headerName: 'Name', width: 180 },
-  { id: 'team', field: 'team', headerName: 'Team', width: 120 },
-  { id: 'score', field: 'score', headerName: 'Score', width: 120, align: 'right' },
+  { id: "name", field: "name", headerName: "Name", width: 180 },
+  { id: "team", field: "team", headerName: "Team", width: 120 },
+  {
+    id: "score",
+    field: "score",
+    headerName: "Score",
+    width: 120,
+    align: "right",
+  },
 ];
 
-const grid = createGrid('#app', {
-  rowKey: 'id',
+const grid = createGrid("#app", {
+  rowKey: "id",
   columns,
   rows,
   rowHeight: 40,
@@ -705,6 +738,7 @@ const grid = createGrid('#app', {
 ```
 
 Tips:
+
 - You can pass a selector string directly, like `createGrid('#app', options)`.
 - Give the container an explicit height for virtual scrolling.
 - Use a stable and unique `rowKey` whenever possible.
@@ -728,14 +762,14 @@ Example:
 
 ```js
 const columns = [
-  { id: 'name', field: 'name', headerName: 'Name', width: 180 },
+  { id: "name", field: "name", headerName: "Name", width: 180 },
   {
-    id: 'status',
-    field: 'status',
-    headerName: 'Status',
+    id: "status",
+    field: "status",
+    headerName: "Status",
     width: 140,
     renderer: ({ value }) => {
-      const badge = document.createElement('span');
+      const badge = document.createElement("span");
       badge.textContent = value;
       badge.className = `status status-${String(value).toLowerCase()}`;
       return badge;
@@ -756,22 +790,22 @@ Return rules:
 
 ```js
 const scoreColumn = {
-  id: 'score',
-  field: 'score',
-  headerName: 'Score',
+  id: "score",
+  field: "score",
+  headerName: "Score",
   renderer: ({ value }) => {
-    const wrap = document.createElement('div');
-    wrap.style.display = 'flex';
-    wrap.style.justifyContent = 'space-between';
+    const wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.justifyContent = "space-between";
 
-    const label = document.createElement('strong');
+    const label = document.createElement("strong");
     label.textContent = String(value);
 
-    const meter = document.createElement('span');
+    const meter = document.createElement("span");
     meter.style.width = `${Math.min(100, Number(value) / 20)}%`;
-    meter.style.height = '6px';
-    meter.style.background = '#0f4c81';
-    meter.style.borderRadius = '999px';
+    meter.style.height = "6px";
+    meter.style.background = "#0f4c81";
+    meter.style.borderRadius = "999px";
 
     wrap.append(label, meter);
     return wrap;
@@ -783,26 +817,26 @@ const scoreColumn = {
 
 ```js
 const grid = createGrid(container, {
-  rowKey: 'id',
+  rowKey: "id",
   columns,
   rows,
   rowHeight: 40,
   variableRowHeight: false,
   selectable: true,
-  selectionMode: 'multiple',
-  tableId: 'orders-grid',
+  selectionMode: "multiple",
+  tableId: "orders-grid",
   sidePanel: {
     enabled: true,
-    defaultTab: 'columns',
+    defaultTab: "columns",
     defaultOpen: false,
-    quickFilterFields: ['name', 'team', 'status'],
+    quickFilterFields: ["name", "team", "status"],
   },
   pagination: {
-    mode: 'client',
+    mode: "client",
     pageSize: 25,
   },
   infiniteScroll: {
-    mode: 'client',
+    mode: "client",
     initialLoadSize: 100,
     loadMoreSize: 50,
   },
@@ -817,12 +851,12 @@ const grid = createGrid(container, {
 ### 7. Overlay States and Accessibility
 
 ```js
-const grid = createGrid('#app', {
-  rowKey: 'id',
+const grid = createGrid("#app", {
+  rowKey: "id",
   columns,
   rows: [],
-  renderLoadingState: () => '<div>Loading...</div>',
-  renderEmptyState: () => '<div>No rows yet.</div>',
+  renderLoadingState: () => "<div>Loading...</div>",
+  renderEmptyState: () => "<div>No rows yet.</div>",
   renderErrorState: ({ message }) => `<div>Error: ${message}</div>`,
 });
 ```
@@ -833,27 +867,28 @@ HighGrid ships with a default `role="grid"` structure and basic arrow-key naviga
 
 ```js
 grid.setRows(rows);
-grid.appendRows([{ id: 3, name: 'Carol' }]);
-grid.updateRows([{ id: 1, name: 'Alice Updated' }]);
+grid.appendRows([{ id: 3, name: "Carol" }]);
+grid.updateRows([{ id: 1, name: "Alice Updated" }]);
 grid.patchRow(1, { score: 1500 });
-grid.upsertRows([{ id: 2, score: 1111 }, { id: 4, name: 'Dave' }]);
+grid.upsertRows([
+  { id: 2, score: 1111 },
+  { id: 4, name: "Dave" },
+]);
 grid.removeRows([4]);
 ```
 
 ### 9. Sorting, Filtering, Selection
 
 ```js
-grid.sortBy([
-  { field: 'score', direction: 'desc', type: 'number' },
-]);
+grid.sortBy([{ field: "score", direction: "desc", type: "number" }]);
 
 grid.clearSort();
-grid.setQuickFilter('alice', ['name', 'team']);
-grid.setColumnFilter('status', {
-  type: 'text',
-  field: 'status',
-  operator: 'contains',
-  value: 'Active',
+grid.setQuickFilter("alice", ["name", "team"]);
+grid.setColumnFilter("status", {
+  type: "text",
+  field: "status",
+  operator: "contains",
+  value: "Active",
 });
 grid.clearFilters();
 grid.toggleSelectAll();
@@ -863,16 +898,16 @@ grid.setRowSelected(1, true);
 ### 10. Grouping and Tree Data
 
 ```js
-grid.enableGrouping(['team']);
-grid.toggleGroup('team:Red');
+grid.enableGrouping(["team"]);
+grid.toggleGroup("team:Red");
 grid.disableGrouping();
 
 grid.enableTree({
-  treeMode: 'children',
-  childrenField: 'children',
-  hasChildrenField: 'hasChildren',
+  treeMode: "children",
+  childrenField: "children",
+  hasChildrenField: "hasChildren",
   onLoadChildren: async (row) => {
-    return [{ id: `${row.id}-1`, name: 'Child', hasChildren: false }];
+    return [{ id: `${row.id}-1`, name: "Child", hasChildren: false }];
   },
 });
 
@@ -886,7 +921,7 @@ grid.disableTree();
 Client mode:
 
 ```js
-grid.setDisplayMode('paginated');
+grid.setDisplayMode("paginated");
 grid.setPageSize(50);
 grid.nextPage();
 
@@ -898,14 +933,19 @@ Server mode:
 
 ```js
 const grid = createGrid(container, {
-  rowKey: 'id',
+  rowKey: "id",
   columns,
   rows: [],
   pagination: {
-    mode: 'server',
+    mode: "server",
     pageSize: 25,
     fetchPage: async ({ page, pageSize, filters, sort }) => {
-      const result = await fetchPageFromServer({ page, pageSize, filters, sort });
+      const result = await fetchPageFromServer({
+        page,
+        pageSize,
+        filters,
+        sort,
+      });
       return {
         rows: result.rows,
         totalCount: result.totalCount,
@@ -913,7 +953,7 @@ const grid = createGrid(container, {
     },
   },
   infiniteScroll: {
-    mode: 'server',
+    mode: "server",
     initialLoadSize: 50,
     loadMoreSize: 50,
     onLoadMore: async ({ offset, loadSize, filters, sort }) => {
@@ -926,10 +966,10 @@ const grid = createGrid(container, {
 ### 12. Live Updates
 
 ```js
-grid.liveAddRows([{ id: 1001, name: 'Live Row' }]);
-grid.liveUpdateRows([{ id: 1, name: 'Updated in live mode' }]);
-grid.livePatchRow(2, { status: 'Review' });
-grid.liveUpsertRows([{ id: 5, name: 'Upserted' }]);
+grid.liveAddRows([{ id: 1001, name: "Live Row" }]);
+grid.liveUpdateRows([{ id: 1, name: "Updated in live mode" }]);
+grid.livePatchRow(2, { status: "Review" });
+grid.liveUpsertRows([{ id: 5, name: "Upserted" }]);
 grid.liveRemoveRows([5]);
 
 grid.pauseLiveUpdates();
@@ -949,19 +989,19 @@ Add `editable`, `parser`, and `validator` to columns to enable the built-in edit
 
 ```js
 const columns = [
-  { id: 'name', field: 'name', headerName: 'Name', editable: true },
+  { id: "name", field: "name", headerName: "Name", editable: true },
   {
-    id: 'score',
-    field: 'score',
-    headerName: 'Score',
-    type: 'number',
+    id: "score",
+    field: "score",
+    headerName: "Score",
+    type: "number",
     editable: true,
-    validator: ({ value }) => Number(value) >= 0 || 'Score must be positive.',
+    validator: ({ value }) => Number(value) >= 0 || "Score must be positive.",
   },
 ];
 
-grid.beginCellEdit(1, 'name');
-grid.setCellValue(1, 'score', 120);
+grid.beginCellEdit(1, "name");
+grid.setCellValue(1, "score", 120);
 grid.validateRows();
 
 const errors = grid.getValidationErrors();
@@ -973,40 +1013,40 @@ Clipboard helpers use tab-separated text so the output works well with spreadshe
 grid.setRowSelected(1, true);
 
 const text = grid.copySelectionToClipboard({
-  columns: ['name', 'score'],
+  columns: ["name", "score"],
 });
 
-grid.pasteFromClipboard('Alice\t140', {
+grid.pasteFromClipboard("Alice\t140", {
   startRowKey: 1,
-  columns: ['name', 'score'],
+  columns: ["name", "score"],
 });
 ```
 
 ### 14. Events
 
 ```js
-grid.on('render', (payload) => {
-  console.log('render', payload);
+grid.on("render", (payload) => {
+  console.log("render", payload);
 });
 
-grid.on('row-click', ({ row, event }) => {
-  console.log('row click', row);
+grid.on("row-click", ({ row, event }) => {
+  console.log("row click", row);
 });
 
-grid.on('cell-click', ({ row, colId, value }) => {
-  console.log('cell click', row, colId, value);
+grid.on("cell-click", ({ row, colId, value }) => {
+  console.log("cell click", row, colId, value);
 });
 
-grid.on('cell-value-change', ({ rowKey, colId, value }) => {
-  console.log('cell value changed', rowKey, colId, value);
+grid.on("cell-value-change", ({ rowKey, colId, value }) => {
+  console.log("cell value changed", rowKey, colId, value);
 });
 
-grid.on('selection-change', (payload) => {
-  console.log('selection changed', payload);
+grid.on("selection-change", (payload) => {
+  console.log("selection changed", payload);
 });
 
-grid.on('state-change', ({ type }) => {
-  console.log('state changed', type);
+grid.on("state-change", ({ type }) => {
+  console.log("state changed", type);
 });
 ```
 
@@ -1014,34 +1054,34 @@ grid.on('state-change', ({ type }) => {
 
 ```js
 const csv = grid.exportCsv({
-  scope: 'displayed',
-  columns: ['name', 'team', 'score'],
+  scope: "displayed",
+  columns: ["name", "team", "score"],
 });
 
 grid.downloadCsv({
-  scope: 'all',
-  fileName: 'operators.csv',
+  scope: "all",
+  fileName: "operators.csv",
 });
 
 const excelHtml = grid.exportExcel({
-  scope: 'all',
-  columns: ['name', 'team', 'score'],
+  scope: "all",
+  columns: ["name", "team", "score"],
 });
 
 grid.downloadExcel({
-  scope: 'all',
-  fileName: 'operators.xls',
+  scope: "all",
+  fileName: "operators.xls",
 });
 ```
 
 ```js
-const grid = createGrid('#app', {
-  rowKey: 'id',
+const grid = createGrid("#app", {
+  rowKey: "id",
   columns,
   rows,
   onCellContextMenu: ({ row, colId, event }) => {
     event.preventDefault();
-    console.log('context menu', row, colId);
+    console.log("context menu", row, colId);
   },
 });
 ```
@@ -1056,32 +1096,36 @@ import {
   uppercaseTeamPlugin,
   createContextMenuPlugin,
   createCsvShortcutPlugin,
-} from 'highgrid';
+} from "highgrid";
 
 grid.usePlugin(uppercaseTeamPlugin);
-grid.unusePlugin('uppercase-team');
+grid.unusePlugin("uppercase-team");
 
-grid.usePlugin(createCsvShortcutPlugin({
-  fileName: 'operators.csv',
-}));
+grid.usePlugin(
+  createCsvShortcutPlugin({
+    fileName: "operators.csv",
+  }),
+);
 
-grid.usePlugin(createContextMenuPlugin({
-  getItems: ({ row, core }) => [
-    {
-      label: `Export ${row.name}`,
-      onSelect: () => {
-        core.downloadCsv({ scope: 'all', fileName: `${row.name}.csv` });
+grid.usePlugin(
+  createContextMenuPlugin({
+    getItems: ({ row, core }) => [
+      {
+        label: `Export ${row.name}`,
+        onSelect: () => {
+          core.downloadCsv({ scope: "all", fileName: `${row.name}.csv` });
+        },
       },
-    },
-  ],
-}));
+    ],
+  }),
+);
 ```
 
 You can also create custom hook-based plugins.
 
 ```js
 const myPlugin = {
-  name: 'my-plugin',
+  name: "my-plugin",
   hooks: {
     afterDataProcess(result) {
       return {
@@ -1109,10 +1153,10 @@ await grid.clearColumnState();
 ### 18. Column Runtime API
 
 ```js
-grid.setColumnVisible('score', false);
-grid.setColumnWidth('score', 160);
-grid.setColumnPinned('name', 'left');
-grid.moveColumn('score', 2);
+grid.setColumnVisible("score", false);
+grid.setColumnWidth("score", 160);
+grid.setColumnPinned("name", "left");
+grid.moveColumn("score", 2);
 
 const allCols = grid.getAllLeafColumns();
 const visibleCols = grid.getVisibleLeafColumns();
@@ -1122,11 +1166,11 @@ const visibleCols = grid.getVisibleLeafColumns();
 
 ```js
 const grid = createGrid(container, {
-  rowKey: 'id',
+  rowKey: "id",
   columns,
   rows,
   variableRowHeight: true,
-  getRowHeight: (row) => (row.type === 'detail' ? 80 : 40),
+  getRowHeight: (row) => (row.type === "detail" ? 80 : 40),
 });
 ```
 
@@ -1134,13 +1178,13 @@ const grid = createGrid(container, {
 
 ```js
 const columns = [
-  { id: 'name', field: 'name', headerName: 'Name', width: 160 },
+  { id: "name", field: "name", headerName: "Name", width: 160 },
   {
-    id: 'location-group',
-    headerName: 'Location',
+    id: "location-group",
+    headerName: "Location",
     children: [
-      { id: 'region', field: 'region', headerName: 'Region', width: 120 },
-      { id: 'country', field: 'country', headerName: 'Country', width: 100 },
+      { id: "region", field: "region", headerName: "Region", width: 120 },
+      { id: "country", field: "country", headerName: "Country", width: 100 },
     ],
   },
 ];
@@ -1166,7 +1210,7 @@ Component usage:
 </template>
 
 <script setup>
-import { HighGrid } from 'highgrid/vue';
+import { HighGrid } from "highgrid/vue";
 </script>
 ```
 
@@ -1178,11 +1222,14 @@ Composable usage:
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useHighGrid } from 'highgrid/vue';
+import { ref, onMounted } from "vue";
+import { useHighGrid } from "highgrid/vue";
 
 const containerRef = ref(null);
-const { grid, state, init, setRows } = useHighGrid(containerRef, { columns, rows });
+const { grid, state, init, setRows } = useHighGrid(containerRef, {
+  columns,
+  rows,
+});
 
 onMounted(() => init());
 </script>
@@ -1193,8 +1240,8 @@ onMounted(() => init());
 Import `tokens.css` to expose every visual property as a CSS custom property.
 
 ```js
-import 'highgrid/styles/tokens.css';
-import 'highgrid/styles/grid.css';
+import "highgrid/styles/tokens.css";
+import "highgrid/styles/grid.css";
 ```
 
 Override any token on a parent element:
@@ -1225,17 +1272,21 @@ Built-in theme presets:
 Type declarations are bundled — no separate `@types` package needed.
 
 ```ts
-import { createGrid, GridOptions, ColumnDef } from 'highgrid';
+import { createGrid, GridOptions, ColumnDef } from "highgrid";
 
-interface Row { id: number; name: string; score: number; }
+interface Row {
+  id: number;
+  name: string;
+  score: number;
+}
 
 const columns: ColumnDef<Row>[] = [
-  { id: 'name', field: 'name', headerName: 'Name' },
-  { id: 'score', field: 'score', headerName: 'Score', type: 'number' },
+  { id: "name", field: "name", headerName: "Name" },
+  { id: "score", field: "score", headerName: "Score", type: "number" },
 ];
 
-const grid = createGrid<Row>(document.getElementById('app')!, {
-  rowKey: 'id',
+const grid = createGrid<Row>(document.getElementById("app")!, {
+  rowKey: "id",
   columns,
   rows: [],
 });
@@ -1250,8 +1301,8 @@ grid.getTreeState();
 grid.getColumnState();
 grid.getSelectionState();
 grid.getPaginationState();
-grid.getRows();       // raw source rows
-grid.getFlatRows();   // flattened display rows (includes group/tree nodes)
+grid.getRows(); // raw source rows
+grid.getFlatRows(); // flattened display rows (includes group/tree nodes)
 ```
 
 ### 25. Running the Example App
