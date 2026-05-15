@@ -445,4 +445,63 @@ describe('GridCore DOM smoke', () => {
 
     grid.destroy();
   });
+
+  it('edits cells, validates values, and exposes clipboard/export helpers', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+
+    const grid = createGrid(host, {
+      rowKey: 'id',
+      editing: { enabled: true },
+      rows: [
+        { id: 1, name: 'Alpha', score: 10 },
+        { id: 2, name: 'Beta', score: 20 },
+      ],
+      columns: [
+        { id: 'name', field: 'name', headerName: 'Name', width: 160, editable: true },
+        {
+          id: 'score',
+          field: 'score',
+          headerName: 'Score',
+          width: 120,
+          type: 'number',
+          editable: true,
+          validator: ({ value }) => Number(value) >= 0 || 'Score must be positive',
+        },
+      ],
+    });
+
+    await flush();
+    await flush();
+
+    expect(grid.setCellValue(1, 'name', 'Alpha Edited')).toBe(true);
+    await flush();
+    expect(grid.getRows()[0].name).toBe('Alpha Edited');
+
+    expect(grid.setCellValue(1, 'score', -1)).toBe(false);
+    await flush();
+    expect(grid.getCellValidationError(1, 'score')).toBe('Score must be positive');
+    expect(host.querySelector('.ag-cell-invalid[data-col-id="score"]')).not.toBeNull();
+
+    expect(grid.setCellValue(1, 'score', 30)).toBe(true);
+    await flush();
+    expect(grid.getValidationErrors()).toEqual([]);
+
+    grid.setRowSelected(1, true);
+    await flush();
+    const clipboard = grid.copySelectionToClipboard({ columns: ['name', 'score'] });
+    expect(clipboard).toContain('Alpha Edited\t30');
+
+    expect(grid.pasteFromClipboard('Gamma\t40', { startRowKey: 2, columns: ['name', 'score'] })).toBe(2);
+    await flush();
+    expect(grid.getRows()[1].name).toBe('Gamma');
+    expect(grid.getRows()[1].score).toBe(40);
+
+    expect(grid.exportExcel({ scope: 'all', columns: ['name', 'score'] })).toContain('<table>');
+
+    const stats = await grid.benchmarkLiveUpdates({ rowsPerSecond: 5, durationMs: 120, batchSize: 1 });
+    expect(stats.generated).toBeGreaterThan(0);
+
+    grid.destroy();
+  });
 });

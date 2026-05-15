@@ -369,6 +369,13 @@ export class BodyRenderer {
       cell.style.zIndex = String(stickyStyle.zIndex);
     }
 
+    const validationError = this._options.getCellValidationError?.(row._rowKey, def.id);
+    if (validationError) {
+      cell.classList.add('ag-cell-invalid');
+      cell.setAttribute('aria-invalid', 'true');
+      cell.title = String(validationError);
+    }
+
     if (this._viewModel.isVariableRowHeight()) {
       cell.classList.add('ag-cell-variable');
     }
@@ -422,6 +429,10 @@ export class BodyRenderer {
     cell.addEventListener('click', (event) => {
       event.stopPropagation();
       this._options.onCellClick?.({ row, colId: def.id, value, event });
+    });
+    cell.addEventListener('dblclick', (event) => {
+      event.stopPropagation();
+      this._options.onCellDoubleClick?.({ row, colId: def.id, value, cell, event });
     });
     cell.addEventListener('contextmenu', (event) => {
       event.stopPropagation();

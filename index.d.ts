@@ -55,6 +55,32 @@ export interface CsvExportOptions {
   fileName?: string;
 }
 
+export interface ExcelExportOptions extends CsvExportOptions {}
+
+export interface ClipboardOptions extends CsvExportOptions {
+  startRowKey?: GridKey;
+}
+
+export interface LiveBenchmarkOptions {
+  rowsPerSecond?: number;
+  durationMs?: number;
+  batchSize?: number;
+}
+
+export interface LiveBenchmarkResult {
+  generated: number;
+  elapsedMs: number;
+  rowsPerSecond: number;
+}
+
+export interface CellEditParams<Row = GridRow> {
+  row: Row;
+  def: ColumnDef<Row>;
+  value: any;
+}
+
+export interface CellValidationParams<Row = GridRow> extends CellEditParams<Row> {}
+
 export interface ContextMenuItem<Row = GridRow> {
   label: string;
   disabled?: boolean;
@@ -117,6 +143,10 @@ export interface ColumnDef<Row = GridRow> {
   reorderable?: boolean;
   formatter?: ((value: any, row: Row) => any) | null;
   renderer?: ((params: CellRendererParams<Row>) => HTMLElement | string | number | null | undefined) | null;
+  editable?: boolean | ((params: { row: Row; def: ColumnDef<Row> }) => boolean);
+  editor?: ((params: CellEditParams<Row>) => HTMLElement | null | undefined) | null;
+  parser?: ((params: CellEditParams<Row>) => any) | null;
+  validator?: ((params: CellValidationParams<Row>) => true | string | null | undefined) | null;
   headerRenderer?: ((def: ColumnDef<Row>) => HTMLElement | string | null | undefined) | null;
   comparator?: ((a: any, b: any, rowA?: Row, rowB?: Row) => number) | null;
   cellClass?: string | null;
@@ -230,6 +260,10 @@ export interface LiveUpdatesOptions {
   maxRows?: number;
 }
 
+export interface EditingOptions {
+  enabled?: boolean;
+}
+
 export interface GridOptions<Row = GridRow> {
   rowKey?: keyof Row | string | ((row: Row) => GridKey);
   rows?: Row[];
@@ -254,10 +288,12 @@ export interface GridOptions<Row = GridRow> {
   pagination?: PaginationOptions<Row>;
   infiniteScroll?: InfiniteScrollOptions<Row>;
   liveUpdates?: LiveUpdatesOptions;
+  editing?: EditingOptions;
   tree?: TreeOptions<Row>;
   onLoadChildren?: TreeOptions<Row>['onLoadChildren'];
   onRowClick?: ((payload: { row: Row; event: MouseEvent }) => void) | null;
   onCellClick?: ((payload: { row: Row; colId: string; value: any; event: MouseEvent }) => void) | null;
+  onCellDoubleClick?: ((payload: { row: Row; colId: string; value: any; cell: HTMLElement; event: MouseEvent }) => void) | null;
   onRowContextMenu?: ((payload: RowContextMenuPayload<Row>) => void) | null;
   onCellContextMenu?: ((payload: CellContextMenuPayload<Row>) => void) | null;
   emptyMessage?: string;
@@ -342,8 +378,18 @@ export declare class GridCore<Row = GridRow> {
   setLiveRowAnimationEnabled(enabled: boolean): void;
   isLiveRowAnimationEnabled(): boolean;
   setLocale(locale: Record<string, any>): void;
+  beginCellEdit(rowKey: GridKey, colId: string, options?: { cell?: HTMLElement }): boolean;
+  setCellValue(rowKey: GridKey, colId: string, rawValue: any): boolean;
+  validateRows(rows?: Row[]): Array<{ rowKey: string; colId: string; message: string }>;
+  getValidationErrors(): Array<{ rowKey: string; colId: string; message: string }>;
+  getCellValidationError(rowKey: GridKey, colId: string): string | null;
   exportCsv(options?: CsvExportOptions): string;
   downloadCsv(options?: CsvExportOptions): string;
+  exportExcel(options?: ExcelExportOptions): string;
+  downloadExcel(options?: ExcelExportOptions): string;
+  copySelectionToClipboard(options?: ClipboardOptions): string;
+  pasteFromClipboard(text: string, options?: ClipboardOptions): number;
+  benchmarkLiveUpdates(options?: LiveBenchmarkOptions): Promise<LiveBenchmarkResult>;
   saveColumnState(): Promise<void>;
   loadColumnState(): Promise<void>;
   clearColumnState(): Promise<void>;

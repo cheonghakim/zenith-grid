@@ -290,9 +290,53 @@ grid.pauseLiveUpdates();
 grid.resumeLiveUpdates();
 grid.setLiveMaxRows(2000);
 grid.setLiveRowAnimationEnabled(true);
+
+const stats = await grid.benchmarkLiveUpdates({
+  rowsPerSecond: 500,
+  durationMs: 3000,
+});
 ```
 
-### 12. 이벤트
+### 13. 셀 편집, 검증, 클립보드
+
+컬럼에 `editable`, `parser`, `validator`를 넣으면 기본 셀 편집을 사용할 수 있습니다.
+
+```js
+const columns = [
+  { id: 'name', field: 'name', headerName: '이름', editable: true },
+  {
+    id: 'score',
+    field: 'score',
+    headerName: '점수',
+    type: 'number',
+    editable: true,
+    validator: ({ value }) => Number(value) >= 0 || '점수는 0 이상이어야 합니다.',
+  },
+];
+
+grid.beginCellEdit(1, 'name');
+grid.setCellValue(1, 'score', 120);
+grid.validateRows();
+
+const errors = grid.getValidationErrors();
+```
+
+선택된 행을 스프레드시트에 붙여넣기 좋은 TSV로 복사하거나, TSV 텍스트를 기존 행에 붙여넣을 수 있습니다.
+
+```js
+grid.setRowSelected(1, true);
+
+const text = grid.copySelectionToClipboard({
+  columns: ['name', 'score'],
+});
+
+grid.pasteFromClipboard('Alice\t140', {
+  startRowKey: 1,
+  columns: ['name', 'score'],
+});
+```
+
+### 14. 이벤트
 
 ```js
 grid.on('render', (payload) => {
@@ -307,6 +351,10 @@ grid.on('cell-click', ({ row, colId, value }) => {
   console.log('cell click', row, colId, value);
 });
 
+grid.on('cell-value-change', ({ rowKey, colId, value }) => {
+  console.log('cell value changed', rowKey, colId, value);
+});
+
 grid.on('selection-change', (payload) => {
   console.log('selection changed', payload);
 });
@@ -316,9 +364,9 @@ grid.on('state-change', ({ type }) => {
 });
 ```
 
-### 13. CSV 내보내기와 컨텍스트 메뉴
+### 15. CSV/Excel 내보내기와 컨텍스트 메뉴
 
-현재 보이는 데이터, 전체 데이터, 선택된 행만 CSV로 내보낼 수 있습니다.
+현재 보이는 데이터, 전체 데이터, 선택된 행만 CSV 또는 Excel 호환 HTML로 내보낼 수 있습니다.
 
 ```js
 const csv = grid.exportCsv({
@@ -329,6 +377,16 @@ const csv = grid.exportCsv({
 grid.downloadCsv({
   scope: 'all',
   fileName: 'operators.csv',
+});
+
+const excelHtml = grid.exportExcel({
+  scope: 'all',
+  columns: ['name', 'team', 'score'],
+});
+
+grid.downloadExcel({
+  scope: 'all',
+  fileName: 'operators.xls',
 });
 ```
 
@@ -346,7 +404,7 @@ const grid = createGrid('#app', {
 });
 ```
 
-### 14. 플러그인
+### 16. 플러그인
 
 내장 플러그인은 `uppercaseTeamPlugin`, `scorePrefixPlugin`가 있습니다.
 
@@ -396,7 +454,7 @@ const myPlugin = {
 };
 ```
 
-### 15. 컬럼 상태 저장
+### 17. 컬럼 상태 저장
 
 `tableId`를 주면 컬럼 너비/가시성/핀 상태를 저장하고 다시 불러올 수 있습니다.
 
@@ -406,7 +464,7 @@ await grid.loadColumnState();
 await grid.clearColumnState();
 ```
 
-### 16. 컬럼 런타임 제어
+### 18. 컬럼 런타임 제어
 
 ```js
 grid.setColumnVisible('score', false);
@@ -418,7 +476,7 @@ const allCols = grid.getAllLeafColumns();
 const visibleCols = grid.getVisibleLeafColumns();
 ```
 
-### 17. 가변 행 높이
+### 19. 가변 행 높이
 
 ```js
 const grid = createGrid(container, {
@@ -433,7 +491,7 @@ const grid = createGrid(container, {
 });
 ```
 
-### 18. 헤더 그룹 (컬럼 묶기)
+### 20. 헤더 그룹 (컬럼 묶기)
 
 ```js
 const columns = [
@@ -449,7 +507,7 @@ const columns = [
 ];
 ```
 
-### 18. Vue 3 어댑터
+### 21. Vue 3 어댑터
 
 ```bash
 npm install highgrid
@@ -491,7 +549,7 @@ onMounted(() => init());
 </script>
 ```
 
-### 19. 테마 커스터마이징
+### 22. 테마 커스터마이징
 
 `tokens.css`를 가져오면 CSS 변수 하나로 전체 스타일을 제어할 수 있습니다.
 
@@ -528,7 +586,7 @@ import 'highgrid/styles/grid.css';
 </div>
 ```
 
-### 20. TypeScript
+### 23. TypeScript
 
 `index.d.ts`가 포함되어 있어 별도 설치 없이 타입 추론이 됩니다.
 
@@ -553,7 +611,7 @@ const grid = createGrid<Row>(document.getElementById('app')!, {
 });
 ```
 
-### 21. 상태 조회 API
+### 24. 상태 조회 API
 
 ```js
 grid.getFilterState();     // 현재 필터 상태
@@ -566,7 +624,7 @@ grid.getRows();            // 전체 원본 행
 grid.getFlatRows();        // 평탄화된 표시 행 (그룹/트리 포함)
 ```
 
-### 22. 예제 실행
+### 25. 예제 실행
 
 ```bash
 npm install
@@ -575,7 +633,7 @@ npm run dev
 
 예제 페이지에서는 HighGrid 데모를 열 수 있고, 우측 컨트롤 패널에서 모드 전환, 라이브 데이터, 컬럼 상태, 벤치마크를 확인할 수 있습니다.
 
-### 23. 배포 전 확인 사항
+### 26. 배포 전 확인 사항
 
 - `npm test`
 - `npm run build`
@@ -865,9 +923,53 @@ grid.pauseLiveUpdates();
 grid.resumeLiveUpdates();
 grid.setLiveMaxRows(2000);
 grid.setLiveRowAnimationEnabled(true);
+
+const stats = await grid.benchmarkLiveUpdates({
+  rowsPerSecond: 500,
+  durationMs: 3000,
+});
 ```
 
-### 13. Events
+### 13. Cell Editing, Validation, and Clipboard
+
+Add `editable`, `parser`, and `validator` to columns to enable the built-in editing flow.
+
+```js
+const columns = [
+  { id: 'name', field: 'name', headerName: 'Name', editable: true },
+  {
+    id: 'score',
+    field: 'score',
+    headerName: 'Score',
+    type: 'number',
+    editable: true,
+    validator: ({ value }) => Number(value) >= 0 || 'Score must be positive.',
+  },
+];
+
+grid.beginCellEdit(1, 'name');
+grid.setCellValue(1, 'score', 120);
+grid.validateRows();
+
+const errors = grid.getValidationErrors();
+```
+
+Clipboard helpers use tab-separated text so the output works well with spreadsheets.
+
+```js
+grid.setRowSelected(1, true);
+
+const text = grid.copySelectionToClipboard({
+  columns: ['name', 'score'],
+});
+
+grid.pasteFromClipboard('Alice\t140', {
+  startRowKey: 1,
+  columns: ['name', 'score'],
+});
+```
+
+### 14. Events
 
 ```js
 grid.on('render', (payload) => {
@@ -882,6 +984,10 @@ grid.on('cell-click', ({ row, colId, value }) => {
   console.log('cell click', row, colId, value);
 });
 
+grid.on('cell-value-change', ({ rowKey, colId, value }) => {
+  console.log('cell value changed', rowKey, colId, value);
+});
+
 grid.on('selection-change', (payload) => {
   console.log('selection changed', payload);
 });
@@ -891,7 +997,7 @@ grid.on('state-change', ({ type }) => {
 });
 ```
 
-### 14. CSV Export and Context Menus
+### 15. CSV/Excel Export and Context Menus
 
 ```js
 const csv = grid.exportCsv({
@@ -902,6 +1008,16 @@ const csv = grid.exportCsv({
 grid.downloadCsv({
   scope: 'all',
   fileName: 'operators.csv',
+});
+
+const excelHtml = grid.exportExcel({
+  scope: 'all',
+  columns: ['name', 'team', 'score'],
+});
+
+grid.downloadExcel({
+  scope: 'all',
+  fileName: 'operators.xls',
 });
 ```
 
@@ -917,7 +1033,7 @@ const grid = createGrid('#app', {
 });
 ```
 
-### 15. Plugins
+### 16. Plugins
 
 Built-in plugins include `uppercaseTeamPlugin` and `scorePrefixPlugin`.
 
@@ -967,7 +1083,7 @@ const myPlugin = {
 };
 ```
 
-### 16. Persisting Column State
+### 17. Persisting Column State
 
 When `tableId` is provided, HighGrid can persist and restore column width, visibility, and pin state.
 
@@ -977,7 +1093,7 @@ await grid.loadColumnState();
 await grid.clearColumnState();
 ```
 
-### 17. Column Runtime API
+### 18. Column Runtime API
 
 ```js
 grid.setColumnVisible('score', false);
@@ -989,7 +1105,7 @@ const allCols = grid.getAllLeafColumns();
 const visibleCols = grid.getVisibleLeafColumns();
 ```
 
-### 18. Variable Row Height
+### 19. Variable Row Height
 
 ```js
 const grid = createGrid(container, {
@@ -1001,7 +1117,7 @@ const grid = createGrid(container, {
 });
 ```
 
-### 19. Header Groups
+### 20. Header Groups
 
 ```js
 const columns = [
@@ -1017,7 +1133,7 @@ const columns = [
 ];
 ```
 
-### 18. Vue 3 Adapter
+### 21. Vue 3 Adapter
 
 ```bash
 npm install highgrid
@@ -1059,7 +1175,7 @@ onMounted(() => init());
 </script>
 ```
 
-### 19. Theming
+### 22. Theming
 
 Import `tokens.css` to expose every visual property as a CSS custom property.
 
@@ -1091,7 +1207,7 @@ Built-in theme presets:
 <div class="ag-theme-spacious"><div id="my-grid"></div></div>
 ```
 
-### 20. TypeScript
+### 23. TypeScript
 
 Type declarations are bundled — no separate `@types` package needed.
 
@@ -1112,7 +1228,7 @@ const grid = createGrid<Row>(document.getElementById('app')!, {
 });
 ```
 
-### 21. State Query API
+### 24. State Query API
 
 ```js
 grid.getFilterState();
@@ -1125,7 +1241,7 @@ grid.getRows();       // raw source rows
 grid.getFlatRows();   // flattened display rows (includes group/tree nodes)
 ```
 
-### 22. Running the Example App
+### 25. Running the Example App
 
 ```bash
 npm install
@@ -1134,7 +1250,7 @@ npm run dev
 
 The example app includes a floating control panel for display modes, live updates, column state, and quick benchmark actions.
 
-### 23. Before You Ship
+### 26. Before You Ship
 
 - `npm test`
 - `npm run build`

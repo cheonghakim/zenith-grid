@@ -80,6 +80,10 @@ export class ColumnModel {
       // 렌더링
       formatter: def.formatter ?? null,
       renderer: def.renderer ?? null,
+      editable: def.editable ?? null,
+      editor: def.editor ?? null,
+      parser: def.parser ?? null,
+      validator: def.validator ?? null,
       headerRenderer: def.headerRenderer ?? null,
       // 기능 플래그
       sortable: def.sortable ?? true,

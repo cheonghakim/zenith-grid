@@ -43,6 +43,7 @@ export class GridCore {
     this._locale = this._mergeLocale(DEFAULT_LOCALE, options.locale ?? {});
     this._activeCellColIndex = 0;
     this._handleKeydown = this._handleKeydown.bind(this);
+    this._validationErrors = new Map();
 
     this._getRowKey = this._createRowKeyGetter(options.rowKey);
     this._pluginManager = new PluginManager(this);
@@ -280,6 +281,11 @@ export class GridCore {
           this._events.emit('cell-click', payload);
           options.onCellClick?.(payload);
         },
+        onCellDoubleClick: (payload) => {
+          this._events.emit('cell-dblclick', payload);
+          options.onCellDoubleClick?.(payload);
+          this.beginCellEdit(payload.row._rowKey, payload.colId, { cell: payload.cell });
+        },
         onRowContextMenu: ({ row, event }) => {
           this._events.emit('row-contextmenu', { row, event });
           options.onRowContextMenu?.({ row, event });
@@ -321,6 +327,7 @@ export class GridCore {
         shouldAnimateRow: (rowKey) => this._liveUpdateManager.shouldAnimateRow(rowKey),
         getRowAnimationDuration: () => this._liveUpdateManager.getRowAnimationDuration(),
         getLocaleText: (key, fallback, params) => this.getLocaleText(key, fallback, params),
+        getCellValidationError: (rowKey, colId) => this.getCellValidationError(rowKey, colId),
       }
     );
 
@@ -585,7 +592,7 @@ export class GridCore {
 
   setRowSelected(rowKey, selected, options = {}) {
     const row = this._flatRows.find((item) => item._rowKey === String(rowKey));
-    const keys = this._collectSelectionKeysForRow(row, options);
+    const keys = row ? this._collectSelectionKeysForRow(row, options) : [String(rowKey)];
     this._selectionManager.setRowsSelected(keys, selected, selected ? 'select' : 'deselect');
     this._refreshSelection();
   }
@@ -852,6 +859,110 @@ export class GridCore {
     void this.refresh();
   }
 
+  beginCellEdit(rowKey, colId, options = {}) {
+    const column = this._columns.getDef(colId);
+    const row = this._dataStore.getByKey(rowKey);
+    if (!column || !row || !this._isCellEditable(row, column)) {
+      return false;
+    }
+
+    const cell = options.cell instanceof HTMLElement
+      ? options.cell
+      : this._container.querySelector(`.ag-row[data-row-key="${String(rowKey)}"] .ag-cell[data-col-id="${colId}"]`);
+    if (!(cell instanceof HTMLElement)) {
+      return false;
+    }
+
+    const previous = row[column.field];
+    const editor = this._createCellEditor(row, column, previous);
+    cell.classList.add('ag-cell-editing');
+    cell.innerHTML = '';
+    cell.appendChild(editor);
+    editor.focus();
+    editor.select?.();
+
+    const finish = (commit) => {
+      if (!cell.isConnected) return;
+      if (commit) {
+        this.setCellValue(rowKey, colId, editor.value);
+      } else {
+        void this.refresh();
+      }
+    };
+
+    editor.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        finish(true);
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        finish(false);
+      }
+    });
+    editor.addEventListener('blur', () => finish(true), { once: true });
+    return true;
+  }
+
+  setCellValue(rowKey, colId, rawValue) {
+    const column = this._columns.getDef(colId);
+    const row = this._dataStore.getByKey(rowKey);
+    if (!column || !row) {
+      return false;
+    }
+
+    const field = column.field;
+    const value = this._parseCellValue(rawValue, row, column);
+    const error = this._validateCellValue(value, row, column);
+    const errorKey = this._getValidationKey(rowKey, colId);
+    if (error) {
+      this._validationErrors.set(errorKey, error);
+      this._emitStateChanged('validation');
+      void this.refresh();
+      return false;
+    }
+
+    this._validationErrors.delete(errorKey);
+    this.patchRow(rowKey, { [field]: value });
+    this._events.emit('cell-value-change', {
+      rowKey: String(rowKey),
+      colId,
+      field,
+      value,
+      previousValue: row[field],
+      row,
+    });
+    this._emitStateChanged('edit');
+    return true;
+  }
+
+  validateRows(rows = this._dataStore.getAll()) {
+    this._validationErrors.clear();
+    const columns = this._columns.getAllLeafColumns().map((column) => column.def);
+    rows.forEach((row) => {
+      const rowKey = this._dataStore.getRowKey(row);
+      columns.forEach((column) => {
+        const error = this._validateCellValue(row[column.field], row, column);
+        if (error) {
+          this._validationErrors.set(this._getValidationKey(rowKey, column.id), error);
+        }
+      });
+    });
+    void this.refresh();
+    return this.getValidationErrors();
+  }
+
+  getValidationErrors() {
+    return [...this._validationErrors.entries()].map(([key, message]) => {
+      const [rowKey, colId] = key.split('::');
+      return { rowKey, colId, message };
+    });
+  }
+
+  getCellValidationError(rowKey, colId) {
+    return this._validationErrors.get(this._getValidationKey(rowKey, colId)) ?? null;
+  }
+
   exportCsv(options = {}) {
     const delimiter = options.delimiter ?? ',';
     const includeHeaders = options.includeHeaders !== false;
@@ -897,6 +1008,107 @@ export class GridCore {
     anchor.remove();
     URL.revokeObjectURL(url);
     return csv;
+  }
+
+  exportExcel(options = {}) {
+    const columns = this._resolveCsvColumns(options);
+    const rows = this._resolveCsvRows(options);
+    const tableRows = [];
+    if (options.includeHeaders !== false) {
+      tableRows.push(`<tr>${columns.map((column) => `<th>${this._escapeHtml(column.def.headerName ?? column.def.header ?? column.def.id)}</th>`).join('')}</tr>`);
+    }
+    rows.forEach((row) => {
+      tableRows.push(`<tr>${columns.map(({ def }) => `<td>${this._escapeHtml(row?.[def.field] ?? '')}</td>`).join('')}</tr>`);
+    });
+    return `<!doctype html><html><head><meta charset="utf-8"></head><body><table>${tableRows.join('')}</table></body></html>`;
+  }
+
+  downloadExcel(options = {}) {
+    const content = this.exportExcel(options);
+    if (typeof document === 'undefined' || typeof Blob === 'undefined' || typeof URL?.createObjectURL !== 'function') {
+      return content;
+    }
+    const blob = new Blob([content], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = options.fileName ?? 'highgrid-export.xls';
+    anchor.style.display = 'none';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    return content;
+  }
+
+  copySelectionToClipboard(options = {}) {
+    const text = this.exportCsv({
+      delimiter: '\t',
+      includeHeaders: options.includeHeaders ?? false,
+      onlySelected: options.onlySelected ?? true,
+      scope: options.scope ?? 'displayed',
+      columns: options.columns,
+    });
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(text);
+    }
+    return text;
+  }
+
+  pasteFromClipboard(text, options = {}) {
+    const rows = this._parseDelimitedRows(text, options.delimiter ?? '\t');
+    if (rows.length === 0) {
+      return 0;
+    }
+
+    const columns = this._resolveCsvColumns({ columns: options.columns });
+    const targetRows = this._resolvePasteTargetRows(options);
+    let changed = 0;
+
+    rows.forEach((values, rowOffset) => {
+      const row = targetRows[rowOffset];
+      if (!row) return;
+      const rowKey = row._rowKey ?? this._dataStore.getRowKey(row);
+      values.forEach((value, colOffset) => {
+        const column = columns[colOffset];
+        if (!column) return;
+        if (this.setCellValue(rowKey, column.def.id, value)) {
+          changed += 1;
+        }
+      });
+    });
+
+    return changed;
+  }
+
+  async benchmarkLiveUpdates(options = {}) {
+    const rowsPerSecond = Math.max(1, options.rowsPerSecond ?? 100);
+    const durationMs = Math.max(100, options.durationMs ?? 1000);
+    const batchSize = Math.max(1, options.batchSize ?? Math.min(rowsPerSecond, 100));
+    const start = performance.now?.() ?? Date.now();
+    let generated = 0;
+
+    while (((performance.now?.() ?? Date.now()) - start) < durationMs) {
+      const batch = [];
+      for (let index = 0; index < batchSize; index += 1) {
+        generated += 1;
+        batch.push({
+          id: `benchmark-${start}-${generated}`,
+          name: `Benchmark ${generated}`,
+          value: generated,
+        });
+      }
+      this.liveUpsertRows(batch);
+      await new Promise((resolve) => setTimeout(resolve, Math.max(0, Math.round((batchSize / rowsPerSecond) * 1000))));
+    }
+
+    await this.refresh();
+    const elapsedMs = (performance.now?.() ?? Date.now()) - start;
+    return {
+      generated,
+      elapsedMs,
+      rowsPerSecond: Math.round((generated / Math.max(1, elapsedMs)) * 1000),
+    };
   }
 
   getLocaleText(key, fallback, params = {}) {
@@ -1601,7 +1813,7 @@ export class GridCore {
   _resolveCsvRows(options = {}) {
     if (options.onlySelected === true) {
       const selected = this._selectionManager.getSelectedKeys();
-      return this.getFlatRows().filter((row) => row?._type == null && selected.has(String(row._rowKey)));
+      return this.getFlatRows().filter((row) => this._isExportableRow(row) && selected.has(String(row._rowKey)));
     }
 
     const scope = options.scope ?? 'displayed';
@@ -1609,9 +1821,92 @@ export class GridCore {
       return this._dataStore.getAll();
     }
     if (scope === 'flat') {
-      return this.getFlatRows().filter((row) => row?._type == null);
+      return this.getFlatRows().filter((row) => this._isExportableRow(row));
     }
-    return this.getRows().filter((row) => row?._type == null);
+    return this.getRows().filter((row) => this._isExportableRow(row));
+  }
+
+  _resolvePasteTargetRows(options = {}) {
+    if (options.startRowKey != null) {
+      const flatRows = this.getFlatRows().filter((row) => this._isExportableRow(row));
+      const startIndex = flatRows.findIndex((row) => String(row._rowKey) === String(options.startRowKey));
+      return startIndex >= 0 ? flatRows.slice(startIndex) : [];
+    }
+
+    const selected = this._selectionManager.getSelectedKeys();
+    if (selected.size > 0) {
+      return this.getFlatRows().filter((row) => this._isExportableRow(row) && selected.has(String(row._rowKey)));
+    }
+
+    return this.getRows().filter((row) => this._isExportableRow(row));
+  }
+
+  _isExportableRow(row) {
+    return row && row._type !== 'group-header' && row._type !== 'tree-loading';
+  }
+
+  _parseDelimitedRows(text, delimiter) {
+    return String(text ?? '')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n')
+      .filter((line) => line.length > 0)
+      .map((line) => line.split(delimiter));
+  }
+
+  _isCellEditable(row, column) {
+    if (column.editable === false) {
+      return false;
+    }
+    const editing = this._options.editing;
+    if (editing?.enabled === false) {
+      return false;
+    }
+    if (typeof column.editable === 'function') {
+      return column.editable({ row, def: column }) !== false;
+    }
+    return column.editable === true || editing?.enabled === true;
+  }
+
+  _createCellEditor(row, column, value) {
+    if (typeof column.editor === 'function') {
+      const custom = column.editor({ row, def: column, value });
+      if (custom instanceof HTMLElement) {
+        return custom;
+      }
+    }
+
+    const input = document.createElement('input');
+    input.className = 'ag-cell-editor';
+    input.type = column.type === 'number' ? 'number' : column.type === 'date' ? 'date' : 'text';
+    input.value = value == null ? '' : String(value);
+    return input;
+  }
+
+  _parseCellValue(rawValue, row, column) {
+    if (typeof column.parser === 'function') {
+      return column.parser({ value: rawValue, row, def: column });
+    }
+    if (column.type === 'number') {
+      const parsed = Number(rawValue);
+      return Number.isNaN(parsed) ? rawValue : parsed;
+    }
+    return rawValue;
+  }
+
+  _validateCellValue(value, row, column) {
+    if (typeof column.validator !== 'function') {
+      return null;
+    }
+    const result = column.validator({ value, row, def: column });
+    if (result === true || result == null) {
+      return null;
+    }
+    return typeof result === 'string' ? result : 'Invalid value';
+  }
+
+  _getValidationKey(rowKey, colId) {
+    return `${String(rowKey)}::${String(colId)}`;
   }
 
   _escapeCsvValue(value, delimiter) {
@@ -1627,5 +1922,14 @@ export class GridCore {
       return `"${normalized.replace(/"/g, '""')}"`;
     }
     return normalized;
+  }
+
+  _escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 }
