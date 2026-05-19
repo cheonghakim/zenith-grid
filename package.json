@@ -54,5 +54,13 @@
     "virtual-scroll",
     "enterprise"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cheonghakim/awesome-grid.git"
+  },
+  "homepage": "https://cheonghakim.github.io/awesome-grid",
+  "bugs": {
+    "url": "https://github.com/cheonghakim/awesome-grid/issues"
+  }
 }
