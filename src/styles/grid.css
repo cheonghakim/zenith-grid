@@ -890,14 +890,14 @@
   padding-top: 10px;
   padding-bottom: 10px;
   white-space: normal;
-  overflow: visible;
+  overflow: hidden;
   text-overflow: initial;
 }
 
 .ag-row-variable .ag-cell-text,
 .ag-row-variable .ag-group-label {
   white-space: normal;
-  overflow: visible;
+  overflow: hidden;
   text-overflow: initial;
   line-height: 1.45;
 }

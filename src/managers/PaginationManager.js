@@ -150,6 +150,10 @@ export class PaginationManager {
     }
   }
 
+  reset() {
+    this._page = 0;
+  }
+
   destroy() {
     this._page = 0;
   }

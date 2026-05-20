@@ -84,7 +84,14 @@ export class InfiniteScrollManager {
   }
 
   async loadMore() {
-    if (this._mode !== 'server' || !this._hasMore || this._loading || !this._onLoadMore) {
+    if (!this._hasMore || this._loading) return;
+
+    if (this._mode !== 'server') {
+      this._loadClientMore();
+      return;
+    }
+
+    if (!this._onLoadMore) {
       return;
     }
 

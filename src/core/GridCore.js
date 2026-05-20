@@ -732,8 +732,12 @@ export class GridCore {
   }
 
   setPaginationMode(mode) {
+    const prevMode = this._paginationManager.getMode();
     this._paginationManager.setMode(mode);
     if (this._displayMode === 'paginated' && mode === 'server') {
+      if (prevMode !== 'server') {
+        this._paginationManager.reset();
+      }
       void this._loadServerPage(this._paginationManager.getState().page, this._paginationManager.getState().pageSize);
       return;
     }
@@ -755,7 +759,7 @@ export class GridCore {
       this._infiniteScrollManager.reset();
     }
     if (mode === 'infinite') {
-      this._paginationManager.setPage(0);
+      this._paginationManager.reset();
     }
     this._displayMode = mode;
     this._pipeline._displayMode = mode;
@@ -1015,7 +1019,21 @@ export class GridCore {
     const rows = this._resolveCsvRows(options);
     const tableRows = [];
     if (options.includeHeaders !== false) {
-      tableRows.push(`<tr>${columns.map((column) => `<th>${this._escapeHtml(column.def.headerName ?? column.def.header ?? column.def.id)}</th>`).join('')}</tr>`);
+      const multiHeaders = this._buildExcelHeaderRows(columns);
+      if (multiHeaders) {
+        for (const cells of multiHeaders) {
+          const cellHtml = cells.map(({ text, colspan, rowspan }) => {
+            const attrs = [
+              colspan > 1 ? `colspan="${colspan}"` : '',
+              rowspan > 1 ? `rowspan="${rowspan}"` : '',
+            ].filter(Boolean).join(' ');
+            return `<th${attrs ? ` ${attrs}` : ''}>${this._escapeHtml(text)}</th>`;
+          }).join('');
+          tableRows.push(`<tr>${cellHtml}</tr>`);
+        }
+      } else {
+        tableRows.push(`<tr>${columns.map((col) => `<th>${this._escapeHtml(col.def.headerName ?? col.def.header ?? col.def.id)}</th>`).join('')}</tr>`);
+      }
     }
     rows.forEach((row) => {
       tableRows.push(`<tr>${columns.map(({ def }) => `<td>${this._escapeHtml(row?.[def.field] ?? '')}</td>`).join('')}</tr>`);
@@ -1028,7 +1046,8 @@ export class GridCore {
     if (typeof document === 'undefined' || typeof Blob === 'undefined' || typeof URL?.createObjectURL !== 'function') {
       return content;
     }
-    const blob = new Blob([content], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    // BOM(﻿)을 앞에 추가해 Excel이 UTF-8로 읽도록 강제 (€ 등 특수문자 깨짐 방지)
+    const blob = new Blob(['﻿', content], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
@@ -1922,6 +1941,55 @@ export class GridCore {
       return `"${normalized.replace(/"/g, '""')}"`;
     }
     return normalized;
+  }
+
+  _buildExcelHeaderRows(leafColumns) {
+    const hasGroups = leafColumns.some((col) => col.def.parentId != null);
+    if (!hasGroups) return null;
+
+    const defsMap = new Map(
+      this._columns.getModel().getAllDefs().map((def) => [def.id, def])
+    );
+
+    const maxDepth = leafColumns.reduce((max, col) => Math.max(max, col.def.depth), 0);
+
+    const getAncestorAtDepth = (def, targetDepth) => {
+      if (def.depth === targetDepth) return def.id;
+      if (def.depth < targetDepth) return null;
+      let current = def;
+      while (current && current.depth > targetDepth) {
+        current = defsMap.get(current.parentId);
+      }
+      return current?.depth === targetDepth ? current.id : null;
+    };
+
+    const headerRows = [];
+    for (let depth = 0; depth <= maxDepth; depth++) {
+      const cells = [];
+      let i = 0;
+      while (i < leafColumns.length) {
+        const col = leafColumns[i];
+        const ancestorId = getAncestorAtDepth(col.def, depth);
+        if (ancestorId === null) { i++; continue; }
+
+        const ancestorDef = defsMap.get(ancestorId);
+        if (ancestorDef.isGroup) {
+          let colspan = 0;
+          let j = i;
+          while (j < leafColumns.length && getAncestorAtDepth(leafColumns[j].def, depth) === ancestorId) {
+            colspan++;
+            j++;
+          }
+          cells.push({ text: ancestorDef.headerName, colspan, rowspan: 1 });
+          i = j;
+        } else {
+          cells.push({ text: ancestorDef.headerName, colspan: 1, rowspan: maxDepth - depth + 1 });
+          i++;
+        }
+      }
+      headerRows.push(cells);
+    }
+    return headerRows;
   }
 
   _escapeHtml(value) {

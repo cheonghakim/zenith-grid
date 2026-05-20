@@ -1377,3 +1377,24 @@ const multiHeaderGrid = createGrid(document.getElementById('multiHeaderGrid'), {
   rowHeight: 40,
   tableId: 'multi-header-demo',
 });
+
+// ── 다운로드 버튼 ──────────────────────────────────────────────
+document.getElementById('downloadMainCsvButton').addEventListener('click', () => {
+  grid.downloadCsv({ fileName: 'main-grid.csv' });
+});
+
+document.getElementById('downloadMainExcelButton').addEventListener('click', () => {
+  grid.downloadExcel({ fileName: 'main-grid.xls' });
+});
+
+document.getElementById('downloadMainSelectedCsvButton').addEventListener('click', () => {
+  grid.downloadCsv({ fileName: 'main-grid-selected.csv', onlySelected: true });
+});
+
+document.getElementById('downloadMultiCsvButton').addEventListener('click', () => {
+  multiHeaderGrid.downloadCsv({ fileName: 'multi-header-grid.csv' });
+});
+
+document.getElementById('downloadMultiExcelButton').addEventListener('click', () => {
+  multiHeaderGrid.downloadExcel({ fileName: 'multi-header-grid.xls' });
+});
