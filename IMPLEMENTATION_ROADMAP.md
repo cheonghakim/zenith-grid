@@ -102,8 +102,8 @@ src/
     DataWorker.js
   adapters/
     vue3/
-      AwesomeGrid.vue
-      useAwesomeGrid.js
+      HighGrid.vue
+      useHighGrid.js
   styles/
     grid.css
     tokens.css
@@ -223,15 +223,15 @@ raw rows
 브라우저에서 아래 코드가 동작해야 한다.
 
 ```js
-import { createGrid } from 'highgrid';
+import { createGrid } from "highgrid";
 
-const grid = createGrid(document.getElementById('app'), {
+const grid = createGrid(document.getElementById("app"), {
   columns: [
-    { id: 'id', field: 'id', title: 'ID', width: 80 },
-    { id: 'name', field: 'name', title: 'Name', width: 180 },
-    { id: 'status', field: 'status', title: 'Status', width: 120 },
+    { id: "id", field: "id", title: "ID", width: 80 },
+    { id: "name", field: "name", title: "Name", width: 180 },
+    { id: "status", field: "status", title: "Status", width: 120 },
   ],
-  rowKey: 'id',
+  rowKey: "id",
   rows: largeRows,
 });
 ```

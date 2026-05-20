@@ -57,10 +57,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cheonghakim/awesome-grid.git"
+    "url": "git+https://github.com/cheonghakim/high-grid.git"
   },
-  "homepage": "https://cheonghakim.github.io/awesome-grid",
+  "homepage": "https://cheonghakim.github.io/high-grid",
   "bugs": {
-    "url": "https://github.com/cheonghakim/awesome-grid/issues"
+    "url": "https://github.com/cheonghakim/high-grid/issues"
   }
 }
