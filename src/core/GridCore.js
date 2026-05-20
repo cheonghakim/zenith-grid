@@ -975,6 +975,10 @@ export class GridCore {
     const lines = [];
 
     if (includeHeaders) {
+      const groupHeaderRow = this._buildCsvGroupHeaderRow(columns, delimiter);
+      if (groupHeaderRow !== null) {
+        lines.push(groupHeaderRow);
+      }
       lines.push(columns.map((column) => this._escapeCsvValue(column.def.headerName ?? column.def.header ?? column.def.id, delimiter)).join(delimiter));
     }
 
@@ -1001,7 +1005,7 @@ export class GridCore {
       return csv;
     }
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['﻿', csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
@@ -1990,6 +1994,25 @@ export class GridCore {
       headerRows.push(cells);
     }
     return headerRows;
+  }
+
+  _buildCsvGroupHeaderRow(leafColumns, delimiter) {
+    const hasGroups = leafColumns.some((col) => col.def.parentId != null);
+    if (!hasGroups) return null;
+
+    const defsMap = new Map(
+      this._columns.getModel().getAllDefs().map((def) => [def.id, def])
+    );
+
+    const cells = leafColumns.map((col) => {
+      if (!col.def.parentId) return '';
+      const parentDef = defsMap.get(col.def.parentId);
+      if (!parentDef) return '';
+      const siblings = leafColumns.filter((c) => c.def.parentId === col.def.parentId);
+      return siblings[0]?.def.id === col.def.id ? (parentDef.headerName ?? '') : '';
+    });
+
+    return cells.map((v) => this._escapeCsvValue(v, delimiter)).join(delimiter);
   }
 
   _escapeHtml(value) {
