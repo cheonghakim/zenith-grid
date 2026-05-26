@@ -170,6 +170,35 @@ export class TreeManager {
     return flat;
   }
 
+  flattenAllForExport(rows) {
+    if (!this._enabled) {
+      return rows;
+    }
+    if (this._treeMode === 'parentId') {
+      return rows;
+    }
+    return this._flattenTreeAllForExport(rows, null, 0);
+  }
+
+  _flattenTreeAllForExport(rows, parentKey, depth) {
+    const flat = [];
+    for (const row of rows) {
+      const key = this._getKey(row);
+      const rawChildren = row[this._childrenField] ?? this._childrenCache.get(key) ?? [];
+      const flatRow = this._toFlatRow(row, parentKey, depth, flat.length);
+      flatRow._hasChildren = rawChildren.length > 0 || row[this._hasChildrenField] === true;
+      flatRow._isExpanded = this._expandedKeys.has(key);
+      flatRow._isParent = flatRow._hasChildren;
+      flatRow._children = rawChildren;
+      flatRow._descendantRowKeys = this._collectDescendantRowKeys(rawChildren);
+      flat.push(flatRow);
+      if (rawChildren.length > 0) {
+        flat.push(...this._flattenTreeAllForExport(rawChildren, key, depth + 1));
+      }
+    }
+    return flat;
+  }
+
   _toFlatRow(row, parentKey, depth, flatIndex) {
     return {
       _type: 'tree-node',

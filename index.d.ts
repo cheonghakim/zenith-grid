@@ -50,7 +50,7 @@ export interface CsvExportOptions {
   includeHeaders?: boolean;
   includeHidden?: boolean;
   onlySelected?: boolean;
-  scope?: 'displayed' | 'flat' | 'all';
+  scope?: 'displayed' | 'flat' | 'all' | 'complete';
   columns?: string[];
   fileName?: string;
 }

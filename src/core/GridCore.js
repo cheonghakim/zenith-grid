@@ -970,7 +970,7 @@ export class GridCore {
   exportCsv(options = {}) {
     const delimiter = options.delimiter ?? ',';
     const includeHeaders = options.includeHeaders !== false;
-    const columns = this._resolveCsvColumns(options);
+    const columns = this._resolveExportColumns(options);
     const rows = this._resolveCsvRows(options);
     const lines = [];
 
@@ -1000,7 +1000,7 @@ export class GridCore {
   }
 
   downloadCsv(options = {}) {
-    const csv = this.exportCsv(options);
+    const csv = this.exportCsv({ scope: 'complete', ...options });
     if (typeof document === 'undefined' || typeof Blob === 'undefined' || typeof URL?.createObjectURL !== 'function') {
       return csv;
     }
@@ -1019,7 +1019,7 @@ export class GridCore {
   }
 
   exportExcel(options = {}) {
-    const columns = this._resolveCsvColumns(options);
+    const columns = this._resolveExportColumns(options);
     const rows = this._resolveCsvRows(options);
     const tableRows = [];
     if (options.includeHeaders !== false) {
@@ -1046,7 +1046,7 @@ export class GridCore {
   }
 
   downloadExcel(options = {}) {
-    const content = this.exportExcel(options);
+    const content = this.exportExcel({ scope: 'complete', ...options });
     if (typeof document === 'undefined' || typeof Blob === 'undefined' || typeof URL?.createObjectURL !== 'function') {
       return content;
     }
@@ -1846,7 +1846,41 @@ export class GridCore {
     if (scope === 'flat') {
       return this.getFlatRows().filter((row) => this._isExportableRow(row));
     }
+    if (scope === 'complete') {
+      if (this._treeManager.isEnabled()) {
+        return this._treeManager.flattenAllForExport(this._dataStore.getAll())
+          .filter((row) => this._isExportableRow(row));
+      }
+      if (this._groupManager.isEnabled()) {
+        return this._dataStore.getAll();
+      }
+      return this.getFlatRows().filter((row) => this._isExportableRow(row));
+    }
     return this.getRows().filter((row) => this._isExportableRow(row));
+  }
+
+  _resolveExportColumns(options = {}) {
+    const columns = this._resolveCsvColumns(options);
+    const scope = options.scope ?? 'displayed';
+    if (
+      scope !== 'all' &&
+      this._treeManager.isEnabled() &&
+      this._treeManager._treeMode === 'children'
+    ) {
+      const keyField = typeof this._dataStore._rowKeyField === 'string'
+        ? this._dataStore._rowKeyField
+        : 'key';
+      const parentCol = {
+        def: {
+          id: '__parent_key',
+          field: '_parentKey',
+          headerName: `Parent ${keyField}`,
+          header: `Parent ${keyField}`,
+        },
+      };
+      return [parentCol, ...columns];
+    }
+    return columns;
   }
 
   _resolvePasteTargetRows(options = {}) {
