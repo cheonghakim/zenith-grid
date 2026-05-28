@@ -3,6 +3,8 @@
 HighGrid is a vanilla JavaScript data grid library.
 It covers the pieces you usually need in a real table: virtual scrolling, paging, infinite loading, grouping, tree data, live updates, plugins, and custom cell rendering.
 
+<img width="1669" height="822" alt="image" src="https://github.com/user-attachments/assets/feda24a0-f56f-4250-b507-3c91041b27d8" />
+
 ---
 
 ## Demo
