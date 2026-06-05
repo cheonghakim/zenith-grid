@@ -18,74 +18,81 @@ Other Languages: [한국어 문서 (Korean)](./README.ko.md)
 A categorized guide map to quickly locate details about HighGrid's extensive feature set. Click on any topic to jump directly to its section.
 
 #### 1. Setup & Fundamentals
-* [1. Overview](#1-overview)
-* [2. Installation](#2-installation)
-* [3. Quick Start](#3-quick-start)
-* [4. Column Definitions](#4-column-definitions)
-* [5. Cell Renderer](#5-cell-renderer)
-* [6. Core Options](#6-core-options)
-* [7. Overlay States and Accessibility](#7-overlay-states-and-accessibility)
-* [20. Header Groups](#20-header-groups)
-* [23. TypeScript Support](#23-typescript)
-* [27. Before You Ship](#27-before-you-ship)
-* [50. Auto-numbering Row Column (Row number)](#50-auto-numbering-row-column-row-number)
-* [52. Column Inline Filter Row](#52-column-inline-filter-row)
+
+- [1. Overview](#1-overview)
+- [2. Installation](#2-installation)
+- [3. Quick Start](#3-quick-start)
+- [4. Column Definitions](#4-column-definitions)
+- [5. Cell Renderer](#5-cell-renderer)
+- [6. Core Options](#6-core-options)
+- [7. Overlay States and Accessibility](#7-overlay-states-and-accessibility)
+- [20. Header Groups](#20-header-groups)
+- [23. TypeScript Support](#23-typescript)
+- [27. Before You Ship](#27-before-you-ship)
+- [50. Auto-numbering Row Column (Row number)](#50-auto-numbering-row-column-row-number)
+- [52. Column Inline Filter Row](#52-column-inline-filter-row)
 
 #### 2. Data Operations & Updates
-* [8. Data Mutation API](#8-data-mutation-api)
-* [12. Live Updates](#12-live-updates)
-* [18. Column Runtime API](#18-column-runtime-api)
-* [24. State Query API](#24-state-query-api)
-* [30. Column Aggregation (Status Bar)](#30-column-aggregation-status-bar)
-* [33. Row Pinning](#33-row-pinning)
-* [40. Status Bar](#40-status-bar)
-* [51. Cell Flash Animation](#51-cell-flash-animation-live-update-highlights)
+
+- [8. Data Mutation API](#8-data-mutation-api)
+- [12. Live Updates](#12-live-updates)
+- [18. Column Runtime API](#18-column-runtime-api)
+- [24. State Query API](#24-state-query-api)
+- [30. Column Aggregation (Status Bar)](#30-column-aggregation-status-bar)
+- [33. Row Pinning](#33-row-pinning)
+- [40. Status Bar](#40-status-bar)
+- [51. Cell Flash Animation](#51-cell-flash-animation-live-update-highlights)
 
 #### 3. Filtering, Sorting & Grouping
-* [9. Sorting, Filtering, Selection](#9-sorting-filtering-selection)
-* [10. Grouping and Tree Data](#10-grouping-and-tree-data)
-* [11. Pagination and Infinite Scroll](#11-pagination-and-infinite-scroll)
-* [31. Advanced Filter (AND/OR Tree)](#31-advanced-filter-andor-tree)
-* [32. Pivot Mode](#32-pivot-mode)
-* [41. Master-Detail (Expandable Rows)](#41-master-detail-expandable-rows)
-* [43. Multi-column Sorting (Shift+Click)](#43-multi-column-sorting-shiftclick)
-* [49. Advanced Filter GUI Builder](#49-advanced-filter-gui-builder-side-panel-filter-tab)
-* [57. Multi-level Group Aggregations](#57-multi-level-group-aggregations)
-* [58. Web Worker Background Data Pipeline](#58-web-worker-background-data-pipeline)
+
+- [9. Sorting, Filtering, Selection](#9-sorting-filtering-selection)
+- [10. Grouping and Tree Data](#10-grouping-and-tree-data)
+- [11. Pagination and Infinite Scroll](#11-pagination-and-infinite-scroll)
+- [31. Advanced Filter (AND/OR Tree)](#31-advanced-filter-andor-tree)
+- [32. Pivot Mode](#32-pivot-mode)
+- [41. Master-Detail (Expandable Rows)](#41-master-detail-expandable-rows)
+- [43. Multi-column Sorting (Shift+Click)](#43-multi-column-sorting-shiftclick)
+- [49. Advanced Filter GUI Builder](#49-advanced-filter-gui-builder-side-panel-filter-tab)
+- [57. Multi-level Group Aggregations](#57-multi-level-group-aggregations)
+- [58. Web Worker Background Data Pipeline](#58-web-worker-background-data-pipeline)
 
 #### 4. Cell Interactions & Editing
-* [13. Cell Editing, Validation, and Clipboard](#13-cell-editing-validation-and-clipboard)
-* [29. Custom Cell Editors](#29-custom-cell-editors)
-* [34. Undo / Redo](#34-undo--redo)
-* [35. Row Drag & Drop](#35-row-drag--drop)
-* [36. Range Selection](#36-range-selection)
-* [47. 2D Rectangular Range Copy/Paste](#47-2d-rectangular-range-copypaste)
-* [48. Functional Cell Edit Locking](#48-functional-cell-edit-locking)
-* [53. Keyboard Navigation Completed](#53-keyboard-navigation-completed)
-* [55. Fill Handle (Cell Autofill)](#55-fill-handle-cell-autofill)
-* [59. Basic Formulas (=SUM, =AVG)](#59-basic-formulas-sum-avg)
+
+- [13. Cell Editing, Validation, and Clipboard](#13-cell-editing-validation-and-clipboard)
+- [29. Custom Cell Editors](#29-custom-cell-editors)
+- [34. Undo / Redo](#34-undo--redo)
+- [35. Row Drag & Drop](#35-row-drag--drop)
+- [36. Range Selection](#36-range-selection)
+- [47. 2D Rectangular Range Copy/Paste](#47-2d-rectangular-range-copypaste)
+- [48. Functional Cell Edit Locking](#48-functional-cell-edit-locking)
+- [53. Keyboard Navigation Completed](#53-keyboard-navigation-completed)
+- [55. Fill Handle (Cell Autofill)](#55-fill-handle-cell-autofill)
+- [59. Basic Formulas (=SUM, =AVG)](#59-basic-formulas-sum-avg)
 
 #### 5. Styling, Events & Tooling
-* [14. Events](#14-events)
-* [15. CSV/Excel Export and Context Menus](#15-csvexcel-export-and-context-menus)
-* [16. Plugins](#16-plugins)
-* [17. Persisting Column State](#17-persisting-column-state)
-* [19. Variable Row Height](#19-variable-row-height)
-* [22. Theming](#22-theming)
-* [37. Conditional Formatting](#37-conditional-formatting)
-* [38. Sparkline Plugin (Inline Charts)](#38-sparkline-plugin-inline-charts)
-* [39. XLSX Export Plugin](#39-xlsx-export-plugin)
-* [42. Print](#42-print)
-* [54. Side Panel Drag & Drop Column Reordering](#54-side-panel-drag--drop-column-reordering)
-* [56. Rich HTML Tooltip (Custom Popups)](#56-rich-html-tooltip-custom-popups)
+
+- [14. Events](#14-events)
+- [15. CSV/Excel Export and Context Menus](#15-csvexcel-export-and-context-menus)
+- [16. Plugins](#16-plugins)
+- [17. Persisting Column State](#17-persisting-column-state)
+- [19. Variable Row Height](#19-variable-row-height)
+- [22. Theming](#22-theming)
+- [37. Conditional Formatting](#37-conditional-formatting)
+- [38. Sparkline Plugin (Inline Charts)](#38-sparkline-plugin-inline-charts)
+- [39. XLSX Export Plugin](#39-xlsx-export-plugin)
+- [42. Print](#42-print)
+- [54. Side Panel Drag & Drop Column Reordering](#54-side-panel-drag--drop-column-reordering)
+- [56. Rich HTML Tooltip (Custom Popups)](#56-rich-html-tooltip-custom-popups)
 
 #### 6. Framework Integrations
-* [21. Vue 3 Adapter](#21-vue-3-adapter)
-* [28. React Adapter](#28-react-adapter)
+
+- [21. Vue 3 Adapter](#21-vue-3-adapter)
+- [28. React Adapter](#28-react-adapter)
 
 #### 7. Development & Running Examples
-* [25. Running the Example App](#25-running-the-example-app)
-* [26. GitHub Pages Deployment](#26-github-pages-deployment)
+
+- [25. Running the Example App](#25-running-the-example-app)
+- [26. GitHub Pages Deployment](#26-github-pages-deployment)
 
 ---
 
@@ -765,13 +772,13 @@ function MyGrid() {
 
 `useHighGrid` returns:
 
-| Property | Type | Description |
-|---|---|---|
-| `containerRef` | `RefObject` | Attach to the container `<div>` |
-| `grid` | `GridCore \| null` | Raw instance — available after mount |
-| `getGrid()` | `() => GridCore \| null` | Stable ref accessor |
-| `isReady` | `boolean` | `true` after the grid has mounted |
-| `state` | `object` | Reactive selection + render summary |
+| Property       | Type                     | Description                          |
+| -------------- | ------------------------ | ------------------------------------ |
+| `containerRef` | `RefObject`              | Attach to the container `<div>`      |
+| `grid`         | `GridCore \| null`       | Raw instance — available after mount |
+| `getGrid()`    | `() => GridCore \| null` | Stable ref accessor                  |
+| `isReady`      | `boolean`                | `true` after the grid has mounted    |
+| `state`        | `object`                 | Reactive selection + render summary  |
 
 `state` shape:
 
@@ -867,10 +874,20 @@ Enable the status bar and add `aggregate` to columns you want to summarise.
 const grid = createGrid(container, {
   rowKey: "id",
   columns: [
-    { id: "score", field: "score", headerName: "Score", type: "number",
-      aggregate: "avg" },
-    { id: "revenue", field: "revenue", headerName: "Revenue", type: "number",
-      aggregate: "sum" },
+    {
+      id: "score",
+      field: "score",
+      headerName: "Score",
+      type: "number",
+      aggregate: "avg",
+    },
+    {
+      id: "revenue",
+      field: "revenue",
+      headerName: "Revenue",
+      type: "number",
+      aggregate: "sum",
+    },
   ],
   rows,
   statusBar: { enabled: true },
@@ -900,8 +917,18 @@ grid.clearAggregates();
 grid.setAdvancedFilter({
   type: "AND",
   conditions: [
-    { field: "status",   operator: "equals",      value: "Active",   filterType: "select" },
-    { field: "score",    operator: "greaterThan",  value: 5000,       filterType: "number" },
+    {
+      field: "status",
+      operator: "equals",
+      value: "Active",
+      filterType: "select",
+    },
+    {
+      field: "score",
+      operator: "greaterThan",
+      value: 5000,
+      filterType: "number",
+    },
     {
       type: "OR",
       conditions: [
@@ -917,21 +944,21 @@ grid.clearAdvancedFilter();
 
 Leaf node operators by `filterType`:
 
-| filterType | operators |
-|---|---|
-| `text` (default) | `contains`, `notContains`, `startsWith`, `endsWith`, `equals`, `notEquals` |
-| `number` | `equals`, `notEquals`, `greaterThan`, `greaterThanOrEqual`, `lessThan`, `lessThanOrEqual`, `between` |
-| `date` | `equals`, `notEquals`, `before`, `after`, `between` |
-| `select` | `equals` (matches single or array of values) |
+| filterType       | operators                                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `text` (default) | `contains`, `notContains`, `startsWith`, `endsWith`, `equals`, `notEquals`                           |
+| `number`         | `equals`, `notEquals`, `greaterThan`, `greaterThanOrEqual`, `lessThan`, `lessThanOrEqual`, `between` |
+| `date`           | `equals`, `notEquals`, `before`, `after`, `between`                                                  |
+| `select`         | `equals` (matches single or array of values)                                                         |
 
 ### 32. Pivot Mode
 
 ```js
 grid.enablePivot({
-  rowFields: ["region"],    // fields to use as row groups
-  columnField: "team",      // field whose unique values become columns
-  valueField: "score",      // numeric field to aggregate
-  aggFunction: "avg",       // "sum" | "avg" | "count" | "min" | "max"
+  rowFields: ["region"], // fields to use as row groups
+  columnField: "team", // field whose unique values become columns
+  valueField: "score", // numeric field to aggregate
+  aggFunction: "avg", // "sum" | "avg" | "count" | "min" | "max"
 });
 
 grid.disablePivot();
@@ -952,9 +979,7 @@ Pin rows to the top or bottom of the grid — they stay visible while the body s
 const firstRow = grid.getRows()[0];
 grid.setPinnedTopRows([{ ...firstRow, name: "📌 " + firstRow.name }]);
 
-grid.setPinnedBottomRows([
-  { id: "total", name: "Total", score: sumAll() },
-]);
+grid.setPinnedBottomRows([{ id: "total", name: "Total", score: sumAll() }]);
 
 // clear
 grid.setPinnedTopRows([]);
@@ -1007,7 +1032,7 @@ Listen to drag lifecycle events:
 
 ```js
 grid.on("row-drag-start", ({ rowKey }) => console.log("drag start", rowKey));
-grid.on("row-drag-end",   ({ rowKey }) => console.log("drag end",   rowKey));
+grid.on("row-drag-end", ({ rowKey }) => console.log("drag end", rowKey));
 ```
 
 ### 36. Range Selection
@@ -1067,8 +1092,8 @@ import { createGrid, createSparklinePlugin } from "highgrid";
 
 const grid = createGrid(container, {
   columns: [
-    { id: "id",    field: "id",    headerName: "ID" },
-    { id: "name",  field: "name",  headerName: "Name" },
+    { id: "id", field: "id", headerName: "ID" },
+    { id: "name", field: "name", headerName: "Name" },
     // sparkline columns — field must point to a number[]
     {
       id: "trend",
@@ -1086,22 +1111,20 @@ const grid = createGrid(container, {
     },
   ],
   rows,
-  plugins: [
-    { plugin: createSparklinePlugin() },
-  ],
+  plugins: [{ plugin: createSparklinePlugin() }],
 });
 ```
 
 `sparkline` options per column:
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `type` | `"line" \| "bar" \| "area"` | `"line"` | Chart shape |
-| `field` | `string` | column `field` | Row property containing the `number[]` data |
-| `color` | `string` | `"#0f4c81"` | Stroke / fill colour |
-| `width` | `number` | column width − 20 | SVG width in px |
-| `height` | `number` | `28` | SVG height in px |
-| `align` | `"center" \| "left" \| "right"` | `"center"` | Horizontal alignment inside the cell |
+| Option   | Type                            | Default           | Description                                 |
+| -------- | ------------------------------- | ----------------- | ------------------------------------------- |
+| `type`   | `"line" \| "bar" \| "area"`     | `"line"`          | Chart shape                                 |
+| `field`  | `string`                        | column `field`    | Row property containing the `number[]` data |
+| `color`  | `string`                        | `"#0f4c81"`       | Stroke / fill colour                        |
+| `width`  | `number`                        | column width − 20 | SVG width in px                             |
+| `height` | `number`                        | `28`              | SVG height in px                            |
+| `align`  | `"center" \| "left" \| "right"` | `"center"`        | Horizontal alignment inside the cell        |
 
 ### 39. XLSX Export Plugin
 
@@ -1113,9 +1136,7 @@ import { createGrid, createXlsxExportPlugin } from "highgrid";
 const grid = createGrid(container, {
   columns,
   rows,
-  plugins: [
-    { plugin: createXlsxExportPlugin({ fileName: "export.xlsx" }) },
-  ],
+  plugins: [{ plugin: createXlsxExportPlugin({ fileName: "export.xlsx" }) }],
 });
 
 // trigger download
@@ -1147,7 +1168,7 @@ The bar updates automatically on every render. Locale keys for the status bar te
 const locale = {
   grid: {
     statusBar: {
-      totalRows:    "{count} rows",
+      totalRows: "{count} rows",
       filteredRows: "{display} of {total} rows",
       selectedRows: "{count} selected",
     },
@@ -1192,10 +1213,11 @@ grid.printGrid();
 You can sort by multiple columns simultaneously. Hold `Shift` (or `Ctrl`/`Cmd`) and click on column headers to append them to the sorting criteria. Columns will show a sorting order priority number next to their directional arrows.
 
 Or trigger it programmatically:
+
 ```js
 grid.sortBy([
   { field: "team", direction: "asc" },
-  { field: "score", direction: "desc", type: "number" }
+  { field: "score", direction: "desc", type: "number" },
 ]);
 ```
 
@@ -1223,9 +1245,9 @@ When grouping rows, aggregate values (e.g. SUM, AVG) are evaluated and displayed
 const grid = createGrid(container, {
   rowKey: "id",
   columns: [
-    { id: "score", field: "score", headerName: "Score", aggregate: "sum" }
+    { id: "score", field: "score", headerName: "Score", aggregate: "sum" },
   ],
-  rows
+  rows,
 });
 
 grid.enableGrouping(["team"]);
@@ -1236,6 +1258,7 @@ grid.enableGrouping(["team"]);
 Select a rectangular area of cells by clicking and dragging. Copy (`Ctrl+C` / `Cmd+C`) and paste (`Ctrl+V` / `Cmd+V`) data inside the grid. The format is fully compatible with Excel and Google Sheets (tab-delimited text).
 
 Programmatic clipboard methods:
+
 ```js
 // Copy current range selection to tab-delimited text
 const copiedText = grid.copySelectionToClipboard();
@@ -1243,7 +1266,7 @@ const copiedText = grid.copySelectionToClipboard();
 // Paste text into the grid starting from a specific cell
 grid.pasteFromClipboard("Text1\tText2\nText3\tText4", {
   startRowKey: "row-1",
-  columns: ["col-1", "col-2"]
+  columns: ["col-1", "col-2"],
 });
 ```
 
@@ -1258,8 +1281,8 @@ const columns = [
     field: "name",
     headerName: "Name",
     // Prevent editing if the row status is locked
-    editable: ({ row, def }) => row.status !== "locked"
-  }
+    editable: ({ row, def }) => row.status !== "locked",
+  },
 ];
 ```
 
@@ -1268,13 +1291,14 @@ const columns = [
 When the side panel is enabled, you can build complex filtering trees using multiple logical operators (`AND`/`OR`) and conditions in the GUI dialog under the Filters tab.
 
 Programmatic configuration:
+
 ```js
 grid.setAdvancedFilter({
   type: "AND",
   conditions: [
     { field: "team", operator: "equals", value: "Red" },
-    { field: "score", operator: "greaterThan", value: 1000 }
-  ]
+    { field: "score", operator: "greaterThan", value: 1000 },
+  ],
 });
 ```
 
@@ -1284,10 +1308,10 @@ Display a sequential, auto-updating row number column. The numbers adjust automa
 
 ```js
 const grid = createGrid(container, {
-  rowNumbers: true,         // Enable row numbers column
-  rowNumberWidth: 50,       // Optional custom width (default: 44)
+  rowNumbers: true, // Enable row numbers column
+  rowNumberWidth: 50, // Optional custom width (default: 44)
   columns,
-  rows
+  rows,
 });
 ```
 
@@ -1308,18 +1332,19 @@ Render a dedicated row of text input fields directly below column headers for qu
 const grid = createGrid(container, {
   filterRow: { enabled: true }, // Enable inline filter row
   columns,
-  rows
+  rows,
 });
 ```
 
 ### 53. Keyboard Navigation Completed
 
 Robust keyboard support makes grid interaction fully accessible:
-* `Tab` / `Shift+Tab`: Move focus to the next/previous cell. In edit mode, commits the edit and shifts focus.
-* `Enter`: Focus cell and press Enter to edit. In edit mode, commits the value and shifts focus to the cell below.
-* `F2`: Start editing the focused cell.
-* `Escape`: Cancel editing/restore previous value, or clear range selection.
-* `Arrow keys` / `Home` / `End`: Navigate focused cells. While editing, they natively move the text cursor within the input element.
+
+- `Tab` / `Shift+Tab`: Move focus to the next/previous cell. In edit mode, commits the edit and shifts focus.
+- `Enter`: Focus cell and press Enter to edit. In edit mode, commits the value and shifts focus to the cell below.
+- `F2`: Start editing the focused cell.
+- `Escape`: Cancel editing/restore previous value, or clear range selection.
+- `Arrow keys` / `Home` / `End`: Navigate focused cells. While editing, they natively move the text cursor within the input element.
 
 ### 54. Side Panel Drag & Drop Column Reordering
 
@@ -1334,7 +1359,7 @@ const grid = createGrid(container, {
   editing: { enabled: true },
   fillHandle: true, // Enable fill handle
   columns,
-  rows
+  rows,
 });
 ```
 
@@ -1351,8 +1376,8 @@ const columns = [
       const el = document.createElement("div");
       el.innerHTML = `<strong>${row.name}</strong><br/>Status: ${row.status}`;
       return el; // Returns custom Element or string
-    }
-  }
+    },
+  },
 ];
 ```
 
@@ -1368,7 +1393,7 @@ Offloads CPU-heavy sorting and filtering tasks to a background thread to prevent
 const grid = createGrid(container, {
   worker: { enabled: true }, // Enable background worker thread
   columns,
-  rows
+  rows,
 });
 ```
 
@@ -1379,7 +1404,7 @@ Write Excel-like formulas beginning with `=` to calculate values dynamically. In
 ```js
 const rows = [
   { id: 1, a: 10, b: 20, c: "=SUM(A1:B1)" }, // Evaluates to 30
-  { id: 2, a: 15, b: 25, c: "=AVG(A1:B2)" }  // Evaluates to 17.5
+  { id: 2, a: 15, b: 25, c: "=AVG(A1:B2)" }, // Evaluates to 17.5
 ];
 ```
 
