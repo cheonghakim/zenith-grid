@@ -1,3 +1,5 @@
+import { createSvgIcon } from "./IconFactory.js";
+
 export class BodyRenderer {
   constructor(domRenderer, columnModel, viewModel, options = {}) {
     this._dom = domRenderer;
@@ -11,15 +13,24 @@ export class BodyRenderer {
   render(displayRows, rangeBundle) {
     this._currentRows = displayRows;
 
-    const verticalRange = rangeBundle?.vertical ?? rangeBundle ?? this._viewModel.getVerticalRange();
-    const horizontalRange = rangeBundle?.horizontal ?? this._viewModel.getHorizontalRange();
+    const verticalRange =
+      rangeBundle?.vertical ??
+      rangeBundle ??
+      this._viewModel.getVerticalRange();
+    const horizontalRange =
+      rangeBundle?.horizontal ?? this._viewModel.getHorizontalRange();
     const startIndex = Math.max(0, verticalRange.startIndex);
     const endIndex = Math.min(displayRows.length - 1, verticalRange.endIndex);
     const rowHeight = this._viewModel.getRowHeight();
     const visibleRowCount = Math.max(0, endIndex - startIndex + 1);
-    const renderedHeight = this._viewModel.isVariableRowHeight() ? 0 : visibleRowCount * rowHeight;
+    const renderedHeight = this._viewModel.isVariableRowHeight()
+      ? 0
+      : visibleRowCount * rowHeight;
     const topHeight = verticalRange.offsetY;
-    const bottomHeight = Math.max(0, verticalRange.totalHeight - topHeight - renderedHeight);
+    const bottomHeight = Math.max(
+      0,
+      verticalRange.totalHeight - topHeight - renderedHeight,
+    );
 
     this._dom.updateVirtualSpace({
       topHeight,
@@ -29,52 +40,66 @@ export class BodyRenderer {
 
     const container = this._dom.getRowsContainer();
     const now = performance.now?.() ?? Date.now();
-    container.style.position = 'relative';
-    const previousRows = Array.from(container.querySelectorAll('.ag-row')).map((element) => ({
-      key: element.dataset.rowKey,
-      top: element.offsetTop,
-      width: element.offsetWidth,
-      height: element.offsetHeight,
-      element,
-    }));
-    const previousByKey = new Map(previousRows.map((entry) => [entry.key, entry]));
-    container.innerHTML = '';
+    container.style.position = "relative";
+    const previousRows = Array.from(container.querySelectorAll(".ag-row")).map(
+      (element) => ({
+        key: element.dataset.rowKey,
+        top: element.offsetTop,
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        element,
+      }),
+    );
+    const previousByKey = new Map(
+      previousRows.map((entry) => [entry.key, entry]),
+    );
+    container.innerHTML = "";
 
     const visibleColumns = this._columnModel.getVisibleLeafColumns();
     const pinnedGroups = this._columnModel.getColumnsByPin();
     const stickyMeta = this._buildStickyMeta(pinnedGroups);
-    const centerSlice = this._sliceColumnsByRange(pinnedGroups.center, horizontalRange);
-    const totalWidth = visibleColumns.reduce((sum, column) => sum + (column.state.width ?? 0), 0);
+    const centerSlice = this._sliceColumnsByRange(
+      pinnedGroups.center,
+      horizontalRange,
+    );
+    const totalWidth = visibleColumns.reduce(
+      (sum, column) => sum + (column.state.width ?? 0),
+      0,
+    );
     const spannedCells = new Set();
 
     for (let index = startIndex; index <= endIndex; index += 1) {
       const row = displayRows[index];
       if (!row) continue;
 
-      const rowElement = document.createElement('div');
-      rowElement.className = 'ag-row';
+      const rowElement = document.createElement("div");
+      rowElement.className = "ag-row";
       rowElement.dataset.rowKey = row._rowKey;
       rowElement.dataset.rowIndex = String(index - startIndex);
-      rowElement.setAttribute('role', 'row');
-      rowElement.setAttribute('aria-rowindex', String(index + 1));
+      rowElement.setAttribute("role", "row");
+      rowElement.setAttribute("aria-rowindex", String(index + 1));
       this._applyClassNames(rowElement, this._options.getRowClassName?.(row));
       this._applyInlineStyles(rowElement, this._options.getRowStyle?.(row));
 
-      if (this._options.rowDragging && row._type !== 'group-header' && row._type !== 'tree-loading') {
-        rowElement.addEventListener('dragover', (event) => {
-          const draggingRow = container.querySelector('.ag-row-dragging');
+      if (
+        this._options.rowDragging &&
+        row._type !== "group-header" &&
+        row._type !== "tree-loading"
+      ) {
+        rowElement.addEventListener("dragover", (event) => {
+          const draggingRow = container.querySelector(".ag-row-dragging");
           if (draggingRow && draggingRow !== rowElement) {
             event.preventDefault();
-            rowElement.classList.add('ag-row-drag-over');
+            rowElement.classList.add("ag-row-drag-over");
           }
         });
-        rowElement.addEventListener('dragleave', () => {
-          rowElement.classList.remove('ag-row-drag-over');
+        rowElement.addEventListener("dragleave", () => {
+          rowElement.classList.remove("ag-row-drag-over");
         });
-        rowElement.addEventListener('drop', (event) => {
+        rowElement.addEventListener("drop", (event) => {
           event.preventDefault();
-          rowElement.classList.remove('ag-row-drag-over');
-          const fromRowKey = event.dataTransfer?.getData('text/plain');
+          rowElement.classList.remove("ag-row-drag-over");
+          const fromRowKey = event.dataTransfer?.getData("text/plain");
           const toRowKey = row._rowKey;
           if (fromRowKey && fromRowKey !== toRowKey) {
             this._options.onRowDragDrop?.({ fromRowKey, toRowKey });
@@ -82,9 +107,10 @@ export class BodyRenderer {
         });
       }
 
-      const explicitHeight = this._options.getRowHeight?.(row) ?? row._rowHeight ?? null;
+      const explicitHeight =
+        this._options.getRowHeight?.(row) ?? row._rowHeight ?? null;
       if (this._viewModel.isVariableRowHeight()) {
-        rowElement.classList.add('ag-row-variable');
+        rowElement.classList.add("ag-row-variable");
         if (explicitHeight != null) {
           rowElement.style.minHeight = `${explicitHeight}px`;
         }
@@ -93,56 +119,81 @@ export class BodyRenderer {
       }
 
       if (index % 2 === 1) {
-        rowElement.classList.add('ag-row-odd');
+        rowElement.classList.add("ag-row-odd");
       }
 
       if (this._options.selectionManager?.isSelected?.(row._rowKey)) {
-        rowElement.classList.add('ag-row-selected');
+        rowElement.classList.add("ag-row-selected");
       }
 
-      this._options.hooks?.beforeRowRender?.({ row, rowElement, rowIndex: index });
+      this._options.hooks?.beforeRowRender?.({
+        row,
+        rowElement,
+        rowIndex: index,
+      });
 
-      rowElement.addEventListener('click', (event) => {
+      rowElement.addEventListener("click", (event) => {
         this._options.onRowClick?.({ row, event });
       });
-      rowElement.addEventListener('contextmenu', (event) => {
+      rowElement.addEventListener("contextmenu", (event) => {
         this._options.onRowContextMenu?.({ row, event });
       });
 
-      if (row._type === 'detail') {
-        rowElement.classList.add('ag-row-detail');
+      if (row._type === "detail") {
+        rowElement.classList.add("ag-row-detail");
         rowElement.style.height = `${row._rowHeight ?? 200}px`;
         rowElement.style.minHeight = `${row._rowHeight ?? 200}px`;
-        const panel = this._options.getMasterDetailPanel?.(row._masterRow, row._masterRowKey);
+        const panel = this._options.getMasterDetailPanel?.(
+          row._masterRow,
+          row._masterRowKey,
+        );
         if (panel instanceof HTMLElement) {
           rowElement.appendChild(panel);
         } else if (panel != null) {
           rowElement.innerHTML = String(panel);
         }
-      } else if (row._type === 'group-header') {
-        rowElement.classList.add('ag-row-group');
+      } else if (row._type === "group-header") {
+        rowElement.classList.add("ag-row-group");
         rowElement.appendChild(this._createGroupCell(row, totalWidth));
-      } else if (row._type === 'tree-loading') {
-        rowElement.classList.add('ag-row-tree-loading');
+      } else if (row._type === "tree-loading") {
+        rowElement.classList.add("ag-row-tree-loading");
         rowElement.appendChild(this._createLoadingCell(totalWidth));
       } else {
-        if (row._type === 'tree-node') {
-          rowElement.classList.add('ag-row-tree');
+        if (row._type === "tree-node") {
+          rowElement.classList.add("ag-row-tree");
         }
 
         let colIndex = 0;
         if (this._options.rowNumbers) {
-          rowElement.appendChild(this._createRowNumberCell(index + 1, index - startIndex));
+          rowElement.appendChild(
+            this._createRowNumberCell(index + 1, index - startIndex),
+          );
           colIndex += 1;
         }
         if (this._options.selectionEnabled) {
-          rowElement.appendChild(this._createSelectionCell(row, index - startIndex, colIndex));
+          rowElement.appendChild(
+            this._createSelectionCell(row, index - startIndex, colIndex),
+          );
           colIndex += 1;
         }
 
         for (const { def, state } of pinnedGroups.left) {
-          const leafColIndex = visibleColumns.findIndex(c => c.def.id === def.id);
-          const cell = this._createDataCell(row, def, state, stickyMeta.get(def.id), index - startIndex, colIndex, index, leafColIndex, visibleColumns, spannedCells, displayRows);
+          const leafColIndex = visibleColumns.findIndex(
+            (c) => c.def.id === def.id,
+          );
+          const cell = this._createDataCell(
+            row,
+            def,
+            state,
+            stickyMeta.get(def.id),
+            index - startIndex,
+            colIndex,
+            index,
+            leafColIndex,
+            visibleColumns,
+            spannedCells,
+            displayRows,
+          );
           if (cell) rowElement.appendChild(cell);
           colIndex += 1;
         }
@@ -152,44 +203,88 @@ export class BodyRenderer {
         }
 
         for (const { def, state } of centerSlice.columns) {
-          const leafColIndex = visibleColumns.findIndex(c => c.def.id === def.id);
-          const cell = this._createDataCell(row, def, state, null, index - startIndex, colIndex, index, leafColIndex, visibleColumns, spannedCells, displayRows);
+          const leafColIndex = visibleColumns.findIndex(
+            (c) => c.def.id === def.id,
+          );
+          const cell = this._createDataCell(
+            row,
+            def,
+            state,
+            null,
+            index - startIndex,
+            colIndex,
+            index,
+            leafColIndex,
+            visibleColumns,
+            spannedCells,
+            displayRows,
+          );
           if (cell) rowElement.appendChild(cell);
           colIndex += 1;
         }
 
         if (centerSlice.trailingSpacer > 0) {
-          rowElement.appendChild(this._createSpacer(centerSlice.trailingSpacer));
+          rowElement.appendChild(
+            this._createSpacer(centerSlice.trailingSpacer),
+          );
         }
 
         for (const { def, state } of pinnedGroups.right) {
-          const leafColIndex = visibleColumns.findIndex(c => c.def.id === def.id);
-          const cell = this._createDataCell(row, def, state, stickyMeta.get(def.id), index - startIndex, colIndex, index, leafColIndex, visibleColumns, spannedCells, displayRows);
+          const leafColIndex = visibleColumns.findIndex(
+            (c) => c.def.id === def.id,
+          );
+          const cell = this._createDataCell(
+            row,
+            def,
+            state,
+            stickyMeta.get(def.id),
+            index - startIndex,
+            colIndex,
+            index,
+            leafColIndex,
+            visibleColumns,
+            spannedCells,
+            displayRows,
+          );
           if (cell) rowElement.appendChild(cell);
           colIndex += 1;
         }
       }
 
       container.appendChild(rowElement);
-      this._options.hooks?.afterRowRender?.({ row, rowElement, rowIndex: index });
+      this._options.hooks?.afterRowRender?.({
+        row,
+        rowElement,
+        rowIndex: index,
+      });
 
       if (this._viewModel.isVariableRowHeight()) {
         requestAnimationFrame(() => {
-          const measuredHeight = Math.ceil(rowElement.getBoundingClientRect().height);
+          const measuredHeight = Math.ceil(
+            rowElement.getBoundingClientRect().height,
+          );
           if (measuredHeight > 0) {
-            this._options.onRowMeasured?.({ row, flatIndex: index, height: measuredHeight });
+            this._options.onRowMeasured?.({
+              row,
+              flatIndex: index,
+              height: measuredHeight,
+            });
           }
         });
       }
     }
 
-    const nextRows = Array.from(container.querySelectorAll('.ag-row')).map((element) => ({
-      key: element.dataset.rowKey,
-      top: element.offsetTop,
-      element,
-    }));
+    const nextRows = Array.from(container.querySelectorAll(".ag-row")).map(
+      (element) => ({
+        key: element.dataset.rowKey,
+        top: element.offsetTop,
+        element,
+      }),
+    );
     const addedRows = nextRows.filter((entry) => !previousByKey.has(entry.key));
-    const removedRows = previousRows.filter((entry) => entry.key && !nextRows.some((row) => row.key === entry.key));
+    const removedRows = previousRows.filter(
+      (entry) => entry.key && !nextRows.some((row) => row.key === entry.key),
+    );
     const allowDecorativeAnimations = this._shouldRunDecorativeAnimations({
       addedCount: addedRows.length,
       removedCount: removedRows.length,
@@ -199,16 +294,22 @@ export class BodyRenderer {
     nextRows.forEach((entry) => {
       const previous = previousByKey.get(entry.key);
       if (!previous) {
-        if (allowDecorativeAnimations && typeof entry.element.animate === 'function') {
+        if (
+          allowDecorativeAnimations &&
+          typeof entry.element.animate === "function"
+        ) {
           entry.element.animate(
             [
-              { opacity: 0, transform: 'translateX(18px)' },
-              { opacity: 1, transform: 'translateX(0)' },
+              { opacity: 0, transform: "translateX(18px)" },
+              { opacity: 1, transform: "translateX(0)" },
             ],
             {
-              duration: Math.min(this._options.getRowAnimationDuration?.() ?? 260, 320),
-              easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-            }
+              duration: Math.min(
+                this._options.getRowAnimationDuration?.() ?? 260,
+                320,
+              ),
+              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            },
           );
         }
         return;
@@ -219,44 +320,46 @@ export class BodyRenderer {
         return;
       }
 
-      if (typeof entry.element.animate === 'function') {
+      if (typeof entry.element.animate === "function") {
         entry.element.animate(
           [
             { transform: `translateY(${deltaY}px)` },
-            { transform: 'translateY(0)' },
+            { transform: "translateY(0)" },
           ],
           {
             duration: 180,
-            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-          }
+            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+          },
         );
       }
     });
 
     removedRows.forEach((entry) => {
       const ghost = entry.element.cloneNode(true);
-      ghost.classList.add('ag-row-exit-ghost');
-      ghost.style.position = 'absolute';
-      ghost.style.left = '0';
+      ghost.classList.add("ag-row-exit-ghost");
+      ghost.style.position = "absolute";
+      ghost.style.left = "0";
       ghost.style.top = `${entry.top}px`;
       ghost.style.width = `${entry.width}px`;
       ghost.style.height = `${entry.height}px`;
-      ghost.style.pointerEvents = 'none';
+      ghost.style.pointerEvents = "none";
       container.appendChild(ghost);
 
-      if (allowDecorativeAnimations && typeof ghost.animate === 'function') {
+      if (allowDecorativeAnimations && typeof ghost.animate === "function") {
         const animation = ghost.animate(
           [
-            { opacity: 1, transform: 'translateX(0) scale(1)' },
-            { opacity: 0, transform: 'translateX(-22px) scale(0.98)' },
+            { opacity: 1, transform: "translateX(0) scale(1)" },
+            { opacity: 0, transform: "translateX(-22px) scale(0.98)" },
           ],
           {
             duration: 180,
-            easing: 'ease-out',
-            fill: 'forwards',
-          }
+            easing: "ease-out",
+            fill: "forwards",
+          },
         );
-        animation.addEventListener('finish', () => ghost.remove(), { once: true });
+        animation.addEventListener("finish", () => ghost.remove(), {
+          once: true,
+        });
       } else {
         ghost.remove();
       }
@@ -267,14 +370,14 @@ export class BodyRenderer {
 
   _createRowNumberCell(rowNumber, rowIndex) {
     const width = this._options.rowNumberWidth ?? 44;
-    const cell = document.createElement('div');
-    cell.className = 'ag-cell ag-row-number-cell';
-    cell.setAttribute('role', 'rowheader');
+    const cell = document.createElement("div");
+    cell.className = "ag-cell ag-row-number-cell";
+    cell.setAttribute("role", "rowheader");
     cell.style.width = `${width}px`;
     cell.style.minWidth = `${width}px`;
-    cell.style.position = 'sticky';
-    cell.style.left = '0px';
-    cell.style.zIndex = '2';
+    cell.style.position = "sticky";
+    cell.style.left = "0px";
+    cell.style.zIndex = "2";
     cell.dataset.rowIndex = String(rowIndex);
     cell.textContent = String(rowNumber);
     return cell;
@@ -283,52 +386,59 @@ export class BodyRenderer {
   _createSelectionCell(row, rowIndex, colIndex) {
     const hasMasterDetail = Boolean(
       this._options.onMasterDetailToggle &&
-      row._type !== 'group-header' &&
-      row._type !== 'tree-loading' &&
-      row._type !== 'detail'
+      row._type !== "group-header" &&
+      row._type !== "tree-loading" &&
+      row._type !== "detail",
     );
     // selectionColumnWidth는 GridCore에서 master-detail 여부에 따라 이미 조정됨 (44 or 68)
     const width = this._options.selectionColumnWidth ?? 44;
 
-    const cell = document.createElement('div');
-    cell.className = 'ag-cell ag-selection-cell ag-cell-pinned';
-    cell.setAttribute('role', 'gridcell');
+    const cell = document.createElement("div");
+    cell.className = "ag-cell ag-selection-cell ag-cell-pinned";
+    cell.setAttribute("role", "gridcell");
     cell.style.width = `${width}px`;
     cell.style.minWidth = `${width}px`;
-    cell.style.left = '0px';
-    cell.style.zIndex = '5';
-    cell.setAttribute('aria-colindex', String(colIndex + 1));
-    cell.dataset.gridFocusable = 'cell';
+    cell.style.left = "0px";
+    cell.style.zIndex = "5";
+    cell.setAttribute("aria-colindex", String(colIndex + 1));
+    cell.dataset.gridFocusable = "cell";
     cell.dataset.rowIndex = String(rowIndex);
     cell.dataset.colIndex = String(colIndex);
     cell.tabIndex = 0;
 
     // Master-Detail 토글 버튼 (selection cell 안에 배치 → sticky 레이어 충돌 없음)
     if (hasMasterDetail) {
-      const detailBtn = document.createElement('button');
-      detailBtn.type = 'button';
-      detailBtn.className = 'ag-master-detail-toggle';
-      detailBtn.setAttribute('aria-label', 'Toggle row detail');
-      detailBtn.setAttribute('aria-expanded', String(Boolean(row._detailExpanded)));
-      detailBtn.innerHTML = row._detailExpanded ? '▼' : '▶';
-      detailBtn.addEventListener('click', (event) => {
+      const detailBtn = document.createElement("button");
+      detailBtn.type = "button";
+      detailBtn.className = "ag-master-detail-toggle";
+      detailBtn.setAttribute("aria-label", "Toggle row detail");
+      detailBtn.setAttribute(
+        "aria-expanded",
+        String(Boolean(row._detailExpanded)),
+      );
+      detailBtn.appendChild(
+        createSvgIcon(row._detailExpanded ? "chevronDown" : "chevronRight", 18),
+      );
+      detailBtn.addEventListener("click", (event) => {
         event.stopPropagation();
         this._options.onMasterDetailToggle(row._rowKey);
       });
       cell.appendChild(detailBtn);
     }
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'ag-selection-checkbox';
-    checkbox.setAttribute('aria-label', `Select row ${row._rowKey}`);
-    checkbox.checked = this._options.selectionManager?.isRowChecked?.(row) ?? false;
-    checkbox.indeterminate = this._options.selectionManager?.isRowIndeterminate?.(row) ?? false;
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "ag-selection-checkbox";
+    checkbox.setAttribute("aria-label", `Select row ${row._rowKey}`);
+    checkbox.checked =
+      this._options.selectionManager?.isRowChecked?.(row) ?? false;
+    checkbox.indeterminate =
+      this._options.selectionManager?.isRowIndeterminate?.(row) ?? false;
     checkbox.disabled = this._options.isRowSelectable?.(row) === false;
-    checkbox.addEventListener('click', (event) => {
+    checkbox.addEventListener("click", (event) => {
       event.stopPropagation();
     });
-    checkbox.addEventListener('change', () => {
+    checkbox.addEventListener("change", () => {
       this._options.onRowSelectionToggle?.({ row, checked: checkbox.checked });
     });
 
@@ -342,18 +452,27 @@ export class BodyRenderer {
     }
 
     const start = Math.max(0, horizontalRange?.startColIndex ?? 0);
-    const end = Math.min(columns.length - 1, horizontalRange?.endColIndex ?? columns.length - 1);
+    const end = Math.min(
+      columns.length - 1,
+      horizontalRange?.endColIndex ?? columns.length - 1,
+    );
 
     return {
       columns: columns.slice(start, end + 1),
-      leadingSpacer: columns.slice(0, start).reduce((sum, column) => sum + (column.state.width ?? 0), 0),
-      trailingSpacer: columns.slice(end + 1).reduce((sum, column) => sum + (column.state.width ?? 0), 0),
+      leadingSpacer: columns
+        .slice(0, start)
+        .reduce((sum, column) => sum + (column.state.width ?? 0), 0),
+      trailingSpacer: columns
+        .slice(end + 1)
+        .reduce((sum, column) => sum + (column.state.width ?? 0), 0),
     };
   }
 
   _buildStickyMeta(groups) {
     const stickyMeta = new Map();
-    const selectionOffset = this._options.selectionEnabled ? (this._options.selectionColumnWidth ?? 44) : 0;
+    const selectionOffset = this._options.selectionEnabled
+      ? (this._options.selectionColumnWidth ?? 44)
+      : 0;
 
     let leftOffset = selectionOffset;
     for (const { def, state } of groups.left) {
@@ -372,46 +491,50 @@ export class BodyRenderer {
   }
 
   _createSpacer(width) {
-    const spacer = document.createElement('div');
-    spacer.className = 'ag-col-spacer';
+    const spacer = document.createElement("div");
+    spacer.className = "ag-col-spacer";
     spacer.style.width = `${width}px`;
     spacer.style.minWidth = `${width}px`;
     return spacer;
   }
 
   _createGroupCell(row, totalWidth) {
-    const cell = document.createElement('div');
-    cell.className = 'ag-cell ag-group-cell';
+    const cell = document.createElement("div");
+    cell.className = "ag-cell ag-group-cell";
     cell.style.width = `${totalWidth}px`;
     cell.style.minWidth = `${totalWidth}px`;
     cell.style.paddingLeft = `${12 + (row._groupDepth ?? 0) * 18}px`;
 
-    const badge = document.createElement('span');
-    badge.className = 'ag-row-kind-badge ag-row-kind-group';
-    badge.textContent = this._getLocaleText('grid.badges.group', 'GROUP');
+    const badge = document.createElement("span");
+    badge.className = "ag-row-kind-badge ag-row-kind-group";
+    badge.textContent = this._getLocaleText("grid.badges.group", "GROUP");
 
-    const toggle = document.createElement('button');
-    toggle.type = 'button';
-    toggle.className = 'ag-row-toggle';
-    toggle.appendChild(this._createIcon(row._isExpanded ? 'chevronDown' : 'chevronRight'));
-    toggle.addEventListener('click', (event) => {
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "ag-row-toggle";
+    toggle.appendChild(
+      this._createIcon(row._isExpanded ? "chevronDown" : "chevronRight"),
+    );
+    toggle.addEventListener("click", (event) => {
       event.stopPropagation();
       this._options.onGroupToggle?.({ groupKey: row._groupKey, row });
     });
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'ag-selection-checkbox';
-    checkbox.checked = this._options.selectionManager?.isRowChecked?.(row) ?? false;
-    checkbox.indeterminate = this._options.selectionManager?.isRowIndeterminate?.(row) ?? false;
-    checkbox.addEventListener('click', (event) => event.stopPropagation());
-    checkbox.addEventListener('change', () => {
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "ag-selection-checkbox";
+    checkbox.checked =
+      this._options.selectionManager?.isRowChecked?.(row) ?? false;
+    checkbox.indeterminate =
+      this._options.selectionManager?.isRowIndeterminate?.(row) ?? false;
+    checkbox.addEventListener("click", (event) => event.stopPropagation());
+    checkbox.addEventListener("change", () => {
       this._options.onRowSelectionToggle?.({ row, checked: checkbox.checked });
     });
 
-    const label = document.createElement('span');
-    label.className = 'ag-group-label';
-    label.textContent = `${row._groupField}: ${row._groupValue ?? 'Empty'} (${row._childCount ?? 0})`;
+    const label = document.createElement("span");
+    label.className = "ag-group-label";
+    label.textContent = `${row._groupField}: ${row._groupValue ?? "Empty"} (${row._childCount ?? 0})`;
 
     cell.appendChild(badge);
     cell.appendChild(checkbox);
@@ -420,14 +543,17 @@ export class BodyRenderer {
 
     // 그룹 행 집계 표시
     if (row._aggregates && Object.keys(row._aggregates).length > 0) {
-      const aggWrap = document.createElement('span');
-      aggWrap.className = 'ag-group-aggregates';
+      const aggWrap = document.createElement("span");
+      aggWrap.className = "ag-group-aggregates";
       for (const [, { value, type }] of Object.entries(row._aggregates)) {
-        const chip = document.createElement('span');
-        chip.className = 'ag-group-agg-chip';
-        const formatted = typeof value === 'number'
-          ? (value % 1 !== 0 ? value.toFixed(2) : value.toLocaleString())
-          : value;
+        const chip = document.createElement("span");
+        chip.className = "ag-group-agg-chip";
+        const formatted =
+          typeof value === "number"
+            ? value % 1 !== 0
+              ? value.toFixed(2)
+              : value.toLocaleString()
+            : value;
         chip.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)}: ${formatted}`;
         aggWrap.appendChild(chip);
       }
@@ -438,15 +564,30 @@ export class BodyRenderer {
   }
 
   _createLoadingCell(totalWidth) {
-    const cell = document.createElement('div');
-    cell.className = 'ag-cell ag-loading-cell';
+    const cell = document.createElement("div");
+    cell.className = "ag-cell ag-loading-cell";
     cell.style.width = `${totalWidth}px`;
     cell.style.minWidth = `${totalWidth}px`;
-    cell.textContent = this._getLocaleText('grid.loading.childRows', 'Loading child rows...');
+    cell.textContent = this._getLocaleText(
+      "grid.loading.childRows",
+      "Loading child rows...",
+    );
     return cell;
   }
 
-  _createDataCell(row, def, state, stickyStyle = null, rowIndex = 0, colIndex = 0, absoluteRowIndex = 0, leafColIndex = 0, allVisibleCols = [], spannedCells = null, displayRows = []) {
+  _createDataCell(
+    row,
+    def,
+    state,
+    stickyStyle = null,
+    rowIndex = 0,
+    colIndex = 0,
+    absoluteRowIndex = 0,
+    leafColIndex = 0,
+    allVisibleCols = [],
+    spannedCells = null,
+    displayRows = [],
+  ) {
     // 1. 셀 병합(Spanning) 여부 체크하여 생략 처리
     if (spannedCells) {
       const cellKey = `${absoluteRowIndex}::${def.id}`;
@@ -455,29 +596,29 @@ export class BodyRenderer {
       }
     }
 
-    const cell = document.createElement('div');
-    cell.className = 'ag-cell';
+    const cell = document.createElement("div");
+    cell.className = "ag-cell";
     cell.dataset.colId = def.id;
-    cell.dataset.gridFocusable = 'cell';
+    cell.dataset.gridFocusable = "cell";
     cell.dataset.rowIndex = String(rowIndex);
     cell.dataset.colIndex = String(colIndex);
-    cell.setAttribute('role', 'gridcell');
-    cell.setAttribute('aria-colindex', String(colIndex + 1));
+    cell.setAttribute("role", "gridcell");
+    cell.setAttribute("aria-colindex", String(colIndex + 1));
     cell.tabIndex = 0;
-    cell.style.textAlign = def.align ?? 'left';
+    cell.style.textAlign = def.align ?? "left";
 
     // 2. rowSpan / colSpan 계산 및 spannedCells 캐시 갱신
     const value = row[def.field];
-    
+
     let rowSpan = 1;
-    if (typeof def.rowSpan === 'function') {
+    if (typeof def.rowSpan === "function") {
       rowSpan = def.rowSpan({ row, def, value });
     } else if (def.rowSpan) {
       rowSpan = def.rowSpan;
     }
 
     let colSpan = 1;
-    if (typeof def.colSpan === 'function') {
+    if (typeof def.colSpan === "function") {
       colSpan = def.colSpan({ row, def, value });
     } else if (def.colSpan) {
       colSpan = def.colSpan;
@@ -516,51 +657,61 @@ export class BodyRenderer {
         cellHeight = 0;
         for (let r = 0; r < rowSpan; r++) {
           const targetRow = displayRows[absoluteRowIndex + r];
-          cellHeight += this._options.getRowHeight?.(targetRow) ?? targetRow?._rowHeight ?? rowHeight;
+          cellHeight +=
+            this._options.getRowHeight?.(targetRow) ??
+            targetRow?._rowHeight ??
+            rowHeight;
         }
       } else {
         cellHeight = rowHeight * rowSpan;
       }
       cell.style.height = `${cellHeight}px`;
       cell.style.minHeight = `${cellHeight}px`;
-      cell.style.zIndex = '2';
+      cell.style.zIndex = "2";
     }
 
     if (stickyStyle) {
-      cell.classList.add('ag-cell-pinned');
+      cell.classList.add("ag-cell-pinned");
       if (stickyStyle.left != null) cell.style.left = `${stickyStyle.left}px`;
-      if (stickyStyle.right != null) cell.style.right = `${stickyStyle.right}px`;
+      if (stickyStyle.right != null)
+        cell.style.right = `${stickyStyle.right}px`;
       cell.style.zIndex = String(stickyStyle.zIndex + (rowSpan > 1 ? 1 : 0));
     }
 
     // 5. 로우 드래그 핸들 추가 (def.rowDrag가 true인 경우)
-    if (def.rowDrag && row._type !== 'group-header' && row._type !== 'tree-loading') {
-      const handle = document.createElement('button');
-      handle.type = 'button';
-      handle.className = 'ag-row-drag-handle';
+    if (
+      def.rowDrag &&
+      row._type !== "group-header" &&
+      row._type !== "tree-loading"
+    ) {
+      const handle = document.createElement("button");
+      handle.type = "button";
+      handle.className = "ag-row-drag-handle";
       handle.draggable = true;
-      handle.style.cursor = 'grab';
-      handle.style.marginRight = '8px';
-      handle.style.display = 'inline-flex';
-      handle.style.alignItems = 'center';
-      handle.style.border = 'none';
-      handle.style.background = 'none';
-      handle.style.padding = '0';
-      handle.style.color = 'var(--ag-text-muted, #64748b)';
-      handle.innerHTML = '⠿';
-      
-      handle.addEventListener('dragstart', (event) => {
-        event.dataTransfer?.setData('text/plain', row._rowKey);
-        const rowEl = handle.closest('.ag-row');
-        rowEl?.classList.add('ag-row-dragging');
+      handle.style.cursor = "grab";
+      handle.style.marginRight = "8px";
+      handle.style.display = "inline-flex";
+      handle.style.alignItems = "center";
+      handle.style.border = "none";
+      handle.style.background = "none";
+      handle.style.padding = "0";
+      handle.style.color = "var(--ag-text-muted, #64748b)";
+      handle.appendChild(createSvgIcon("dragVertical", 14));
+
+      handle.addEventListener("dragstart", (event) => {
+        event.dataTransfer?.setData("text/plain", row._rowKey);
+        const rowEl = handle.closest(".ag-row");
+        rowEl?.classList.add("ag-row-dragging");
         this._options.onRowDragStart?.({ rowKey: row._rowKey });
       });
 
-      handle.addEventListener('dragend', () => {
-        const rowEl = handle.closest('.ag-row');
-        rowEl?.classList.remove('ag-row-dragging');
-        const container = handle.closest('.ag-rows-container');
-        container?.querySelectorAll('.ag-row-drag-over').forEach(el => el.classList.remove('ag-row-drag-over'));
+      handle.addEventListener("dragend", () => {
+        const rowEl = handle.closest(".ag-row");
+        rowEl?.classList.remove("ag-row-dragging");
+        const container = handle.closest(".ag-rows-container");
+        container
+          ?.querySelectorAll(".ag-row-drag-over")
+          .forEach((el) => el.classList.remove("ag-row-drag-over"));
         this._options.onRowDragEnd?.();
       });
 
@@ -568,14 +719,14 @@ export class BodyRenderer {
     }
 
     // 조건부 서식 (Conditional Formatting)
-    if (typeof def.conditionalFormat === 'function') {
+    if (typeof def.conditionalFormat === "function") {
       const fmt = def.conditionalFormat(value, row);
       if (fmt) {
         if (fmt.class) {
           const classes = Array.isArray(fmt.class) ? fmt.class : [fmt.class];
           classes.forEach((cls) => cls && cell.classList.add(cls));
         }
-        if (fmt.style && typeof fmt.style === 'object') {
+        if (fmt.style && typeof fmt.style === "object") {
           Object.entries(fmt.style).forEach(([prop, val]) => {
             if (val != null) cell.style[prop] = String(val);
           });
@@ -583,23 +734,26 @@ export class BodyRenderer {
       }
     }
 
-    const validationError = this._options.getCellValidationError?.(row._rowKey, def.id);
+    const validationError = this._options.getCellValidationError?.(
+      row._rowKey,
+      def.id,
+    );
     if (validationError) {
-      cell.classList.add('ag-cell-invalid');
-      cell.setAttribute('aria-invalid', 'true');
+      cell.classList.add("ag-cell-invalid");
+      cell.setAttribute("aria-invalid", "true");
       cell.title = String(validationError);
     }
 
     // 셀 툴팁 (Cell Tooltip)
     if (!validationError) {
-      if (typeof def.tooltipComponent === 'function') {
+      if (typeof def.tooltipComponent === "function") {
         // 리치 툴팁: 커스텀 HTML 팝업
         let tooltipEl = null;
         let showTimer = null;
-        cell.addEventListener('mouseenter', () => {
+        cell.addEventListener("mouseenter", () => {
           showTimer = setTimeout(() => {
-            tooltipEl = document.createElement('div');
-            tooltipEl.className = 'ag-rich-tooltip';
+            tooltipEl = document.createElement("div");
+            tooltipEl.className = "ag-rich-tooltip";
             const content = def.tooltipComponent({ value, row, def });
             if (content instanceof HTMLElement) {
               tooltipEl.appendChild(content);
@@ -614,17 +768,17 @@ export class BodyRenderer {
             tooltipEl.style.top = `${rect.bottom + window.scrollY + 4}px`;
           }, 400);
         });
-        cell.addEventListener('mouseleave', () => {
+        cell.addEventListener("mouseleave", () => {
           clearTimeout(showTimer);
           tooltipEl?.remove();
           tooltipEl = null;
         });
-      } else if (typeof def.tooltip === 'function') {
+      } else if (typeof def.tooltip === "function") {
         const tip = def.tooltip(value, row);
         if (tip != null) cell.title = String(tip);
       } else if (def.tooltip === true) {
-        cell.title = value == null ? '' : String(value);
-      } else if (typeof def.tooltip === 'string') {
+        cell.title = value == null ? "" : String(value);
+      } else if (typeof def.tooltip === "string") {
         cell.title = def.tooltip;
       }
     }
@@ -633,36 +787,45 @@ export class BodyRenderer {
     const rangeManager = this._options.getRangeSelectionManager?.();
     if (rangeManager?.hasRange()) {
       const allLeafCols = this._options.getAllLeafColumnDefs?.() ?? [];
-      if (rangeManager.isInRange(row._rowKey, def.id, this._currentRows, allLeafCols)) {
-        cell.classList.add('ag-cell-range-selected');
+      if (
+        rangeManager.isInRange(
+          row._rowKey,
+          def.id,
+          this._currentRows,
+          allLeafCols,
+        )
+      ) {
+        cell.classList.add("ag-cell-range-selected");
       }
     }
 
     if (this._viewModel.isVariableRowHeight()) {
-      cell.classList.add('ag-cell-variable');
+      cell.classList.add("ag-cell-variable");
     }
 
-    if (row._type === 'tree-node' && def._isFirstColumn) {
+    if (row._type === "tree-node" && def._isFirstColumn) {
       cell.style.paddingLeft = `${12 + (row._depth ?? 0) * 18}px`;
 
-      const badge = document.createElement('span');
-      badge.className = 'ag-row-kind-badge ag-row-kind-tree';
-      badge.textContent = this._getLocaleText('grid.badges.tree', 'TREE');
+      const badge = document.createElement("span");
+      badge.className = "ag-row-kind-badge ag-row-kind-tree";
+      badge.textContent = this._getLocaleText("grid.badges.tree", "TREE");
       cell.appendChild(badge);
 
       if (row._hasChildren) {
-        const toggle = document.createElement('button');
-        toggle.type = 'button';
-        toggle.className = 'ag-row-toggle';
-        toggle.appendChild(this._createIcon(row._isExpanded ? 'chevronDown' : 'chevronRight'));
-        toggle.addEventListener('click', (event) => {
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "ag-row-toggle";
+        toggle.appendChild(
+          this._createIcon(row._isExpanded ? "chevronDown" : "chevronRight"),
+        );
+        toggle.addEventListener("click", (event) => {
           event.stopPropagation();
           this._options.onTreeToggle?.({ rowKey: row._rowKey, row });
         });
         cell.appendChild(toggle);
       } else {
-        const spacer = document.createElement('span');
-        spacer.className = 'ag-row-toggle ag-row-toggle-spacer';
+        const spacer = document.createElement("span");
+        spacer.className = "ag-row-toggle ag-row-toggle-spacer";
         cell.appendChild(spacer);
       }
     }
@@ -675,19 +838,19 @@ export class BodyRenderer {
       if (rendered instanceof HTMLElement) {
         cell.appendChild(rendered);
       } else if (rendered != null) {
-        const text = document.createElement('span');
-        text.className = 'ag-cell-text';
+        const text = document.createElement("span");
+        text.className = "ag-cell-text";
         text.textContent = String(rendered);
         cell.appendChild(text);
       }
     } else {
-      const text = document.createElement('span');
-      text.className = 'ag-cell-text';
-      text.textContent = renderedValue == null ? '' : String(renderedValue);
+      const text = document.createElement("span");
+      text.className = "ag-cell-text";
+      text.textContent = renderedValue == null ? "" : String(renderedValue);
       cell.appendChild(text);
     }
 
-    cell.addEventListener('mousedown', (event) => {
+    cell.addEventListener("mousedown", (event) => {
       if (event.button !== 0) return;
       const rm = this._options.getRangeSelectionManager?.();
       if (rm) {
@@ -695,22 +858,28 @@ export class BodyRenderer {
         // stopPropagation 제거: 행 클릭 이벤트도 정상 처리
       }
     });
-    cell.addEventListener('mouseenter', () => {
+    cell.addEventListener("mouseenter", () => {
       const rm = this._options.getRangeSelectionManager?.();
       if (rm?._isSelecting) {
         rm.extendRange(row._rowKey, def.id);
       }
     });
 
-    cell.addEventListener('click', (event) => {
+    cell.addEventListener("click", (event) => {
       event.stopPropagation();
       this._options.onCellClick?.({ row, colId: def.id, value, event });
     });
-    cell.addEventListener('dblclick', (event) => {
+    cell.addEventListener("dblclick", (event) => {
       event.stopPropagation();
-      this._options.onCellDoubleClick?.({ row, colId: def.id, value, cell, event });
+      this._options.onCellDoubleClick?.({
+        row,
+        colId: def.id,
+        value,
+        cell,
+        event,
+      });
     });
-    cell.addEventListener('contextmenu', (event) => {
+    cell.addEventListener("contextmenu", (event) => {
       event.stopPropagation();
       this._options.onCellContextMenu?.({ row, colId: def.id, value, event });
     });
@@ -719,9 +888,9 @@ export class BodyRenderer {
 
     // 채우기 핸들 (편집 가능한 셀에만)
     if (this._options.fillHandle && def.editable !== false) {
-      const handle = document.createElement('div');
-      handle.className = 'ag-fill-handle';
-      handle.addEventListener('mousedown', (event) => {
+      const handle = document.createElement("div");
+      handle.className = "ag-fill-handle";
+      handle.addEventListener("mousedown", (event) => {
         event.stopPropagation();
         event.preventDefault();
         this._options.onFillHandleStart?.({ row, def, value, cell });
@@ -733,66 +902,73 @@ export class BodyRenderer {
   }
 
   _createIcon(type) {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('aria-hidden', 'true');
-    svg.classList.add('ag-icon');
-
-    const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-    polyline.setAttribute('fill', 'none');
-    polyline.setAttribute('stroke', 'currentColor');
-    polyline.setAttribute('stroke-width', '2');
-    polyline.setAttribute('stroke-linecap', 'round');
-    polyline.setAttribute('stroke-linejoin', 'round');
-    polyline.setAttribute('points', type === 'chevronDown' ? '6 9 12 15 18 9' : '9 6 15 12 9 18');
-    svg.appendChild(polyline);
-    return svg;
+    return createSvgIcon(type, 18);
   }
 
   renderPinnedRows(rows, position) {
-    const container = position === 'top'
-      ? this._dom.getPinnedTopRowsContainer?.()
-      : this._dom.getPinnedBottomRowsContainer?.();
+    const container =
+      position === "top"
+        ? this._dom.getPinnedTopRowsContainer?.()
+        : this._dom.getPinnedBottomRowsContainer?.();
     if (!container) return;
 
     if (!rows || rows.length === 0) {
-      container.style.display = 'none';
-      container.innerHTML = '';
+      container.style.display = "none";
+      container.innerHTML = "";
       return;
     }
 
-    container.style.display = 'block';
-    container.innerHTML = '';
+    container.style.display = "block";
+    container.innerHTML = "";
 
     const rowHeight = this._viewModel.getRowHeight();
     const visibleColumns = this._columnModel.getVisibleLeafColumns();
     const pinnedGroups = this._columnModel.getColumnsByPin();
     const stickyMeta = this._buildStickyMeta(pinnedGroups);
-    const totalWidth = visibleColumns.reduce((sum, col) => sum + (col.state.width ?? 0), 0);
+    const totalWidth = visibleColumns.reduce(
+      (sum, col) => sum + (col.state.width ?? 0),
+      0,
+    );
 
     rows.forEach((row, index) => {
-      const rowEl = document.createElement('div');
+      const rowEl = document.createElement("div");
       rowEl.className = `ag-row ag-pinned-row ag-pinned-row-${position}`;
       rowEl.dataset.rowKey = row._rowKey ?? `pinned-${position}-${index}`;
       rowEl.style.height = `${rowHeight}px`;
-      rowEl.setAttribute('role', 'row');
+      rowEl.setAttribute("role", "row");
 
-      if (row._type === 'aggregate') {
-        rowEl.classList.add('ag-row-aggregate');
+      if (row._type === "aggregate") {
+        rowEl.classList.add("ag-row-aggregate");
       }
 
       let colIndex = 0;
       if (this._options.selectionEnabled) {
-        const sel = document.createElement('div');
-        sel.className = 'ag-cell ag-cell-pinned';
+        const sel = document.createElement("div");
+        sel.className = "ag-cell ag-cell-pinned";
         sel.style.width = `${this._options.selectionColumnWidth ?? 44}px`;
         sel.style.minWidth = `${this._options.selectionColumnWidth ?? 44}px`;
         rowEl.appendChild(sel);
         colIndex += 1;
       }
 
-      for (const { def, state } of [...pinnedGroups.left, ...pinnedGroups.center, ...pinnedGroups.right]) {
-        const cell = this._createDataCell(row, def, state, stickyMeta.get(def.id), index, colIndex, index, 0, visibleColumns, null, rows);
+      for (const { def, state } of [
+        ...pinnedGroups.left,
+        ...pinnedGroups.center,
+        ...pinnedGroups.right,
+      ]) {
+        const cell = this._createDataCell(
+          row,
+          def,
+          state,
+          stickyMeta.get(def.id),
+          index,
+          colIndex,
+          index,
+          0,
+          visibleColumns,
+          null,
+          rows,
+        );
         if (cell) rowEl.appendChild(cell);
         colIndex += 1;
       }
@@ -812,25 +988,29 @@ export class BodyRenderer {
     if (!container) return;
 
     // 기존 하이라이트 제거
-    container.querySelectorAll('.ag-cell-range-selected').forEach((el) => {
-      el.classList.remove('ag-cell-range-selected');
+    container.querySelectorAll(".ag-cell-range-selected").forEach((el) => {
+      el.classList.remove("ag-cell-range-selected");
     });
 
     if (!rangeManager?.hasRange()) return;
 
-    container.querySelectorAll('.ag-cell[data-col-id]').forEach((cell) => {
-      const rowEl = cell.closest('.ag-row');
+    container.querySelectorAll(".ag-cell[data-col-id]").forEach((cell) => {
+      const rowEl = cell.closest(".ag-row");
       const rowKey = rowEl?.dataset.rowKey;
       const colId = cell.dataset.colId;
-      if (rowKey && colId && rangeManager.isInRange(rowKey, colId, this._currentRows, allLeafCols)) {
-        cell.classList.add('ag-cell-range-selected');
+      if (
+        rowKey &&
+        colId &&
+        rangeManager.isInRange(rowKey, colId, this._currentRows, allLeafCols)
+      ) {
+        cell.classList.add("ag-cell-range-selected");
       }
     });
   }
 
   clear() {
     const container = this._dom.getRowsContainer();
-    if (container) container.innerHTML = '';
+    if (container) container.innerHTML = "";
     this._currentRows = [];
   }
 
@@ -840,7 +1020,7 @@ export class BodyRenderer {
 
   _getLocaleText(key, fallback, params = {}) {
     const getter = this._options.getLocaleText;
-    if (typeof getter !== 'function') {
+    if (typeof getter !== "function") {
       return fallback;
     }
     return getter(key, fallback, params);
@@ -851,7 +1031,9 @@ export class BodyRenderer {
       return;
     }
 
-    const classNames = Array.isArray(value) ? value : String(value).split(/\s+/);
+    const classNames = Array.isArray(value)
+      ? value
+      : String(value).split(/\s+/);
     classNames
       .map((name) => String(name).trim())
       .filter(Boolean)
@@ -859,7 +1041,7 @@ export class BodyRenderer {
   }
 
   _applyInlineStyles(element, styles) {
-    if (!styles || typeof styles !== 'object') {
+    if (!styles || typeof styles !== "object") {
       return;
     }
 

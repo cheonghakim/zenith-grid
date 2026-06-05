@@ -1199,9 +1199,9 @@ grid.sortBy([
 ]);
 ```
 
-### 44. Column Header Dropdown Menu (⋮ Button & Right-click)
+### 44. Column Header Dropdown Menu (Menu Button & Right-click)
 
-Hovering over a column header reveals a `⋮` button. Clicking this button or right-clicking anywhere on the header opens a context menu with options to sort, auto-size, or pin columns (Left, Right, or Unpin).
+Hovering over a column header reveals a menu icon button. Clicking this button or right-clicking anywhere on the header opens a context menu with options to sort, auto-size, or pin columns (Left, Right, or Unpin).
 
 ### 45. Column Auto-Sizing (autoSizeColumn / autoSizeAllColumns)
 

@@ -1,5 +1,4 @@
-HighGrid Third-Party Notices
-============================
+# HighGrid Third-Party Notices
 
 This file lists the third-party software components used by HighGrid,
 along with their licenses and copyright notices.
@@ -14,87 +13,109 @@ RUNTIME / OPTIONAL DEPENDENCIES
 These packages are NOT bundled into the HighGrid core. They are dynamically
 loaded at runtime only when the corresponding feature/plugin is used.
 
-1. ExcelJS
-   Version:  4.4.0
-   License:  MIT
-   Homepage: https://github.com/exceljs/exceljs
-   Usage:    Dynamically loaded (lazy import) by xlsxExportPlugin to generate
-             native .xlsx files. Install separately: `npm install exceljs`
+1.  ExcelJS
+    Version: 4.4.0
+    License: MIT
+    Homepage: https://github.com/exceljs/exceljs
+    Usage: Dynamically loaded (lazy import) by xlsxExportPlugin to generate
+    native .xlsx files. Install separately: `npm install exceljs`
 
-   MIT License
-   Copyright (c) 2014-2019 Guyon Roche
+    MIT License
+    Copyright (c) 2014-2019 Guyon Roche
 
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
 
-2. Apache ECharts
-   Version:  ^5.x / 6.1.0 (devDependency for demo; user-supplied for production)
-   License:  Apache License 2.0
-   Homepage: https://echarts.apache.org
-   Repository: https://github.com/apache/echarts
-   Usage:    Optional. Users may integrate ECharts for chart-in-cell rendering
-             via the echartsPlugin (src/plugins/echartsPlugin.js). ECharts is
-             NOT bundled into HighGrid and must be installed separately:
-             `npm install echarts`
-             When distributing an application that includes ECharts, you must
-             comply with Apache License 2.0 — include the license text and the
-             NOTICE file from the ECharts repository.
+2.  Apache ECharts
+    Version: ^5.x / 6.1.0 (devDependency for demo; user-supplied for production)
+    License: Apache License 2.0
+    Homepage: https://echarts.apache.org
+    Repository: https://github.com/apache/echarts
+    Usage: Optional. Users may integrate ECharts for chart-in-cell rendering
+    via the echartsPlugin (src/plugins/echartsPlugin.js). ECharts is
+    NOT bundled into HighGrid and must be installed separately:
+    `npm install echarts`
+    When distributing an application that includes ECharts, you must
+    comply with Apache License 2.0 — include the license text and the
+    NOTICE file from the ECharts repository.
 
-   Apache License, Version 2.0
-   Copyright (c) 2013-2023 The Apache Software Foundation
+    Apache License, Version 2.0
+    Copyright (c) 2013-2023 The Apache Software Foundation
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 
-   NOTICE: Apache ECharts, Apache, and the Apache feather logo are either
-   registered trademarks or trademarks of the Apache Software Foundation.
+    NOTICE: Apache ECharts, Apache, and the Apache feather logo are either
+    registered trademarks or trademarks of the Apache Software Foundation.
+
+3.  Material Design Icons (MDI)
+    Version: Path data copied from the public Material Design Icons collection
+    License: Apache License 2.0
+    Homepage: https://pictogrammers.com/library/mdi/
+    License URL: https://pictogrammers.com/docs/general/license/
+    Usage: Selected icon path data is embedded in src/renderer/IconFactory.js
+    for internal row toggle, sorting, drag handle, filter, menu, and
+    demo tab icons. No external MDI package is bundled.
+
+    Material Design Icons are maintained by Pictogrammers. The icon SVG/path
+    assets are licensed under the Apache License 2.0.
+
+4.  Google Fonts: Inter and Plus Jakarta Sans
+    Version: Served by Google Fonts CDN for the demo page
+    License: SIL Open Font License 1.1
+    Homepage: https://fonts.google.com/
+    Inter License: https://github.com/google/fonts/blob/main/ofl/inter/OFL.txt
+    Plus Jakarta Sans License: https://github.com/tokotype/PlusJakartaSans
+    Usage: The demo page (examples/index.html) loads Inter and Plus Jakarta Sans
+    from Google Fonts. These font files are not bundled into the HighGrid core
+    library package.
 
 ────────────────────────────────────────────────────────────────────────────────
 PEER DEPENDENCIES (not bundled — installed by the end user)
 ────────────────────────────────────────────────────────────────────────────────
 
-3. Vue
-   Version:  ^3.3.0 (peer dependency)
-   License:  MIT
+5. Vue
+   Version: ^3.3.0 (peer dependency)
+   License: MIT
    Homepage: https://vuejs.org
-   Usage:    Required only when using the Vue 3 adapter
-             (`highgrid/src/adapters/vue3`). The core library works without Vue.
+   Usage: Required only when using the Vue 3 adapter
+   (`highgrid/src/adapters/vue3`). The core library works without Vue.
 
    MIT License
    Copyright (c) 2013-present, Yuxi (Evan) You
 
    (Full MIT license text: https://github.com/vuejs/core/blob/main/LICENSE)
 
-4. React & ReactDOM
-   Version:  ^18.0.0 (peer dependency)
-   License:  MIT
+6. React & ReactDOM
+   Version: ^18.0.0 (peer dependency)
+   License: MIT
    Homepage: https://react.dev
-   Usage:    Required only when using the React adapter
-             (`highgrid/src/adapters/react`). The core library works without React.
+   Usage: Required only when using the React adapter
+   (`highgrid/src/adapters/react`). The core library works without React.
 
    MIT License
    Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -109,50 +130,50 @@ These packages are listed in devDependencies and are used only in the
 development/build/test pipeline. They are NOT included in the published
 npm package or any distributed bundle.
 
-5. Vite
-   Version:  5.4.21
-   License:  MIT
-   Homepage: https://vite.dev
-   Usage:    Build tool for bundling the library and serving the demo.
+7.  Vite
+    Version: 5.4.21
+    License: MIT
+    Homepage: https://vite.dev
+    Usage: Build tool for bundling the library and serving the demo.
 
-6. Vitest
-   Version:  1.6.1
-   License:  MIT
-   Homepage: https://vitest.dev
-   Usage:    Unit and DOM test runner.
+8.  Vitest
+    Version: 1.6.1
+    License: MIT
+    Homepage: https://vitest.dev
+    Usage: Unit and DOM test runner.
 
-7. jsdom
-   Version:  26.1.0
-   License:  MIT
-   Homepage: https://github.com/jsdom/jsdom
-   Usage:    DOM environment emulation for unit tests (via Vitest).
+9.  jsdom
+    Version: 26.1.0
+    License: MIT
+    Homepage: https://github.com/jsdom/jsdom
+    Usage: DOM environment emulation for unit tests (via Vitest).
 
-8. @playwright/test
-   Version:  1.60.0
-   License:  Apache-2.0
-   Homepage: https://playwright.dev
-   Usage:    End-to-end (E2E) browser testing framework.
+10. @playwright/test
+    Version: 1.60.0
+    License: Apache-2.0
+    Homepage: https://playwright.dev
+    Usage: End-to-end (E2E) browser testing framework.
 
-   Apache License, Version 2.0
-   Copyright (c) Microsoft Corporation.
+    Apache License, Version 2.0
+    Copyright (c) Microsoft Corporation.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-9. @vitejs/plugin-vue
-   License:  MIT
-   Homepage: https://github.com/vitejs/vite-plugin-vue
-   Usage:    Vite plugin for Vue 3 single-file component (.vue) support.
+11. @vitejs/plugin-vue
+    License: MIT
+    Homepage: https://github.com/vitejs/vite-plugin-vue
+    Usage: Vite plugin for Vue 3 single-file component (.vue) support.
 
 ────────────────────────────────────────────────────────────────────────────────
 NOTES
 ────────────────────────────────────────────────────────────────────────────────
 
-- The HighGrid core library (src/) contains NO bundled third-party code.
-  All source code in src/ is original work licensed under MIT.
+- The HighGrid core library (src/) is original work licensed under MIT, except
+  for the selected MDI icon path data listed in entry #3.
 
 - sparklinePlugin (src/plugins/sparklinePlugin.js) renders mini charts using
   native browser SVG APIs only. No external charting library is required or

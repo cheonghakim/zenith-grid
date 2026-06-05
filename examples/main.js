@@ -6,11 +6,36 @@ import {
   createSparklinePlugin,
 } from '../src/index.js';
 import { createEchartsPlugin } from '../src/plugins/echartsPlugin.js';
+import { createSvgIcon } from '../src/renderer/IconFactory.js';
 import '../src/styles/grid.css';
 
+if (!customElements.get('mdi-icon')) {
+  customElements.define('mdi-icon', class extends HTMLElement {
+    static get observedAttributes() {
+      return ['type', 'size'];
+    }
+
+    connectedCallback() {
+      this._render();
+    }
+
+    attributeChangedCallback() {
+      if (this.isConnected) this._render();
+    }
+
+    _render() {
+      const type = this.getAttribute('type') ?? '';
+      const size = Number(this.getAttribute('size') ?? 16);
+      this.replaceChildren(createSvgIcon(type, Number.isFinite(size) ? size : 16));
+    }
+  });
+}
+
+// ── DOM ELEMENTS BINDING ──────────────────────────────────────
 const rowCountEl = document.getElementById('rowCount');
 const visibleCountEl = document.getElementById('visibleCount');
 const selectedCountEl = document.getElementById('selectedCount');
+
 const modeValueEl = document.getElementById('modeValue');
 const datasetValueEl = document.getElementById('datasetValue');
 const groupingValueEl = document.getElementById('groupingValue');
@@ -21,63 +46,49 @@ const paginationValueEl = document.getElementById('paginationValue');
 const infiniteValueEl = document.getElementById('infiniteValue');
 const pluginsValueEl = document.getElementById('pluginsValue');
 const columnStateValueEl = document.getElementById('columnStateValue');
+
 const eventLogEl = document.getElementById('eventLog');
 const benchmarkLogEl = document.getElementById('benchmarkLog');
 
-const datasetSelect = document.getElementById('datasetSelect');
-const datasetRadios = document.querySelectorAll('input[name="datasetMode"]');
-const structureRadios = document.querySelectorAll('input[name="structureMode"]');
-const scenarioRadios = document.querySelectorAll('input[name="scenarioMode"]');
-const quickFilterInput = document.getElementById('quickFilterInput');
-const statusFilterSelect = document.getElementById('statusFilterSelect');
-const pageSizeSelect = document.getElementById('pageSizeSelect');
-const columnSelect = document.getElementById('columnSelect');
-const pinSelect = document.getElementById('pinSelect');
-const widthInput = document.getElementById('widthInput');
-const visibleCheckbox = document.getElementById('visibleCheckbox');
+// Tab Buttons & Panels
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
 
-const resetButton = document.getElementById('resetButton');
+// Overview Controls
+const scenarioRadios = document.querySelectorAll('input[name="scenarioMode"]');
+const pageSizeSelect = document.getElementById('pageSizeSelect');
 const reloadButton = document.getElementById('reloadButton');
-const groupButton = document.getElementById('groupButton');
-const treeButton = document.getElementById('treeButton');
+const prevPageButton = document.getElementById('prevPageButton');
+const nextPageButton = document.getElementById('nextPageButton');
+const loadMoreButton = document.getElementById('loadMoreButton');
+
+ // Hierarchy Controls
+const structureRadios = document.querySelectorAll('input[name="structureMode"]');
+const variableHeightButton = document.getElementById('variableHeightButton');
 const expandTreeButton = document.getElementById('expandTreeButton');
 const collapseTreeButton = document.getElementById('collapseTreeButton');
-const clientModeButton = document.getElementById('clientModeButton');
-const paginationButton = document.getElementById('paginationButton');
-const infiniteButton = document.getElementById('infiniteButton');
-const nextPageButton = document.getElementById('nextPageButton');
-const prevPageButton = document.getElementById('prevPageButton');
-const loadMoreButton = document.getElementById('loadMoreButton');
-const paginationClientButton = document.getElementById('paginationClientButton');
-const paginationServerButton = document.getElementById('paginationServerButton');
-const infiniteClientButton = document.getElementById('infiniteClientButton');
-const infiniteServerButton = document.getElementById('infiniteServerButton');
-const variableHeightButton = document.getElementById('variableHeightButton');
+
+// Local Mutation Controls (tab-live)
 const appendRowsButton = document.getElementById('appendRowsButton');
 const updateFirstRowButton = document.getElementById('updateFirstRowButton');
 const patchFirstRowButton = document.getElementById('patchFirstRowButton');
 const removeLastRowButton = document.getElementById('removeLastRowButton');
-const liveButton = document.getElementById('liveButton');
-const startStreamButton = document.getElementById('startStreamButton');
-const stopStreamButton = document.getElementById('stopStreamButton');
+
+// Live Streaming Controls
 const streamBurstInput = document.getElementById('streamBurstInput');
 const streamIntervalInput = document.getElementById('streamIntervalInput');
 const streamMaxRowsInput = document.getElementById('streamMaxRowsInput');
+const liveButton = document.getElementById('liveButton');
+const startStreamButton = document.getElementById('startStreamButton');
+const stopStreamButton = document.getElementById('stopStreamButton');
 const pauseLiveButton = document.getElementById('pauseLiveButton');
 const liveAnimationButton = document.getElementById('liveAnimationButton');
-const uppercasePluginButton = document.getElementById('uppercasePluginButton');
-const scorePluginButton = document.getElementById('scorePluginButton');
-const applyColumnButton = document.getElementById('applyColumnButton');
-const saveColumnStateButton = document.getElementById('saveColumnStateButton');
-const loadColumnStateButton = document.getElementById('loadColumnStateButton');
-const clearColumnStateButton = document.getElementById('clearColumnStateButton');
+
 const benchmarkRenderButton = document.getElementById('benchmarkRenderButton');
 const benchmarkScenarioButton = document.getElementById('benchmarkScenarioButton');
 const benchmarkScrollButton = document.getElementById('benchmarkScrollButton');
-const gridHost = document.getElementById('gridApp');
 
-document.getElementById('resumeLiveButton')?.remove();
-
+// ── HELPER DATA GENERATORS ────────────────────────────────────
 const TEAM_NAMES = ['Red', 'Blue', 'Gold', 'Green'];
 const STATUS_NAMES = ['Active', 'Paused', 'Review'];
 const REGIONS = ['Seoul', 'Tokyo', 'Berlin', 'Austin', 'Dubai', 'Toronto'];
@@ -176,29 +187,24 @@ function renderScoreCell({ value }) {
   return wrap;
 }
 
-const columns = [
-  { id: 'id', field: 'id', header: 'ID', width: 140, type: 'number', align: 'right' },
-  { id: 'name', field: 'name', header: 'Operator', width: 220, tooltip: true, editable: true },
-  { id: 'team', field: 'team', header: 'Team', width: 140, filterType: 'select', filterOptions: TEAM_NAMES },
+// Columns definition for main grids
+const getBaseColumns = () => [
+  { id: 'id', field: 'id', header: 'ID', width: 100, type: 'number', align: 'right' },
+  { id: 'name', field: 'name', header: 'Operator', width: 180, tooltip: true, editable: true },
+  { id: 'team', field: 'team', header: 'Team', width: 120, filterType: 'select', filterOptions: TEAM_NAMES },
   { id: 'status', field: 'status', header: 'Status', width: 120, filterType: 'select', filterOptions: STATUS_NAMES, renderer: renderStatusBadge },
-  { id: 'score', field: 'score', header: 'Score', width: 140, type: 'number', align: 'right', renderer: renderScoreCell, aggregate: 'avg', editable: true },
-  // 셀 차트 컬럼 (기본 숨김 → 스파크라인 버튼으로 토글)
-  { id: 'trend',     field: 'history', header: '10-Week Score · Line',  width: 140, visible: false, sparkline: { type: 'line',  field: 'history', color: '#0f4c81' } },
-  { id: 'trendBar',  field: 'history', header: '10-Week Score · Bar',   width: 140, visible: false, sparkline: { type: 'bar',   field: 'history', color: '#7c3aed' } },
-  { id: 'trendArea', field: 'history', header: '10-Week Score · Area',  width: 150, visible: false, echart:    { type: 'area',  dataField: 'history', color: '#16a34a', height: 32 } },
-  { id: 'region', field: 'region', header: 'Region', width: 160, filterType: 'select', filterOptions: REGIONS },
-  { id: 'severity', field: 'severity', header: 'Severity', width: 140, filterType: 'select', filterOptions: SEVERITIES },
-  { id: 'owner', field: 'owner', header: 'Owner', width: 150, filterType: 'select', filterOptions: OWNERS },
-  { id: 'queue', field: 'queue', header: 'Queue', width: 160, filterType: 'select', filterOptions: QUEUES },
-  { id: 'lastAction', field: 'lastAction', header: 'Last Action', width: 220 },
-  { id: 'notes', field: 'notes', header: 'Notes', width: 420, tooltip: true },
-  { id: 'updatedAt', field: 'updatedAt', header: 'Updated At', width: 180, type: 'date' },
+  { id: 'score', field: 'score', header: 'Score', width: 130, type: 'number', align: 'right', renderer: renderScoreCell, aggregate: 'avg', editable: true },
+  { id: 'region', field: 'region', header: 'Region', width: 140, filterType: 'select', filterOptions: REGIONS },
+  { id: 'severity', field: 'severity', header: 'Severity', width: 120, filterType: 'select', filterOptions: SEVERITIES },
+  { id: 'owner', field: 'owner', header: 'Owner', width: 130, filterType: 'select', filterOptions: OWNERS },
+  { id: 'queue', field: 'queue', header: 'Queue', width: 140, filterType: 'select', filterOptions: QUEUES },
+  { id: 'lastAction', field: 'lastAction', header: 'Last Action', width: 200 },
+  { id: 'notes', field: 'notes', header: 'Notes', width: 320, tooltip: true },
+  { id: 'updatedAt', field: 'updatedAt', header: 'Updated At', width: 160, type: 'date' },
 ];
 
 function delay(ms) {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, ms);
-  });
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 function toTimestamp(date) {
@@ -207,9 +213,7 @@ function toTimestamp(date) {
 
 function createNotes(index, options = {}) {
   const base = NOTE_FRAGMENTS[index % NOTE_FRAGMENTS.length];
-  const extra = index % 5 === 0
-    ? ` Depth validation note ${index}. ${NOTE_FRAGMENTS[(index + 2) % NOTE_FRAGMENTS.length]}`
-    : '';
+  const extra = index % 5 === 0 ? ` Depth validation note ${index}.` : '';
   const remoteTag = options.remote ? ' Served from mock remote source.' : '';
   return `${base}${extra}${remoteTag}`;
 }
@@ -263,8 +267,8 @@ function createTreeRows() {
     createTreeNode('north', 'North Division', { team: 'Red', score: 4200 }, [
       createTreeNode('north-ops', 'North Operations', { score: 2750 }, [
         createTreeNode('north-ops-alpha', 'Alpha Squad', { score: 1900 }, [
-          createTreeNode('north-ops-alpha-1', 'Alpha Analyst 1', { hasChildren: false, notes: 'Leaf node at depth 3 with wrapped analyst notes for row height checks.' }),
-          createTreeNode('north-ops-alpha-2', 'Alpha Analyst 2', { hasChildren: false, notes: 'Another depth 3 leaf so expand-all visibly shows multiple levels.' }),
+          createTreeNode('north-ops-alpha-1', 'Alpha Analyst 1', { hasChildren: false, notes: 'Leaf node at depth 3 with wrapped analyst notes.' }),
+          createTreeNode('north-ops-alpha-2', 'Alpha Analyst 2', { hasChildren: false, notes: 'Another depth 3 leaf so expand-all works.' }),
         ]),
         createTreeNode('north-ops-beta', 'Beta Squad', { score: 1820, hasChildren: true }, []),
       ]),
@@ -284,7 +288,7 @@ function createTreeRows() {
       status: 'Review',
       score: 3100,
       hasChildren: true,
-      notes: 'Starts collapsed with lazy children so you can confirm dynamic depth expansion.',
+      notes: 'Starts collapsed with lazy children.',
     }, []),
   ];
 }
@@ -292,10 +296,7 @@ function createTreeRows() {
 function createLazyChildren(row) {
   const depth = String(row.id).split('-').length - 1;
   return delay(180).then(() => {
-    if (depth >= 3) {
-      return [];
-    }
-
+    if (depth >= 3) return [];
     return Array.from({ length: 2 }, (_, index) => {
       const childId = `${row.id}-lazy-${index + 1}`;
       const willHaveChildren = depth < 2 && index === 0;
@@ -304,7 +305,7 @@ function createLazyChildren(row) {
         `${row.name} Lazy Child ${index + 1}`,
         {
           score: (row.score ?? 1200) - 80 + index * 45,
-          notes: `${row.name} lazy child ${index + 1} validates async tree loading at depth ${depth + 1}. ${NOTE_FRAGMENTS[(depth + index) % NOTE_FRAGMENTS.length]}`,
+          notes: `${row.name} lazy child ${index + 1} at depth ${depth + 1}.`,
           hasChildren: willHaveChildren,
         },
         []
@@ -313,17 +314,11 @@ function createLazyChildren(row) {
   });
 }
 
-function cloneRows(rows) {
-  return structuredClone(rows);
-}
-
+// ── SERVER-MOCK TRANSFORMS FOR PAGINATION ──────────────────────
 function matchServerColumnFilter(row, filterDef) {
   const { type = 'text', operator = 'contains', value, field } = filterDef ?? {};
   const cellValue = row?.[field];
-
-  if (cellValue == null) {
-    return false;
-  }
+  if (cellValue == null) return false;
 
   switch (type) {
     case 'number': {
@@ -332,51 +327,23 @@ function matchServerColumnFilter(row, filterDef) {
         case 'equals': return numeric === Number(value);
         case 'notEquals': return numeric !== Number(value);
         case 'greaterThan': return numeric > Number(value);
-        case 'greaterThanOrEqual': return numeric >= Number(value);
         case 'lessThan': return numeric < Number(value);
-        case 'lessThanOrEqual': return numeric <= Number(value);
-        case 'between':
-          return Array.isArray(value) && numeric >= Number(value[0]) && numeric <= Number(value[1]);
-        default:
-          return true;
-      }
-    }
-    case 'date': {
-      const cellDate = new Date(cellValue);
-      const filterDate = new Date(value);
-      switch (operator) {
-        case 'equals': return cellDate.toDateString() === filterDate.toDateString();
-        case 'notEquals': return cellDate.toDateString() !== filterDate.toDateString();
-        case 'before': return cellDate < filterDate;
-        case 'after': return cellDate > filterDate;
-        case 'between':
-          return Array.isArray(value) && cellDate >= new Date(value[0]) && cellDate <= new Date(value[1]);
-        default:
-          return true;
+        default: return true;
       }
     }
     case 'select': {
-      return Array.isArray(value) ? value.includes(String(cellValue)) || value.includes(cellValue) : cellValue === value;
+      return Array.isArray(value) ? value.includes(String(cellValue)) : cellValue === value;
     }
     default: {
       const cell = String(cellValue).toLowerCase();
       const filter = String(value ?? '').toLowerCase();
-      switch (operator) {
-        case 'contains': return cell.includes(filter);
-        case 'startsWith': return cell.startsWith(filter);
-        case 'endsWith': return cell.endsWith(filter);
-        case 'equals': return cell === filter;
-        case 'notEquals': return cell !== filter;
-        case 'notContains': return !cell.includes(filter);
-        default: return cell.includes(filter);
-      }
+      return cell.includes(filter);
     }
   }
 }
 
 function applyServerTransforms(rows, { filters, sort }) {
   let result = [...rows];
-
   const quickFilter = filters?.quickFilter ?? '';
   const quickFilterFields = filters?.quickFilterFields ?? [];
   if (quickFilter) {
@@ -397,18 +364,11 @@ function applyServerTransforms(rows, { filters, sort }) {
         const leftValue = left[definition.field];
         const rightValue = right[definition.field];
         let compare = 0;
-
         if (definition.type === 'number') {
           compare = Number(leftValue) - Number(rightValue);
-        } else if (definition.type === 'date') {
-          compare = new Date(leftValue) - new Date(rightValue);
         } else {
-          compare = String(leftValue ?? '').localeCompare(String(rightValue ?? ''), undefined, {
-            numeric: true,
-            sensitivity: 'base',
-          });
+          compare = String(leftValue ?? '').localeCompare(String(rightValue ?? ''), undefined, { numeric: true });
         }
-
         if (compare !== 0) {
           return definition.direction === 'desc' ? -compare : compare;
         }
@@ -416,7 +376,6 @@ function applyServerTransforms(rows, { filters, sort }) {
       return 0;
     });
   }
-
   return result;
 }
 
@@ -424,9 +383,8 @@ async function fetchServerPage({ page, pageSize, filters, sort }) {
   await delay(240);
   const filtered = applyServerTransforms(createFlatRows(1300, { prefix: 'Remote', remote: true }), { filters, sort });
   const start = page * pageSize;
-  const end = start + pageSize;
   return {
-    rows: cloneRows(filtered.slice(start, end)),
+    rows: structuredClone(filtered.slice(start, start + pageSize)),
     totalCount: filtered.length,
   };
 }
@@ -434,7 +392,7 @@ async function fetchServerPage({ page, pageSize, filters, sort }) {
 async function loadMoreServerRows({ offset, loadSize, filters, sort }) {
   await delay(220);
   const filtered = applyServerTransforms(createFlatRows(1300, { prefix: 'Remote', remote: true }), { filters, sort });
-  const rows = cloneRows(filtered.slice(offset, offset + loadSize));
+  const rows = structuredClone(filtered.slice(offset, offset + loadSize));
   return {
     rows,
     totalCount: filtered.length,
@@ -443,32 +401,38 @@ async function loadMoreServerRows({ offset, loadSize, filters, sort }) {
   };
 }
 
-function getDefaultFlatRows() {
-  return createFlatRows(2500);
+// ── SYSTEM STATE & EVENT LOGGING ──────────────────────────────
+const eventLines = [];
+function logEvent(label, payload = {}) {
+  const line = `[${new Date().toLocaleTimeString()}] ${label} ${JSON.stringify(payload)}`;
+  eventLines.unshift(line);
+  eventLogEl.textContent = eventLines.slice(0, 24).join('\n');
 }
 
-let currentDataset = 'flat';
-let currentRows = getDefaultFlatRows();
-let groupingEnabled = false;
-let treeEnabled = false;
-let livePaused = false;
-let variableRowHeightEnabled = false;
-let liveRowAnimationEnabled = true;
-let streamTimer = null;
-let streamRowCounter = 0;
-let streamRunning = false;
+function flashActionButton(button) {
+  if (!button) return;
+  button.dataset.fired = 'true';
+  window.setTimeout(() => {
+    button.dataset.fired = 'false';
+  }, 420);
+}
+
+function setToggleState(button, active) {
+  if (!button) return;
+  button.dataset.active = active ? 'true' : 'false';
+  button.setAttribute('aria-pressed', active ? 'true' : 'false');
+}
+
+// ── INSTANTIATING GRID 1: OVERVIEW & PAGINATION ───────────────
 let paginationSource = 'client';
 let infiniteSource = 'client';
-const eventLines = [];
 
-const grid = createGrid(gridHost, {
-  columns,
-  rows: currentRows,
+const gridOverview = createGrid(document.getElementById('grid-overview'), {
+  columns: getBaseColumns(),
+  rows: createFlatRows(2500),
   rowKey: 'id',
   rowHeight: 40,
   locale: koreanLocale,
-  variableRowHeight: variableRowHeightEnabled,
-  tableId: 'highgrid-demo',
   pagination: {
     mode: paginationSource,
     pageSize: Number(pageSizeSelect.value),
@@ -480,868 +444,21 @@ const grid = createGrid(gridHost, {
     loadMoreSize: 40,
     onLoadMore: loadMoreServerRows,
   },
-  liveUpdates: {
-    enabled: true,
-    maxRows: 1000,
-    rowAnimationEnabled: liveRowAnimationEnabled,
-  },
-  availablePlugins: [
-    {
-      plugin: uppercaseTeamPlugin,
-      label: 'Uppercase Team',
-      description: 'Converts the team cell text to uppercase after data processing.',
-    },
-    {
-      plugin: scorePrefixPlugin,
-      label: 'Score Prefix',
-      description: 'Decorates numeric score cells with a PTS prefix.',
-    },
-  ],
   editing: { enabled: true },
-  plugins: [
-    { plugin: createXlsxExportPlugin({ fileName: 'highgrid-export.xlsx' }) },
-    { plugin: createSparklinePlugin() },
-    { plugin: createEchartsPlugin() },
-  ],
-  statusBar: { enabled: true },
-  masterDetail: {
-    detailRenderer: (row) => {
-      const div = document.createElement('div');
-      div.style.cssText = 'padding:16px;display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;';
-      div.innerHTML = `
-        <div style="min-width:200px">
-          <strong style="font-size:15px">${row.name}</strong>
-          <p style="margin:4px 0;color:#556170">팀: ${row.team} · 지역: ${row.region}</p>
-          <p style="margin:4px 0">상태: <b>${row.status}</b> · 심각도: ${row.severity}</p>
-          <p style="margin:4px 0">점수: <b>${row.score?.toLocaleString()}</b></p>
-        </div>
-        <div style="min-width:200px;color:#556170;font-size:13px">
-          <p style="margin:4px 0">담당자: ${row.owner} (${row.queue})</p>
-          <p style="margin:4px 0">최근 작업: ${row.lastAction}</p>
-          <p style="margin:4px 0;white-space:normal;max-width:400px">${row.notes}</p>
-        </div>
-      `;
-      return div;
-    },
-    detailRowHeight: 150,
-  },
   sidePanel: {
     enabled: true,
     quickFilterFields: ['name', 'team', 'status', 'region', 'notes'],
     defaultTab: 'columns',
     defaultOpen: false,
   },
-  tree: {
-    treeMode: 'children',
-    childrenField: 'children',
-    hasChildrenField: 'hasChildren',
-    onLoadChildren: createLazyChildren,
-  },
-  getRowHeight: (row) => {
-    if (!variableRowHeightEnabled) {
-      return null;
-    }
-    if (row._type === 'group-header') {
-      return 44;
-    }
-    const noteLength = String(row.notes ?? '').length;
-    return noteLength > 150 ? 86 : noteLength > 95 ? 64 : 44;
-  },
+  plugins: [
+    { plugin: createXlsxExportPlugin({ fileName: 'overview-grid.xlsx' }) },
+  ],
 });
 
-const modeButtons = {
-  client: clientModeButton,
-  paginated: paginationButton,
-  infinite: infiniteButton,
-};
-
-function logEvent(label, payload = {}) {
-  const line = `[${new Date().toLocaleTimeString()}] ${label} ${JSON.stringify(payload)}`;
-  eventLines.unshift(line);
-  eventLogEl.textContent = eventLines.slice(0, 24).join('\n');
-}
-
-function flashActionButton(button) {
-  button.dataset.fired = 'true';
-  window.setTimeout(() => {
-    button.dataset.fired = 'false';
-  }, 420);
-}
-
-function setToggleState(button, active) {
-  if (!button) {
-    return;
-  }
-  button.dataset.active = active ? 'true' : 'false';
-  button.setAttribute('aria-pressed', active ? 'true' : 'false');
-}
-
-function syncModeButtons() {
-  const mode = grid.getDisplayMode();
-  Object.entries(modeButtons).forEach(([key, button]) => {
-    setToggleState(button, key === mode);
-  });
-}
-
-function syncPluginButtons() {
-  setToggleState(uppercasePluginButton, grid.hasPlugin('uppercase-team'));
-  setToggleState(scorePluginButton, grid.hasPlugin('score-prefix'));
-}
-
-function syncSourceButtons() {
-  setToggleState(paginationClientButton, paginationSource === 'client');
-  setToggleState(paginationServerButton, paginationSource === 'server');
-  setToggleState(infiniteClientButton, infiniteSource === 'client');
-  setToggleState(infiniteServerButton, infiniteSource === 'server');
-}
-
-function syncToggleButtons() {
-  setToggleState(groupButton, groupingEnabled);
-  setToggleState(treeButton, treeEnabled);
-  setToggleState(pauseLiveButton, livePaused);
-  setToggleState(variableHeightButton, variableRowHeightEnabled);
-  setToggleState(liveAnimationButton, liveRowAnimationEnabled);
-  setToggleState(startStreamButton, streamRunning);
-  syncModeButtons();
-  syncPluginButtons();
-  syncSourceButtons();
-}
-
-function getScenarioValue() {
-  return grid.getDisplayMode() === 'client'
-    ? 'client'
-    : grid.getDisplayMode() === 'paginated'
-      ? `paginated-${paginationSource}`
-      : `infinite-${infiniteSource}`;
-}
-
-function getStructureMode() {
-  if (treeEnabled) {
-    return 'tree';
-  }
-  if (groupingEnabled) {
-    return 'grouped';
-  }
-  return 'flat';
-}
-
-function syncScenarioRadios() {
-  const scenario = getScenarioValue();
-  scenarioRadios.forEach((radio) => {
-    radio.checked = radio.value === scenario;
-  });
-  datasetRadios.forEach((radio) => {
-    radio.checked = radio.value === currentDataset;
-  });
-  structureRadios.forEach((radio) => {
-    radio.checked = radio.value === getStructureMode();
-  });
-}
-
-function getMaxTreeDepth(rows = grid.getFlatRows()) {
-  return rows.reduce((maxDepth, row) => Math.max(maxDepth, row._depth ?? 0), 0);
-}
-
-function refreshInspector() {
-  liveRowAnimationEnabled = grid.isLiveRowAnimationEnabled();
-  modeValueEl.textContent = grid.getDisplayMode();
-  datasetValueEl.textContent = currentDataset;
-  groupingValueEl.textContent = groupingEnabled ? 'on' : 'off';
-  treeValueEl.textContent = treeEnabled ? 'on' : 'off';
-  treeDepthValueEl.textContent = String(getMaxTreeDepth());
-  variableHeightValueEl.textContent = variableRowHeightEnabled ? 'on' : 'off';
-
-  const pagination = grid.getPaginationState();
-  paginationValueEl.textContent = `${pagination.mode} | ${pagination.page + 1}/${pagination.totalPages} | size ${pagination.pageSize} | total ${pagination.totalCount}`;
-
-  const infinite = grid.getInfiniteScrollState();
-  infiniteValueEl.textContent = `${infinite.mode} | loaded ${infinite.loadedCount} | total ${infinite.totalCount ?? 'unknown'} | hasMore ${String(infinite.hasMore)}`;
-
-  const columnState = grid.getColumnState();
-  columnStateValueEl.textContent = `${columnState.columns.length} columns tracked`;
-
-  const installedPlugins = grid.getInstalledPlugins();
-  pluginsValueEl.textContent = installedPlugins.length ? installedPlugins.join(', ') : 'none';
-
-  syncToggleButtons();
-  syncScenarioRadios();
-  syncRuntimeSummaryText();
-}
-
-function syncColumnControls() {
-  const state = grid.getColumnState();
-  const target = state.columns.find((column) => column.colId === columnSelect.value);
-  if (!target) {
-    return;
-  }
-  widthInput.value = target.width;
-  pinSelect.value = target.pinned ?? '';
-  visibleCheckbox.checked = target.visible !== false;
-}
-
-function applyActiveFilters() {
-  grid.clearFilters();
-  if (quickFilterInput.value) {
-    grid.setQuickFilter(quickFilterInput.value, ['name', 'team', 'status', 'region', 'notes']);
-  }
-  if (statusFilterSelect.value) {
-    grid.setColumnFilter('status', {
-      type: 'select',
-      field: 'status',
-      value: statusFilterSelect.value,
-    });
-  }
-}
-
-function isServerBackedActive() {
-  return (
-    (grid.getDisplayMode() === 'paginated' && paginationSource === 'server') ||
-    (grid.getDisplayMode() === 'infinite' && infiniteSource === 'server')
-  );
-}
-
-function ensureFlatDatasetForRemote(reason) {
-  if (currentDataset === 'flat') {
-    return;
-  }
-  datasetSelect.value = 'flat';
-  setDataset('flat');
-  logEvent('dataset-auto-switch', { reason, dataset: 'flat' });
-}
-
-function setDataset(kind) {
-  currentDataset = kind;
-  groupingEnabled = false;
-  treeEnabled = false;
-  grid.disableGrouping();
-  grid.disableTree();
-  grid.setDisplayMode('client');
-
-  currentRows = kind === 'tree' ? createTreeRows() : getDefaultFlatRows();
-  grid.setData(currentRows);
-
-  if (kind === 'tree') {
-    grid.enableTree({
-      treeMode: 'children',
-      childrenField: 'children',
-      hasChildrenField: 'hasChildren',
-      onLoadChildren: createLazyChildren,
-    });
-    treeEnabled = true;
-  }
-
-  applyActiveFilters();
-  refreshInspector();
-  logEvent('dataset-change', { kind });
-}
-
-function setStructureMode(mode) {
-  if (mode === 'tree') {
-    groupingEnabled = false;
-    treeEnabled = true;
-    grid.disableGrouping();
-
-    if (currentDataset !== 'tree') {
-      datasetSelect.value = 'tree';
-      currentRows = createTreeRows();
-      currentDataset = 'tree';
-      grid.setData(currentRows);
-    }
-
-    grid.enableTree({
-      treeMode: 'children',
-      childrenField: 'children',
-      hasChildrenField: 'hasChildren',
-      onLoadChildren: createLazyChildren,
-    });
-    refreshInspector();
-    logEvent('structure-change', { mode: 'tree' });
-    return;
-  }
-
-  treeEnabled = false;
-  grid.disableTree();
-
-  if (mode === 'grouped') {
-    groupingEnabled = true;
-    if (currentDataset === 'tree') {
-      datasetSelect.value = 'flat';
-      currentRows = getDefaultFlatRows();
-      currentDataset = 'flat';
-      grid.setData(currentRows);
-    }
-    grid.enableGrouping(['team'], {
-      aggregations: {
-        score: [{ type: 'avg' }],
-      },
-    });
-    refreshInspector();
-    logEvent('structure-change', { mode: 'grouped' });
-    return;
-  }
-
-  groupingEnabled = false;
-  grid.disableGrouping();
-  refreshInspector();
-  logEvent('structure-change', { mode: 'flat' });
-}
-
-function waitForNextRender() {
-  return new Promise((resolve) => {
-    grid.on('render', resolve, { once: true });
-  });
-}
-
-function setScenario(scenario) {
-  if (scenario === 'client') {
-    grid.setDisplayMode('client');
-    return;
-  }
-
-  const [mode, source] = scenario.split('-');
-  if (mode === 'paginated') {
-    paginationSource = source;
-    grid.setPaginationMode(source);
-    grid.setDisplayMode('paginated');
-    return;
-  }
-
-  infiniteSource = source;
-  grid.setInfiniteScrollMode(source);
-  grid.enableInfiniteScroll();
-}
-
-function guardFlatClientMutation(button, label) {
-  if (currentDataset === 'tree') {
-    flashActionButton(button);
-    logEvent(`${label}-skipped`, { reason: 'tree dataset is excluded from flat mutation shortcuts' });
-    return false;
-  }
-  if (isServerBackedActive()) {
-    flashActionButton(button);
-    logEvent(`${label}-skipped`, { reason: 'remote demo mode is read-only for direct local mutations' });
-    return false;
-  }
-  return true;
-}
-
-grid.on('render', ({ totalCount, visibleCount, displayMode }) => {
-  rowCountEl.textContent = totalCount.toLocaleString();
-  visibleCountEl.textContent = visibleCount.toLocaleString();
-  modeValueEl.textContent = displayMode;
-  refreshInspector();
-});
-
-grid.on('selection-change', ({ selectedCount }) => {
-  selectedCountEl.textContent = selectedCount.toLocaleString();
-  logEvent('selection-change', { selectedCount });
-});
-
-grid.on('state-change', ({ type }) => {
-  refreshInspector();
-  logEvent('state-change', { type });
-});
-
-grid.on('row-click', ({ row }) => {
-  logEvent('row-click', { rowKey: row._rowKey, type: row._type, depth: row._depth ?? 0 });
-});
-
-grid.on('cell-click', ({ colId, row }) => {
-  logEvent('cell-click', { colId, rowKey: row._rowKey });
-});
-
-datasetRadios.forEach((radio) => {
-  radio.addEventListener('change', (event) => {
-    if (event.target.checked) {
-      datasetSelect.value = event.target.value;
-      setDataset(event.target.value);
-    }
-  });
-});
-
-structureRadios.forEach((radio) => {
-  radio.addEventListener('change', (event) => {
-    if (event.target.checked) {
-      setStructureMode(event.target.value);
-    }
-  });
-});
-
-scenarioRadios.forEach((radio) => {
-  radio.addEventListener('change', (event) => {
-    if (!event.target.checked) {
-      return;
-    }
-    const scenario = event.target.value;
-    if (scenario.endsWith('server')) {
-      ensureFlatDatasetForRemote(scenario);
-    }
-    setScenario(scenario);
-    refreshInspector();
-    logEvent('scenario-change', { scenario });
-  });
-});
-
-datasetSelect.addEventListener('change', (event) => {
-  datasetRadios.forEach((radio) => {
-    radio.checked = radio.value === event.target.value;
-  });
-  setDataset(event.target.value);
-});
-
-quickFilterInput.addEventListener('input', () => {
-  applyActiveFilters();
-});
-
-statusFilterSelect.addEventListener('change', () => {
-  applyActiveFilters();
-});
-
-resetButton?.addEventListener('click', () => {
-  quickFilterInput.value = '';
-  statusFilterSelect.value = '';
-  applyActiveFilters();
-  selectedCountEl.textContent = '0';
-  flashActionButton(resetButton);
-  logEvent('filters-reset');
-});
-
-reloadButton.addEventListener('click', () => {
-  setDataset(currentDataset);
-  flashActionButton(reloadButton);
-});
-
-groupButton.addEventListener('click', () => {
-  setStructureMode(groupingEnabled ? 'flat' : 'grouped');
-});
-
-treeButton.addEventListener('click', () => {
-  setStructureMode(treeEnabled ? 'flat' : 'tree');
-});
-
-expandTreeButton.addEventListener('click', () => {
-  if (!treeEnabled) {
-    flashActionButton(expandTreeButton);
-    logEvent('tree-expand-skipped', { reason: 'tree mode is not active' });
-    return;
-  }
-  grid.expandAllTree();
-  flashActionButton(expandTreeButton);
-  logEvent('tree-expand-all');
-});
-
-collapseTreeButton.addEventListener('click', () => {
-  if (!treeEnabled) {
-    flashActionButton(collapseTreeButton);
-    logEvent('tree-collapse-skipped', { reason: 'tree mode is not active' });
-    return;
-  }
-  grid.collapseAllTree();
-  flashActionButton(collapseTreeButton);
-  logEvent('tree-collapse-all');
-});
-
-clientModeButton.addEventListener('click', () => {
-  grid.setDisplayMode('client');
-  refreshInspector();
-  logEvent('mode-change', { mode: 'client' });
-});
-
-paginationButton.addEventListener('click', () => {
-  if (paginationSource === 'server') {
-    ensureFlatDatasetForRemote('server-pagination');
-  }
-  grid.setDisplayMode('paginated');
-  refreshInspector();
-  logEvent('mode-change', { mode: 'paginated', source: paginationSource });
-});
-
-infiniteButton.addEventListener('click', () => {
-  if (infiniteSource === 'server') {
-    ensureFlatDatasetForRemote('server-infinite');
-  }
-  grid.enableInfiniteScroll();
-  refreshInspector();
-  logEvent('mode-change', { mode: 'infinite', source: infiniteSource });
-});
-
-nextPageButton.addEventListener('click', () => {
-  grid.nextPage();
-  flashActionButton(nextPageButton);
-  logEvent('page-next');
-});
-
-prevPageButton.addEventListener('click', () => {
-  grid.prevPage();
-  flashActionButton(prevPageButton);
-  logEvent('page-prev');
-});
-
-loadMoreButton.addEventListener('click', async () => {
-  if (grid.getDisplayMode() !== 'infinite') {
-    flashActionButton(loadMoreButton);
-    logEvent('load-more-skipped', { reason: 'infinite mode is not active' });
-    return;
-  }
-  await grid.loadMoreInfinite();
-  flashActionButton(loadMoreButton);
-  logEvent('load-more');
-});
-
-pageSizeSelect.addEventListener('change', () => {
-  grid.setPageSize(Number(pageSizeSelect.value));
-  logEvent('page-size', { size: Number(pageSizeSelect.value) });
-});
-
-paginationClientButton.addEventListener('click', () => {
-  paginationSource = 'client';
-  grid.setPaginationMode('client');
-  refreshInspector();
-  logEvent('pagination-source', { source: 'client' });
-});
-
-paginationServerButton.addEventListener('click', () => {
-  ensureFlatDatasetForRemote('server-pagination');
-  paginationSource = 'server';
-  grid.setPaginationMode('server');
-  refreshInspector();
-  logEvent('pagination-source', { source: 'server' });
-});
-
-infiniteClientButton.addEventListener('click', () => {
-  infiniteSource = 'client';
-  grid.setInfiniteScrollMode('client');
-  refreshInspector();
-  logEvent('infinite-source', { source: 'client' });
-});
-
-infiniteServerButton.addEventListener('click', () => {
-  ensureFlatDatasetForRemote('server-infinite');
-  infiniteSource = 'server';
-  grid.setInfiniteScrollMode('server');
-  refreshInspector();
-  logEvent('infinite-source', { source: 'server' });
-});
-
-variableHeightButton?.addEventListener('click', () => {
-  variableRowHeightEnabled = !variableRowHeightEnabled;
-  grid.setVariableRowHeight(variableRowHeightEnabled);
-  refreshInspector();
-  logEvent('variable-height-toggle', { enabled: variableRowHeightEnabled });
-});
-
-appendRowsButton.addEventListener('click', () => {
-  if (!guardFlatClientMutation(appendRowsButton, 'append')) {
-    return;
-  }
-
-  const nextId = currentRows.length + 1;
-  const rows = Array.from({ length: 5 }, (_, index) => {
-    const id = nextId + index;
-    return {
-      id,
-      name: `Appended Operator ${String(id).padStart(4, '0')}`,
-      team: TEAM_NAMES[id % TEAM_NAMES.length],
-      status: STATUS_NAMES[id % STATUS_NAMES.length],
-      score: 2000 + id * 5,
-      region: REGIONS[id % REGIONS.length],
-      severity: SEVERITIES[id % SEVERITIES.length],
-      owner: OWNERS[id % OWNERS.length],
-      queue: QUEUES[id % QUEUES.length],
-      lastAction: LAST_ACTIONS[id % LAST_ACTIONS.length],
-      notes: `Appended row ${id}. ${createNotes(id)}`,
-      updatedAt: toTimestamp(Date.now()),
-    };
-  });
-
-  currentRows = [...currentRows, ...rows];
-  grid.appendRows(rows);
-  flashActionButton(appendRowsButton);
-  logEvent('append-rows', { count: rows.length });
-});
-
-updateFirstRowButton.addEventListener('click', () => {
-  if (!guardFlatClientMutation(updateFirstRowButton, 'update')) {
-    return;
-  }
-
-  const [first] = currentRows;
-  if (!first) {
-    return;
-  }
-
-  const updated = {
-    ...first,
-    name: `${first.name} Updated`,
-    lastAction: 'Reviewed escalation path',
-    updatedAt: toTimestamp(Date.now()),
-  };
-
-  currentRows = [updated, ...currentRows.slice(1)];
-  grid.updateRows([updated]);
-  flashActionButton(updateFirstRowButton);
-  logEvent('update-row', { id: updated.id });
-});
-
-patchFirstRowButton.addEventListener('click', () => {
-  if (!guardFlatClientMutation(patchFirstRowButton, 'patch')) {
-    return;
-  }
-
-  const [first] = currentRows;
-  if (!first) {
-    return;
-  }
-
-  const nextStatus = first.status === 'Active' ? 'Review' : 'Active';
-  grid.patchRow(first.id, {
-    status: nextStatus,
-    updatedAt: toTimestamp(Date.now()),
-    notes: `${first.notes} Status patched on demand.`,
-  });
-
-  currentRows = currentRows.map((row, index) => (
-    index === 0
-      ? {
-          ...row,
-          status: nextStatus,
-          updatedAt: toTimestamp(Date.now()),
-          notes: `${row.notes} Status patched on demand.`,
-        }
-      : row
-  ));
-
-  flashActionButton(patchFirstRowButton);
-  logEvent('patch-row', { id: first.id });
-});
-
-removeLastRowButton.addEventListener('click', () => {
-  if (!guardFlatClientMutation(removeLastRowButton, 'remove')) {
-    return;
-  }
-
-  const last = currentRows.at(-1);
-  if (!last) {
-    return;
-  }
-
-  currentRows = currentRows.slice(0, -1);
-  grid.removeRows([last.id]);
-  flashActionButton(removeLastRowButton);
-  logEvent('remove-row', { id: last.id });
-});
-
-function makeLiveRows(count) {
-  return Array.from({ length: count }, () => {
-    const id = ++streamRowCounter + 100000;
-    return {
-      id,
-      name: `Stream Op ${String(id).padStart(6, '0')}`,
-      team: TEAM_NAMES[id % TEAM_NAMES.length],
-      status: STATUS_NAMES[id % STATUS_NAMES.length],
-      score: 3000 + (id * 9) % 9000,
-      region: REGIONS[id % REGIONS.length],
-      severity: SEVERITIES[id % SEVERITIES.length],
-      owner: OWNERS[id % OWNERS.length],
-      queue: QUEUES[id % QUEUES.length],
-      lastAction: 'Queued as live arrival',
-      notes: `Stream row ${streamRowCounter}. ${createNotes(id)}`,
-      updatedAt: toTimestamp(Date.now()),
-    };
-  });
-}
-
-liveButton.addEventListener('click', () => {
-  if (!guardFlatClientMutation(liveButton, 'live')) {
-    return;
-  }
-
-  const rows = makeLiveRows(3);
-  grid.liveAddRows(rows);
-  flashActionButton(liveButton);
-  logEvent('live-add', { count: rows.length });
-});
-
-function stopStream() {
-  if (streamTimer !== null) {
-    window.clearInterval(streamTimer);
-    streamTimer = null;
-  }
-  streamRunning = false;
-  syncToggleButtons();
-}
-
-startStreamButton.addEventListener('click', () => {
-  if (streamRunning) {
-    stopStream();
-    logEvent('stream-stop', { totalPushed: streamRowCounter });
-    return;
-  }
-
-  if (!guardFlatClientMutation(startStreamButton, 'stream')) {
-    return;
-  }
-
-  const maxRows = Number(streamMaxRowsInput.value) || 1000;
-  grid.setLiveMaxRows(maxRows);
-
-  streamRunning = true;
-  syncToggleButtons();
-  logEvent('stream-start', { burst: Number(streamBurstInput.value), interval: Number(streamIntervalInput.value), maxRows });
-
-  streamTimer = window.setInterval(() => {
-    const burst = Math.max(1, Number(streamBurstInput.value) || 10);
-    const rows = makeLiveRows(burst);
-    grid.liveAddRows(rows);
-  }, Math.max(50, Number(streamIntervalInput.value) || 200));
-});
-
-stopStreamButton.addEventListener('click', () => {
-  stopStream();
-  logEvent('stream-stop', { totalPushed: streamRowCounter });
-});
-
-pauseLiveButton.addEventListener('click', () => {
-  livePaused = !livePaused;
-  if (livePaused) {
-    grid.pauseLiveUpdates();
-  } else {
-    grid.resumeLiveUpdates();
-  }
-  refreshInspector();
-  logEvent('live-toggle', { paused: livePaused });
-});
-
-liveAnimationButton.addEventListener('click', () => {
-  liveRowAnimationEnabled = !liveRowAnimationEnabled;
-  grid.setLiveRowAnimationEnabled(liveRowAnimationEnabled);
-  refreshInspector();
-  logEvent('live-animation-toggle', { enabled: liveRowAnimationEnabled });
-});
-
-uppercasePluginButton.addEventListener('click', () => {
-  if (grid.hasPlugin('uppercase-team')) {
-    grid.unusePlugin('uppercase-team');
-  } else {
-    grid.usePlugin(uppercaseTeamPlugin);
-  }
-  refreshInspector();
-  logEvent('plugin-toggle', { plugin: 'uppercase-team', enabled: grid.hasPlugin('uppercase-team') });
-});
-
-scorePluginButton.addEventListener('click', () => {
-  if (grid.hasPlugin('score-prefix')) {
-    grid.unusePlugin('score-prefix');
-  } else {
-    grid.usePlugin(scorePrefixPlugin);
-  }
-  refreshInspector();
-  logEvent('plugin-toggle', { plugin: 'score-prefix', enabled: grid.hasPlugin('score-prefix') });
-});
-
-columnSelect.addEventListener('change', () => {
-  syncColumnControls();
-});
-
-applyColumnButton.addEventListener('click', () => {
-  const colId = columnSelect.value;
-  grid.setColumnWidth(colId, Number(widthInput.value));
-  grid.setColumnPinned(colId, pinSelect.value || null);
-  grid.setColumnVisible(colId, visibleCheckbox.checked);
-  syncColumnControls();
-  flashActionButton(applyColumnButton);
-  logEvent('column-apply', {
-    colId,
-    width: Number(widthInput.value),
-    pin: pinSelect.value || null,
-    visible: visibleCheckbox.checked,
-  });
-});
-
-saveColumnStateButton.addEventListener('click', async () => {
-  await grid.saveColumnState();
-  flashActionButton(saveColumnStateButton);
-  refreshInspector();
-  logEvent('column-state-save');
-});
-
-loadColumnStateButton.addEventListener('click', async () => {
-  await grid.loadColumnState();
-  syncColumnControls();
-  flashActionButton(loadColumnStateButton);
-  refreshInspector();
-  logEvent('column-state-load');
-});
-
-clearColumnStateButton.addEventListener('click', async () => {
-  await grid.clearColumnState();
-  flashActionButton(clearColumnStateButton);
-  refreshInspector();
-  logEvent('column-state-clear');
-});
-
-benchmarkRenderButton.addEventListener('click', async () => {
-  const start = performance.now();
-  const renderPromise = waitForNextRender();
-  setDataset(currentDataset);
-  await renderPromise;
-  flashActionButton(benchmarkRenderButton);
-  logBenchmark('Reload dataset', performance.now() - start, `${currentDataset}`);
-});
-
-benchmarkScenarioButton.addEventListener('click', async () => {
-  const nextScenario = getScenarioValue() === 'client' ? 'paginated-server' : 'client';
-  if (nextScenario.endsWith('server')) {
-    ensureFlatDatasetForRemote(nextScenario);
-  }
-  const start = performance.now();
-  const renderPromise = waitForNextRender();
-  setScenario(nextScenario);
-  await renderPromise;
-  flashActionButton(benchmarkScenarioButton);
-  logBenchmark('Switch scenario', performance.now() - start, nextScenario);
-});
-
-benchmarkScrollButton.addEventListener('click', async () => {
-  const viewport = gridHost.querySelector('.ag-body-viewport');
-  if (!viewport) {
-    return;
-  }
-  const start = performance.now();
-  viewport.scrollTop = Math.min(viewport.scrollTop + 420, viewport.scrollHeight);
-  await new Promise((resolve) => requestAnimationFrame(resolve));
-  flashActionButton(benchmarkScrollButton);
-  logBenchmark('Scroll step', performance.now() - start, `top=${Math.round(viewport.scrollTop)}`);
-});
-
-function syncRuntimeSummaryText() {
-  const pagination = grid.getPaginationState();
-  paginationValueEl.textContent = `${pagination.mode} | ${pagination.page + 1}/${pagination.totalPages} | size ${pagination.pageSize} | total ${pagination.totalCount}`;
-
-  const infinite = grid.getInfiniteScrollState();
-  infiniteValueEl.textContent = `${infinite.mode} | loaded ${infinite.loadedCount} | total ${infinite.totalCount ?? 'unknown'} | hasMore ${String(infinite.hasMore)}`;
-}
-
-function logBenchmark(label, duration, details = '') {
-  const line = `${label}: ${duration.toFixed(1)}ms${details ? ` | ${details}` : ''}`;
-  const existingLines = benchmarkLogEl.textContent
-    .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .filter((item) => item !== '아직 벤치마크 실행 없음.');
-
-  benchmarkLogEl.textContent = [line, ...existingLines].slice(0, 6).join('\n');
-}
-
-syncColumnControls();
-refreshInspector();
-logEvent('ready', { dataset: currentDataset, mode: grid.getDisplayMode() });
-
-// ── Multi-level header demo ────────────────────────────────────
-
-// Sample data for the grouped-header demo
+// ── INSTANTIATING GRID 1-B: MULTI GROUP HEADER GRID ──────────
 const multiHeaderColumns = [
-  { id: 'rank', field: 'rank', headerName: '#', width: 52, type: 'number', align: 'right', sortable: true, resizable: false },
+  { id: 'rank', field: 'rank', headerName: '#', width: 52, type: 'number', align: 'right', sortable: true },
   { id: 'name', field: 'name', headerName: 'Player', width: 180, sortable: true },
   { id: 'country', field: 'country', headerName: 'Country', width: 110, sortable: true },
   {
@@ -1364,14 +481,6 @@ const multiHeaderColumns = [
       { id: 'pts', field: 'pts', headerName: 'Pts', width: 68, type: 'number', align: 'right', sortable: true },
     ],
   },
-  {
-    id: 'transfer',
-    headerName: 'Transfer',
-    children: [
-      { id: 'value', field: 'value', headerName: 'Value (M€)', width: 108, type: 'number', align: 'right', sortable: true },
-      { id: 'contract', field: 'contract', headerName: 'Contract', width: 110, sortable: true },
-    ],
-  },
 ];
 
 const COUNTRIES = ['Spain', 'France', 'England', 'Germany', 'Brazil', 'Argentina', 'Portugal', 'Italy', 'Netherlands', 'Belgium'];
@@ -1379,7 +488,6 @@ const PLAYER_NAMES = [
   'Luca Moretti', 'Kai Hoffmann', 'Mateo Vidal', 'Oliver Crane', 'Hugo Renard',
   'Enzo Ferrara', 'Daan Vermeer', 'Samir Nasri', 'Bruno Alves', 'Timo Bauer',
   'Carlos Reyes', 'James Thornton', 'Yannick Dumont', 'Piero Giannini', 'Noah Schultz',
-  'Alexei Petrov', 'Marcus Bell', 'Fabio Conti', 'Rafael Sousa', 'Diego Campos',
 ];
 
 function createMultiHeaderRows() {
@@ -1404,8 +512,6 @@ function createMultiHeaderRows() {
       draws,
       losses,
       pts: wins * 3 + draws,
-      value: Number((5 + Math.random() * 145).toFixed(1)),
-      contract: `${2025 + Math.floor(Math.random() * 4)}-06-30`,
     };
   });
 }
@@ -1421,131 +527,687 @@ const multiHeaderGrid = createGrid(document.getElementById('multiHeaderGrid'), {
   ],
 });
 
-// ── 다운로드 버튼 ──────────────────────────────────────────────
+// ── INSTANTIATING GRID 2: HIERARCHY (TREE & GROUPING) ─────────
+const gridHierarchy = createGrid(document.getElementById('grid-hierarchy'), {
+  columns: getBaseColumns(),
+  rows: createFlatRows(1500),
+  rowKey: 'id',
+  rowHeight: 40,
+  locale: koreanLocale,
+  editing: { enabled: true },
+  tree: {
+    treeMode: 'children',
+    childrenField: 'children',
+    hasChildrenField: 'hasChildren',
+    onLoadChildren: createLazyChildren,
+  },
+});
+
+// ── INSTANTIATING GRID 3: LIVE STREAM & BENCHMARK ──────────────
+const gridLive = createGrid(document.getElementById('grid-live'), {
+  columns: getBaseColumns(),
+  rows: createFlatRows(500),
+  rowKey: 'id',
+  rowHeight: 40,
+  locale: koreanLocale,
+  editing: { enabled: true },
+  liveUpdates: {
+    enabled: true,
+    maxRows: 1000,
+    rowAnimationEnabled: true,
+  },
+});
+
+// ── INSTANTIATING GRID 4: ENTERPRISE FEATURES ──────────────────
+const enterpriseColumns = [
+  ...getBaseColumns(),
+  { id: 'trend',     field: 'history', header: '10-Week Score · Line',  width: 140, visible: false, sparkline: { type: 'line',  field: 'history', color: '#3b82f6' } },
+  { id: 'trendBar',  field: 'history', header: '10-Week Score · Bar',   width: 140, visible: false, sparkline: { type: 'bar',   field: 'history', color: '#8b5cf6' } },
+  { id: 'trendArea', field: 'history', header: '10-Week Score · Area',  width: 150, visible: false, echart:    { type: 'area',  dataField: 'history', color: '#10b981', height: 32 } },
+];
+
+const gridEnterprise = createGrid(document.getElementById('grid-enterprise'), {
+  columns: enterpriseColumns,
+  rows: createFlatRows(2000),
+  rowKey: 'id',
+  rowHeight: 40,
+  locale: koreanLocale,
+  editing: { enabled: true },
+  plugins: [
+    { plugin: createXlsxExportPlugin({ fileName: 'enterprise-grid.xlsx' }) },
+    { plugin: createSparklinePlugin() },
+    { plugin: createEchartsPlugin() },
+  ],
+  sidePanel: {
+    enabled: true,
+    quickFilterFields: ['name', 'team', 'status'],
+    defaultTab: 'columns',
+    defaultOpen: false,
+  },
+  masterDetail: {
+    detailRenderer: (row) => {
+      const div = document.createElement('div');
+      div.className = 'demo-detail-panel';
+      div.innerHTML = `
+        <div class="demo-detail-summary">
+          <strong>${row.name}</strong>
+          <p style="margin:4px 0;">팀: ${row.team} · 지역: ${row.region}</p>
+          <p style="margin:4px 0">상태: <b>${row.status}</b> · 심각도: ${row.severity}</p>
+          <p style="margin:4px 0">점수: <b>${row.score?.toLocaleString()}</b></p>
+        </div>
+        <div class="demo-detail-notes">
+          <p style="margin:4px 0">담당자: ${row.owner} (${row.queue})</p>
+          <p style="margin:4px 0">최근 작업: ${row.lastAction}</p>
+          <p>${row.notes}</p>
+        </div>
+      `;
+      return div;
+    },
+    detailRowHeight: 150,
+  },
+});
+
+// Mapping Active Grid instances based on Active Tab
+let activeGrid = gridOverview;
+
+// ── GENERAL RUNTIME STATS SYNCING ────────────────────────────
+function refreshGlobalStats() {
+  if (!activeGrid) return;
+  
+  // Update Header Counters
+  rowCountEl.textContent = activeGrid.getRows().length.toLocaleString();
+  visibleCountEl.textContent = activeGrid.getFlatRows().length.toLocaleString();
+  selectedCountEl.textContent = activeGrid.getSelectedRows ? activeGrid.getSelectedRows().length.toLocaleString() : '0';
+
+  // Update Footer Details
+  modeValueEl.textContent = activeGrid.getDisplayMode ? activeGrid.getDisplayMode() : 'client';
+  
+  if (activeGrid === gridOverview) {
+    datasetValueEl.textContent = 'flat (2,500)';
+    groupingValueEl.textContent = 'off';
+    treeValueEl.textContent = 'off';
+    treeDepthValueEl.textContent = '0';
+    variableHeightValueEl.textContent = 'off';
+    
+    const pag = gridOverview.getPaginationState();
+    paginationValueEl.textContent = `${pag.mode} | page ${pag.page + 1}/${pag.totalPages} | size ${pag.pageSize}`;
+    
+    const inf = gridOverview.getInfiniteScrollState();
+    infiniteValueEl.textContent = `${inf.mode} | loaded ${inf.loadedCount} | hasMore ${inf.hasMore}`;
+    
+    const cols = gridOverview.getColumnState();
+    columnStateValueEl.textContent = `${cols.columns.length} columns`;
+    
+    const plugins = gridOverview.getInstalledPlugins();
+    pluginsValueEl.textContent = plugins.length ? plugins.join(', ') : 'none';
+  } else if (activeGrid === gridHierarchy) {
+    const isTree = gridHierarchy.isTreeEnabled && gridHierarchy.isTreeEnabled();
+    const isGroup = gridHierarchy.isGroupingEnabled && gridHierarchy.isGroupingEnabled();
+    
+    datasetValueEl.textContent = isTree ? 'tree (Division)' : 'flat (1,500)';
+    groupingValueEl.textContent = isGroup ? 'on (team)' : 'off';
+    treeValueEl.textContent = isTree ? 'on' : 'off';
+    
+    const maxDepth = gridHierarchy.getFlatRows().reduce((max, row) => Math.max(max, row._depth ?? 0), 0);
+    treeDepthValueEl.textContent = String(maxDepth);
+    variableHeightValueEl.textContent = 'off';
+    paginationValueEl.textContent = 'n/a';
+    infiniteValueEl.textContent = 'n/a';
+    columnStateValueEl.textContent = `${gridHierarchy.getColumnState().columns.length} columns`;
+    pluginsValueEl.textContent = gridHierarchy.getInstalledPlugins().join(', ') || 'none';
+  } else if (activeGrid === gridLive) {
+    datasetValueEl.textContent = 'live streaming dataset';
+    groupingValueEl.textContent = 'off';
+    treeValueEl.textContent = 'off';
+    treeDepthValueEl.textContent = '0';
+    variableHeightValueEl.textContent = 'off';
+    paginationValueEl.textContent = 'n/a';
+    infiniteValueEl.textContent = 'n/a';
+    columnStateValueEl.textContent = `${gridLive.getColumnState().columns.length} columns`;
+    pluginsValueEl.textContent = gridLive.getInstalledPlugins().join(', ') || 'none';
+  } else if (activeGrid === gridEnterprise) {
+    datasetValueEl.textContent = 'enterprise analytics dataset';
+    groupingValueEl.textContent = 'off';
+    treeValueEl.textContent = 'off';
+    treeDepthValueEl.textContent = '0';
+    variableHeightValueEl.textContent = 'off';
+    paginationValueEl.textContent = 'n/a';
+    infiniteValueEl.textContent = 'n/a';
+    columnStateValueEl.textContent = `${gridEnterprise.getColumnState().columns.length} columns`;
+    pluginsValueEl.textContent = gridEnterprise.getInstalledPlugins().join(', ') || 'none';
+  }
+}
+
+// ── EVENT LOGGING ON GRIDS ───────────────────────────────────
+[gridOverview, multiHeaderGrid, gridHierarchy, gridLive, gridEnterprise].forEach((g, idx) => {
+  const name = ['Overview', 'MultiHeader', 'Hierarchy', 'Live', 'Enterprise'][idx];
+  
+  g.on('render', () => {
+    if (activeGrid === g) refreshGlobalStats();
+  });
+  
+  g.on('selection-change', ({ selectedCount }) => {
+    if (activeGrid === g) {
+      selectedCountEl.textContent = selectedCount.toLocaleString();
+    }
+    logEvent(`${name}: selection-change`, { selectedCount });
+  });
+
+  g.on('state-change', ({ type }) => {
+    if (activeGrid === g) refreshGlobalStats();
+    logEvent(`${name}: state-change`, { type });
+  });
+
+  g.on('row-click', ({ row }) => {
+    logEvent(`${name}: row-click`, { rowKey: row._rowKey, type: row._type, depth: row._depth ?? 0 });
+  });
+});
+
+// ── TAB TRANSITION LOGIC ──────────────────────────────────────
+tabButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const tabId = btn.dataset.tab;
+
+    // Toggle Tab Button Active Class
+    tabButtons.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Toggle Content Display
+    tabContents.forEach((content) => {
+      if (content.id === `tab-${tabId}`) {
+        content.classList.add('active');
+      } else {
+        content.classList.remove('active');
+      }
+    });
+
+    // Cleanup Live streaming timer if exiting Live tab
+    if (tabId !== 'live') {
+      stopStream();
+    }
+
+    // Switch Active Grid Reference & Force Layout recalculation
+    if (tabId === 'overview') {
+      activeGrid = gridOverview;
+      gridOverview.refresh();
+      multiHeaderGrid.refresh();
+    } else if (tabId === 'hierarchy') {
+      activeGrid = gridHierarchy;
+      gridHierarchy.refresh();
+    } else if (tabId === 'live') {
+      activeGrid = gridLive;
+      gridLive.refresh();
+    } else if (tabId === 'enterprise') {
+      activeGrid = gridEnterprise;
+      gridEnterprise.refresh();
+    }
+
+    refreshGlobalStats();
+    logEvent('tab-change', { activeTab: tabId });
+  });
+});
+
+// ── OVERVIEW TAB CONTROLS BINDING ────────────────────────────
+scenarioRadios.forEach((radio) => {
+  radio.addEventListener('change', (e) => {
+    if (!e.target.checked) return;
+    const scenario = e.target.value;
+    
+    if (scenario === 'client') {
+      gridOverview.setDisplayMode('client');
+    } else if (scenario.startsWith('paginated')) {
+      const mode = scenario.split('-')[1]; // client / server
+      gridOverview.setPaginationMode(mode);
+      gridOverview.setDisplayMode('paginated');
+    } else if (scenario.startsWith('infinite')) {
+      const mode = scenario.split('-')[1]; // client / server
+      gridOverview.setInfiniteScrollMode(mode);
+      gridOverview.enableInfiniteScroll();
+    }
+    refreshGlobalStats();
+    logEvent('Overview: scenario-change', { scenario });
+  });
+});
+
+pageSizeSelect.addEventListener('change', () => {
+  gridOverview.setPageSize(Number(pageSizeSelect.value));
+  logEvent('Overview: page-size', { size: Number(pageSizeSelect.value) });
+});
+
+reloadButton.addEventListener('click', () => {
+  gridOverview.setData(createFlatRows(2500));
+  flashActionButton(reloadButton);
+  logEvent('Overview: reload');
+});
+
+prevPageButton.addEventListener('click', () => {
+  gridOverview.prevPage();
+  flashActionButton(prevPageButton);
+});
+
+nextPageButton.addEventListener('click', () => {
+  gridOverview.nextPage();
+  flashActionButton(nextPageButton);
+});
+
+loadMoreButton.addEventListener('click', async () => {
+  if (gridOverview.getDisplayMode() !== 'infinite') {
+    flashActionButton(loadMoreButton);
+    logEvent('Overview: loadMore-skipped', { reason: 'not in infinite scroll mode' });
+    return;
+  }
+  await gridOverview.loadMoreInfinite();
+  flashActionButton(loadMoreButton);
+});
+
+// Overview Excel/CSV Downloads
 document.getElementById('downloadMainCsvButton').addEventListener('click', () => {
-  grid.downloadCsv({ fileName: 'main-grid.csv' });
+  gridOverview.downloadCsv({ fileName: 'overview-grid.csv' });
 });
 
 document.getElementById('downloadMainExcelButton').addEventListener('click', () => {
-  if (typeof grid.downloadXlsx === 'function') {
-    grid.downloadXlsx({ fileName: 'main-grid.xlsx' });
+  if (typeof gridOverview.downloadXlsx === 'function') {
+    gridOverview.downloadXlsx({ fileName: 'overview-grid.xlsx' });
   } else {
-    grid.downloadExcel({ fileName: 'main-grid.xls' });
+    gridOverview.downloadExcel({ fileName: 'overview-grid.xls' });
   }
 });
 
 document.getElementById('downloadMainSelectedCsvButton').addEventListener('click', () => {
-  grid.downloadCsv({ fileName: 'main-grid-selected.csv', onlySelected: true });
+  gridOverview.downloadCsv({ fileName: 'overview-grid-selected.csv', onlySelected: true });
 });
 
 document.getElementById('downloadMultiCsvButton').addEventListener('click', () => {
-  multiHeaderGrid.downloadCsv({ fileName: 'multi-header-grid.csv' });
+  multiHeaderGrid.downloadCsv({ fileName: 'multi-header.csv' });
 });
 
 document.getElementById('downloadMultiExcelButton').addEventListener('click', () => {
   if (typeof multiHeaderGrid.downloadXlsx === 'function') {
-    multiHeaderGrid.downloadXlsx({ fileName: 'multi-header-grid.xlsx' });
+    multiHeaderGrid.downloadXlsx({ fileName: 'multi-header.xlsx' });
   } else {
-    multiHeaderGrid.downloadExcel({ fileName: 'multi-header-grid.xls' });
+    multiHeaderGrid.downloadExcel({ fileName: 'multi-header.xls' });
   }
 });
 
-// ── 엔터프라이즈 기능 버튼 ─────────────────────────────────────
+// ── HIERARCHY TAB CONTROLS BINDING ───────────────────────────
+structureRadios.forEach((radio) => {
+  radio.addEventListener('change', (e) => {
+    if (!e.target.checked) return;
+    const mode = e.target.value;
+    
+    gridHierarchy.disableGrouping();
+    gridHierarchy.disableTree();
 
-// 조건부 서식 토글
+    if (mode === 'flat') {
+      gridHierarchy.setData(createFlatRows(1500));
+    } else if (mode === 'grouped') {
+      gridHierarchy.setData(createFlatRows(1500));
+      gridHierarchy.enableGrouping(['team'], {
+        aggregations: {
+          score: [{ type: 'avg' }],
+        },
+      });
+    } else if (mode === 'tree') {
+      gridHierarchy.setData(createTreeRows());
+      gridHierarchy.enableTree({
+        treeMode: 'children',
+        childrenField: 'children',
+        hasChildrenField: 'hasChildren',
+        onLoadChildren: createLazyChildren,
+      });
+    }
+    refreshGlobalStats();
+    logEvent('Hierarchy: structure-mode-change', { mode });
+  });
+});
+
+expandTreeButton.addEventListener('click', () => {
+  if (typeof gridHierarchy.expandAllTree === 'function') {
+    gridHierarchy.expandAllTree();
+    logEvent('Hierarchy: expand-all');
+  }
+  flashActionButton(expandTreeButton);
+});
+
+collapseTreeButton.addEventListener('click', () => {
+  if (typeof gridHierarchy.collapseAllTree === 'function') {
+    gridHierarchy.collapseAllTree();
+    logEvent('Hierarchy: collapse-all');
+  }
+  flashActionButton(collapseTreeButton);
+});
+
+let variableRowHeightEnabled = false;
+variableHeightButton.addEventListener('click', () => {
+  variableRowHeightEnabled = !variableRowHeightEnabled;
+  setToggleState(variableHeightButton, variableRowHeightEnabled);
+  gridHierarchy.setVariableRowHeight(variableRowHeightEnabled);
+  logEvent('Hierarchy: variable-height-toggle', { enabled: variableRowHeightEnabled });
+});
+
+// ── LIVE STREAMING & BENCHMARK BINDING ─────────────────────────
+let streamTimer = null;
+let streamRowCounter = 0;
+let streamRunning = false;
+let livePaused = false;
+let liveRowAnimationEnabled = true;
+
+function makeLiveRows(count) {
+  return Array.from({ length: count }, () => {
+    const id = ++streamRowCounter + 100000;
+    return {
+      id,
+      name: `Stream Op ${String(id).padStart(6, '0')}`,
+      team: TEAM_NAMES[id % TEAM_NAMES.length],
+      status: STATUS_NAMES[id % STATUS_NAMES.length],
+      score: 3000 + (id * 9) % 9000,
+      region: REGIONS[id % REGIONS.length],
+      severity: SEVERITIES[id % SEVERITIES.length],
+      owner: OWNERS[id % OWNERS.length],
+      queue: QUEUES[id % QUEUES.length],
+      lastAction: 'Queued as live arrival',
+      notes: `Stream row ${streamRowCounter}. ${createNotes(id)}`,
+      updatedAt: toTimestamp(Date.now()),
+    };
+  });
+}
+
+liveButton.addEventListener('click', () => {
+  const rows = makeLiveRows(3);
+  gridLive.liveAddRows(rows);
+  flashActionButton(liveButton);
+  logEvent('Live: burst-added-rows', { count: rows.length });
+});
+
+function stopStream() {
+  if (streamTimer !== null) {
+    window.clearInterval(streamTimer);
+    streamTimer = null;
+  }
+  streamRunning = false;
+  setToggleState(startStreamButton, false);
+  logEvent('Live: stream-stopped', { totalPushed: streamRowCounter });
+}
+
+startStreamButton.addEventListener('click', () => {
+  if (streamRunning) {
+    stopStream();
+    return;
+  }
+
+  const maxRows = Number(streamMaxRowsInput.value) || 1000;
+  gridLive.setLiveMaxRows(maxRows);
+  streamRunning = true;
+  setToggleState(startStreamButton, true);
+  logEvent('Live: stream-started', { maxRows });
+
+  streamTimer = window.setInterval(() => {
+    const burst = Math.max(1, Number(streamBurstInput.value) || 10);
+    const rows = makeLiveRows(burst);
+    gridLive.liveAddRows(rows);
+  }, Math.max(50, Number(streamIntervalInput.value) || 200));
+});
+
+stopStreamButton.addEventListener('click', () => {
+  stopStream();
+});
+
+pauseLiveButton.addEventListener('click', () => {
+  livePaused = !livePaused;
+  setToggleState(pauseLiveButton, livePaused);
+  if (livePaused) {
+    gridLive.pauseLiveUpdates();
+  } else {
+    gridLive.resumeLiveUpdates();
+  }
+  logEvent('Live: paused-state-toggle', { paused: livePaused });
+});
+
+liveAnimationButton.addEventListener('click', () => {
+  liveRowAnimationEnabled = !liveRowAnimationEnabled;
+  setToggleState(liveAnimationButton, liveRowAnimationEnabled);
+  gridLive.setLiveRowAnimationEnabled(liveRowAnimationEnabled);
+  logEvent('Live: cell-animation-toggle', { enabled: liveRowAnimationEnabled });
+});
+
+appendRowsButton.addEventListener('click', () => {
+  const currentLen = gridLive.getRows().length;
+  const rows = Array.from({ length: 5 }, (_, index) => {
+    const id = currentLen + 10000 + index;
+    return {
+      id,
+      name: `Appended Operator ${String(id).padStart(4, '0')}`,
+      team: TEAM_NAMES[id % TEAM_NAMES.length],
+      status: STATUS_NAMES[id % STATUS_NAMES.length],
+      score: 2000 + id * 5,
+      region: REGIONS[id % REGIONS.length],
+      severity: SEVERITIES[id % SEVERITIES.length],
+      owner: OWNERS[id % OWNERS.length],
+      queue: QUEUES[id % QUEUES.length],
+      lastAction: 'Appended manually',
+      notes: `Manually appended row ${id}.`,
+      updatedAt: toTimestamp(Date.now()),
+    };
+  });
+  gridLive.appendRows(rows);
+  flashActionButton(appendRowsButton);
+  logEvent('Live: append-rows', { count: rows.length });
+});
+
+updateFirstRowButton.addEventListener('click', () => {
+  const rows = gridLive.getRows();
+  const first = rows[0];
+  if (!first) return;
+  const updated = {
+    ...first,
+    name: `${first.name} Updated`,
+    lastAction: 'Updated manually',
+    updatedAt: toTimestamp(Date.now()),
+  };
+  gridLive.updateRows([updated]);
+  flashActionButton(updateFirstRowButton);
+  logEvent('Live: update-row', { id: updated.id });
+});
+
+patchFirstRowButton.addEventListener('click', () => {
+  const rows = gridLive.getRows();
+  const first = rows[0];
+  if (!first) return;
+  const nextStatus = first.status === 'Active' ? 'Review' : 'Active';
+  gridLive.patchRow(first.id, {
+    status: nextStatus,
+    updatedAt: toTimestamp(Date.now()),
+    notes: `Patched status to ${nextStatus}.`,
+  });
+  flashActionButton(patchFirstRowButton);
+  logEvent('Live: patch-row', { id: first.id });
+});
+
+removeLastRowButton.addEventListener('click', () => {
+  const rows = gridLive.getRows();
+  const last = rows.at(-1);
+  if (!last) return;
+  gridLive.removeRows([last.id]);
+  flashActionButton(removeLastRowButton);
+  logEvent('Live: remove-row', { id: last.id });
+});
+
+// Benchmarking handlers
+function logBenchmark(label, duration, details = '') {
+  const line = `${label}: ${duration.toFixed(1)}ms${details ? ` | ${details}` : ''}`;
+  const existingLines = benchmarkLogEl.textContent
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item) => !item.startsWith('벤치마크'));
+
+  benchmarkLogEl.textContent = [line, ...existingLines].slice(0, 6).join('\n');
+}
+
+benchmarkRenderButton.addEventListener('click', async () => {
+  const start = performance.now();
+  
+  // Setup render lock promise
+  const renderPromise = new Promise((res) => {
+    gridLive.on('render', res, { once: true });
+  });
+  
+  gridLive.setData(createFlatRows(500));
+  await renderPromise;
+  
+  flashActionButton(benchmarkRenderButton);
+  logBenchmark('Reload dataset', performance.now() - start, '500 rows');
+});
+
+benchmarkScenarioButton.addEventListener('click', async () => {
+  const start = performance.now();
+  const renderPromise = new Promise((res) => {
+    gridLive.on('render', res, { once: true });
+  });
+
+  const nextMode = gridLive.getDisplayMode() === 'client' ? 'paginated' : 'client';
+  gridLive.setDisplayMode(nextMode);
+  await renderPromise;
+
+  flashActionButton(benchmarkScenarioButton);
+  logBenchmark('Switch scenario', performance.now() - start, `mode=${nextMode}`);
+});
+
+benchmarkScrollButton.addEventListener('click', async () => {
+  const viewport = document.getElementById('grid-live').querySelector('.ag-body-viewport') || 
+                   document.getElementById('grid-live').querySelector('.highgrid-body-viewport');
+  if (!viewport) {
+    logBenchmark('Scroll Step', 0, 'failed: viewport not found');
+    return;
+  }
+  const start = performance.now();
+  viewport.scrollTop = Math.min(viewport.scrollTop + 320, viewport.scrollHeight);
+  await new Promise((resolve) => window.requestAnimationFrame(resolve));
+  flashActionButton(benchmarkScrollButton);
+  logBenchmark('Scroll step', performance.now() - start, `top=${Math.round(viewport.scrollTop)}`);
+});
+
+// ── ENTERPRISE TAB CONTROLS BINDING ──────────────────────────
 let conditionalFormatActive = false;
 document.getElementById('conditionalFormatButton')?.addEventListener('click', function () {
   conditionalFormatActive = !conditionalFormatActive;
   setToggleState(this, conditionalFormatActive);
-  const updated = grid.getAllLeafColumns().map((c) => {
+  
+  const updated = gridEnterprise.getAllLeafColumns().map((c) => {
     if (c.def.id !== 'score') return c.def;
     return {
       ...c.def,
       conditionalFormat: conditionalFormatActive
         ? (v) => {
-            if (v >= 8000) return { style: { color: '#16a34a', fontWeight: 'bold' } };
-            if (v <= 2000) return { style: { color: '#dc2626' } };
+            if (v >= 8000) return { style: { color: '#34d399', fontWeight: 'bold' } };
+            if (v <= 2000) return { style: { color: '#f87171' } };
             return null;
           }
         : null,
     };
   });
-  grid.setColumns(updated);
-  logEvent('conditional-format', { active: conditionalFormatActive });
+  gridEnterprise.setColumns(updated);
+  logEvent('Enterprise: conditional-format', { active: conditionalFormatActive });
 });
 
-// 스파크라인 컬럼 토글 (SVG line·bar + ECharts area 세 종류)
 let sparklineActive = false;
 document.getElementById('sparklineButton')?.addEventListener('click', function () {
   sparklineActive = !sparklineActive;
   setToggleState(this, sparklineActive);
-  grid.setColumnVisible('trend', sparklineActive);
-  grid.setColumnVisible('trendBar', sparklineActive);
-  grid.setColumnVisible('trendArea', sparklineActive);
-  logEvent('sparkline', { active: sparklineActive, types: 'SVG line, SVG bar, ECharts area' });
+  gridEnterprise.setColumnVisible('trend', sparklineActive);
+  gridEnterprise.setColumnVisible('trendBar', sparklineActive);
+  gridEnterprise.setColumnVisible('trendArea', sparklineActive);
+  logEvent('Enterprise: sparkline-toggle', { active: sparklineActive });
 });
 
-// Pivot 모드 토글
 let pivotActive = false;
 document.getElementById('pivotButton')?.addEventListener('click', function () {
   pivotActive = !pivotActive;
   setToggleState(this, pivotActive);
   if (pivotActive) {
-    grid.enablePivot({ rowFields: ['region'], columnField: 'team', valueField: 'score', aggFunction: 'avg' });
-    logEvent('pivot', { active: true, config: 'region × team, avg(score)' });
+    gridEnterprise.enablePivot({ rowFields: ['region'], columnField: 'team', valueField: 'score', aggFunction: 'avg' });
+    logEvent('Enterprise: pivot-enabled', { row: 'region', col: 'team', agg: 'avg' });
   } else {
-    grid.disablePivot();
-    grid.setColumns(columns);
-    logEvent('pivot', { active: false });
+    gridEnterprise.disablePivot();
+    gridEnterprise.setColumns(enterpriseColumns);
+    logEvent('Enterprise: pivot-disabled');
   }
 });
 
-// 행 고정 토글
-document.getElementById('pinnedRowButton')?.addEventListener('click', () => {
-  const firstRow = grid.getRows()[0];
+document.getElementById('pinnedRowButton')?.addEventListener('click', function() {
+  const firstRow = gridEnterprise.getRows()[0];
   if (firstRow) {
-    grid.setPinnedTopRows([{ ...firstRow, name: '📌 ' + firstRow.name }]);
-    logEvent('pin-row', { rowKey: firstRow._rowKey });
+    gridEnterprise.setPinnedTopRows([{ ...firstRow, name: '[Pinned] ' + firstRow.name }]);
+    logEvent('Enterprise: row-pinned', { key: firstRow._rowKey });
   }
-  flashActionButton(document.getElementById('pinnedRowButton'));
+  flashActionButton(this);
 });
 
-document.getElementById('clearPinnedButton')?.addEventListener('click', () => {
-  grid.setPinnedTopRows([]);
-  grid.setPinnedBottomRows([]);
-  logEvent('clear-pinned');
-  flashActionButton(document.getElementById('clearPinnedButton'));
+document.getElementById('clearPinnedButton')?.addEventListener('click', function() {
+  gridEnterprise.setPinnedTopRows([]);
+  gridEnterprise.setPinnedBottomRows([]);
+  logEvent('Enterprise: pin-cleared');
+  flashActionButton(this);
 });
 
-// Undo / Redo
-// 사용법: Score 또는 Operator 셀을 더블클릭 → 값 수정 → Enter 후 클릭하거나 그리드 포커스 시 Ctrl+Z/Y
-document.getElementById('undoButton')?.addEventListener('click', () => {
-  if (!grid.canUndo()) {
-    logEvent('undo', { result: '취소할 내용 없음 — Score/Operator 셀 더블클릭 후 편집하세요' });
+document.getElementById('undoButton')?.addEventListener('click', function() {
+  if (!gridEnterprise.canUndo()) {
+    logEvent('Enterprise: undo-failed', { reason: 'no undo history' });
     return;
   }
-  const result = grid.undo();
-  logEvent('undo', result
-    ? { colId: result.colId, 이전값: result.newValue, 복원값: result.oldValue }
-    : { result: '취소할 내용 없음' }
-  );
-  flashActionButton(document.getElementById('undoButton'));
+  const result = gridEnterprise.undo();
+  logEvent('Enterprise: undo-success', result);
+  flashActionButton(this);
 });
 
-document.getElementById('redoButton')?.addEventListener('click', () => {
-  if (!grid.canRedo()) {
-    logEvent('redo', { result: '다시 실행할 내용 없음' });
+document.getElementById('redoButton')?.addEventListener('click', function() {
+  if (!gridEnterprise.canRedo()) {
+    logEvent('Enterprise: redo-failed', { reason: 'no redo history' });
     return;
   }
-  const result = grid.redo();
-  logEvent('redo', result
-    ? { colId: result.colId, 이전값: result.oldValue, 적용값: result.newValue }
-    : { result: '다시 실행할 내용 없음' }
-  );
-  flashActionButton(document.getElementById('redoButton'));
+  const result = gridEnterprise.redo();
+  logEvent('Enterprise: redo-success', result);
+  flashActionButton(this);
 });
 
-// 인쇄
 document.getElementById('printButton')?.addEventListener('click', () => {
-  grid.printGrid();
+  gridEnterprise.printGrid();
 });
+
+// ── THEME SWITCHING ───────────────────────────────────────────
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+let currentTheme = localStorage.getItem('highgrid-demo-theme') || 'dark';
+
+function applyTheme(theme) {
+  document.body.setAttribute('data-theme', theme);
+  const gridHosts = [
+    document.getElementById('grid-overview'),
+    document.getElementById('multiHeaderGrid'),
+    document.getElementById('grid-hierarchy'),
+    document.getElementById('grid-live'),
+    document.getElementById('grid-enterprise')
+  ];
+  gridHosts.forEach((host) => {
+    if (!host) return;
+    if (theme === 'dark') {
+      host.classList.add('ag-theme-dark');
+    } else {
+      host.classList.remove('ag-theme-dark');
+    }
+  });
+}
+
+// Initialize theme
+applyTheme(currentTheme);
+
+themeToggleBtn.addEventListener('click', () => {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  applyTheme(currentTheme);
+  localStorage.setItem('highgrid-demo-theme', currentTheme);
+  logEvent('theme-change', { theme: currentTheme });
+});
+
+// ── INITIAL SYSTEM SYNCS ──────────────────────────────────────
+setToggleState(liveAnimationButton, true);
+refreshGlobalStats();
+logEvent('dashboard-initialized', { ready: true });

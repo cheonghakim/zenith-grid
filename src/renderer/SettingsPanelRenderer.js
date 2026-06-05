@@ -1,3 +1,5 @@
+import { createSvgIcon } from './IconFactory.js';
+
 export class SettingsPanelRenderer {
   constructor(domRenderer, core, options = {}) {
     this._dom = domRenderer;
@@ -139,8 +141,8 @@ export class SettingsPanelRenderer {
 
       const dragHandle = document.createElement('span');
       dragHandle.className = 'ag-side-panel-drag-handle';
-      dragHandle.textContent = '⠿';
       dragHandle.setAttribute('aria-hidden', 'true');
+      dragHandle.appendChild(createSvgIcon('dragVertical', 14));
       top.appendChild(dragHandle);
 
       const label = document.createElement('label');
