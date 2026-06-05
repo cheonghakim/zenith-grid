@@ -21,6 +21,24 @@ import { HeaderRenderer } from '../renderer/HeaderRenderer.js';
 import { BodyRenderer } from '../renderer/BodyRenderer.js';
 import { SettingsPanelRenderer } from '../renderer/SettingsPanelRenderer.js';
 import { DEFAULT_LOCALE } from './defaultLocale.js';
+import { createSelectEditor } from '../editors/SelectEditor.js';
+import { createDateEditor } from '../editors/DateEditor.js';
+import { createTextareaEditor } from '../editors/TextareaEditor.js';
+import { RowDragManager } from '../managers/RowDragManager.js';
+import { AggregateManager } from '../managers/AggregateManager.js';
+import { RangeSelectionManager } from '../managers/RangeSelectionManager.js';
+import { UndoRedoManager } from '../managers/UndoRedoManager.js';
+import { AdvancedFilterManager } from '../managers/AdvancedFilterManager.js';
+import { PivotManager } from '../managers/PivotManager.js';
+import { StatusBarRenderer } from '../renderer/StatusBarRenderer.js';
+import { FormulaManager } from '../managers/FormulaManager.js';
+
+function escapeCssSelector(value) {
+  if (typeof CSS !== 'undefined' && CSS.escape) {
+    return CSS.escape(value);
+  }
+  return String(value).replace(/([!"#$%&'()*+,.\\/:;<=>?@\\[\\]^\`{|}~])/g, '\\\\$1');
+}
 
 export class GridCore {
   constructor(container, options = {}) {
@@ -157,12 +175,14 @@ export class GridCore {
       },
     });
 
-    const workerEnabled = Boolean(options.worker?.enabled && options.worker?.url);
+    const workerEnabled = Boolean(options.worker?.enabled);
     this._workerBridge = new WorkerBridge({
       enabled: workerEnabled,
       workerUrl: options.worker?.url,
       timeout: options.worker?.timeout ?? 10000,
     });
+
+    this._formulaManager = new FormulaManager(this);
 
     this._pipeline = new Pipeline({
       sortManager: this._sortManager,
@@ -202,9 +222,56 @@ export class GridCore {
       },
     });
 
+    this._rowDragManager = new RowDragManager({
+      onRowDragStart: (payload) => this._events.emit('row-drag-start', payload),
+      onRowDragEnd: (payload) => this._events.emit('row-drag-end', payload),
+      onRowDrop: ({ fromRowKey, toRowKey }) => this._handleRowDragDrop({ fromRowKey, toRowKey }),
+    });
+
+    this._aggregateManager = new AggregateManager({
+      onChanged: () => void this.refresh(),
+    });
+
+    this._rangeSelectionManager = new RangeSelectionManager({
+      onChanged: () => {
+        this._events.emit('range-selection-change', this._rangeSelectionManager.getState());
+        // 전체 재렌더 대신 CSS 클래스만 토글 (성능)
+        this._bodyRenderer?.updateRangeHighlight(
+          this._rangeSelectionManager,
+          this._columns?.getVisibleLeafColumns?.()?.map((c) => c.def) ?? []
+        );
+      },
+    });
+
+    this._undoRedoManager = new UndoRedoManager({
+      maxHistory: options.undoRedoMaxHistory ?? 100,
+    });
+
+    this._advancedFilterManager = new AdvancedFilterManager({
+      onChanged: () => {
+        this._emitStateChanged('advanced-filter');
+        if (this._reloadActiveRemoteData()) return;
+        void this.refresh();
+      },
+    });
+
+    this._pivotManager = new PivotManager({
+      onChanged: () => {
+        void this.refresh();
+      },
+    });
+
+    this._expandedDetailKeys = new Set();
+    this._masterDetailRenderer = options.masterDetail?.detailRenderer ?? null;
+    this._masterDetailRowHeight = options.masterDetail?.detailRowHeight ?? 200;
+
+    this._handlePaste = this._handlePaste.bind(this);
+    this._handleGlobalMouseUp = () => this._rangeSelectionManager.endSelection();
     this._dom = new DOMRenderer(container, options);
     this._dom.build();
     this._dom.getRoot()?.addEventListener('keydown', this._handleKeydown);
+    this._dom.getRoot()?.addEventListener('paste', this._handlePaste);
+    document.addEventListener('mouseup', this._handleGlobalMouseUp);
     this._settingsPanel = new SettingsPanelRenderer(this._dom, this, {
       quickFilterFields: options.sidePanel?.quickFilterFields ?? [],
       defaultTab: options.sidePanel?.defaultTab ?? 'columns',
@@ -213,6 +280,18 @@ export class GridCore {
     if (options.sidePanel?.enabled !== false) {
       this._settingsPanel.mount();
     }
+
+    const statusBarEnabled = options.statusBar?.enabled ?? false;
+    this._statusBarRenderer = statusBarEnabled
+      ? new StatusBarRenderer(this._dom, {
+          getLocaleText: (key, fallback, params) => this.getLocaleText(key, fallback, params),
+          getColumnLabel: (colId) => {
+            const def = this._columns.getDef(colId);
+            return def?.headerName ?? def?.header ?? colId;
+          },
+        })
+      : null;
+    this._statusBarRenderer?.mount();
 
     this._headerRenderer = new HeaderRenderer(
       this._dom,
@@ -246,13 +325,25 @@ export class GridCore {
         getColumnFilterChoices: (colId) => this.getColumnFilterChoices(colId),
         getLocaleText: (key, fallback, params) => this.getLocaleText(key, fallback, params),
         rowHeight: options.rowHeight ?? 40,
+        rowNumbers: options.rowNumbers ?? false,
+        rowNumberWidth: options.rowNumberWidth ?? 44,
+        filterRowEnabled: options.filterRow?.enabled ?? false,
+        fillHandle: options.fillHandle ?? false,
+        onFillHandleStart: ({ row, def, value }) => this._startFillHandle(row, def, value),
         selectionEnabled: options.selectable !== false,
-        selectionColumnWidth: 44,
+        selectionColumnWidth: this._masterDetailRenderer ? 68 : 44,
         isAllSelected: () => this._selectionManager.isAllSelected(this._displayRows),
         isSomeSelected: () => this._selectionManager.isSomeSelected(this._displayRows),
         onToggleSelectAll: () => {
           this.toggleSelectAll();
         },
+        onClearSort: (colId) => {
+          this._sortManager.clearSortFor(colId);
+        },
+        onAutoSizeColumn: (colId) => this.autoSizeColumn(colId),
+        onAutoSizeAllColumns: () => this.autoSizeAllColumns(),
+        onColumnPin: (colId, pin) => this.setColumnPinned(colId, pin),
+        onColumnVisibilityChange: (colId, visible) => this.setColumnVisible(colId, visible),
       }
     );
 
@@ -263,7 +354,7 @@ export class GridCore {
       {
         selectionManager: this._selectionManager,
         selectionEnabled: options.selectable !== false,
-        selectionColumnWidth: 44,
+        selectionColumnWidth: this._masterDetailRenderer ? 68 : 44,
         onRowClick: ({ row, event }) => {
           if (options.selectable !== false && this._selectionManager.isSelectableRow(row)) {
             if (event.shiftKey) {
@@ -323,11 +414,44 @@ export class GridCore {
         isRowSelectable: (row) => this._selectionManager.isSelectableRow(row),
         getRowClassName: options.getRowClassName ?? null,
         getRowStyle: options.getRowStyle ?? null,
-        hooks: options.hooks ?? {},
+        hooks: {
+          beforeRowRender: (ctx) => {
+            options.hooks?.beforeRowRender?.(ctx);
+            this._pluginManager.callHook('beforeRowRender', ctx);
+          },
+          afterRowRender: (ctx) => {
+            options.hooks?.afterRowRender?.(ctx);
+            this._pluginManager.callHook('afterRowRender', ctx);
+          },
+          beforeCellRender: (ctx) => {
+            options.hooks?.beforeCellRender?.(ctx);
+            this._pluginManager.callHook('beforeCellRender', ctx);
+          },
+          afterCellRender: (ctx) => {
+            options.hooks?.afterCellRender?.(ctx);
+            this._pluginManager.callHook('afterCellRender', ctx);
+          },
+        },
         shouldAnimateRow: (rowKey) => this._liveUpdateManager.shouldAnimateRow(rowKey),
         getRowAnimationDuration: () => this._liveUpdateManager.getRowAnimationDuration(),
         getLocaleText: (key, fallback, params) => this.getLocaleText(key, fallback, params),
         getCellValidationError: (rowKey, colId) => this.getCellValidationError(rowKey, colId),
+        rowNumbers: options.rowNumbers ?? false,
+        rowNumberWidth: options.rowNumberWidth ?? 44,
+        rowDragging: options.rowDragging ?? false,
+        onRowDragDrop: ({ fromRowKey, toRowKey }) => this._handleRowDragDrop({ fromRowKey, toRowKey }),
+        onRowDragStart: ({ rowKey }) => this._rowDragManager.handleDragStart(rowKey),
+        onRowDragEnd: () => this._rowDragManager.handleDragEnd(),
+        getRangeSelectionManager: () => this._rangeSelectionManager,
+        getAllLeafColumnDefs: () => this._columns.getVisibleLeafColumns().map((c) => c.def),
+        getMasterDetailPanel: this._masterDetailRenderer
+          ? (row) => {
+              try { return this._masterDetailRenderer(row, this); } catch { return null; }
+            }
+          : null,
+        onMasterDetailToggle: this._masterDetailRenderer
+          ? (rowKey) => this.toggleDetail(rowKey)
+          : null,
       }
     );
 
@@ -364,13 +488,15 @@ export class GridCore {
 
     this._displayRows = [];
     this._flatRows = [];
+    this._pinnedTopRows = Array.isArray(options.pinnedTopRows) ? options.pinnedTopRows : [];
+    this._pinnedBottomRows = Array.isArray(options.pinnedBottomRows) ? options.pinnedBottomRows : [];
     this._currentRangeBundle = {
       vertical: this._viewModel.getVerticalRange(),
       horizontal: this._viewModel.getHorizontalRange(),
     };
 
     if (Array.isArray(options.rows)) {
-      this._dataStore.setData(options.rows);
+      this.setRows(options.rows);
     } else {
       void this.refresh();
     }
@@ -391,6 +517,10 @@ export class GridCore {
 
   async refresh() {
     if (this._destroyed) return;
+
+    if (this._formulaManager) {
+      this._formulaManager.evaluateAll();
+    }
 
     const version = ++this._renderVersion;
     let result;
@@ -416,18 +546,86 @@ export class GridCore {
     }
     if (this._destroyed || version !== this._renderVersion) return;
 
+    // 고급 필터 적용
+    if (this._advancedFilterManager.hasFilter()) {
+      result.displayRows = result.displayRows.filter((row) =>
+        row._type === 'group-header' || row._type === 'tree-loading' || this._advancedFilterManager.evaluate(row)
+      );
+      result.flatRows = result.flatRows.filter((row) =>
+        row._type === 'group-header' || row._type === 'tree-loading' || this._advancedFilterManager.evaluate(row)
+      );
+    }
+
+    // Pivot 모드
+    if (this._pivotManager.isEnabled()) {
+      const { pivotRows, pivotColumnDefs } = this._pivotManager.process(result.displayRows);
+      if (pivotColumnDefs) {
+        result.displayRows = pivotRows;
+        result.flatRows = pivotRows;
+        this._columns.setColumns(pivotColumnDefs, false);
+        this._headerModel.rebuild();
+        this._syncColumnWidths();
+      }
+    }
+
+    // 그룹 행 집계 계산 (런타임 API 또는 컬럼 def aggregate 속성 중 하나라도 있으면 실행)
+    const allLeafCols = this._columns.getAllLeafColumns().map((c) => c.def);
+    const hasAnyAggregate = this._aggregateManager.hasAny()
+      || allLeafCols.some((def) => def.aggregate != null);
+    if (hasAnyAggregate) {
+      for (let i = 0; i < result.displayRows.length; i++) {
+        const row = result.displayRows[i];
+        if (row._type !== 'group-header') continue;
+        const groupDepth = row._groupDepth ?? 0;
+        // 직계 leaf 행 + 하위 그룹의 leaf 행 모두 수집
+        const leafChildren = [];
+        for (let j = i + 1; j < result.displayRows.length; j++) {
+          const next = result.displayRows[j];
+          if (next._type === 'group-header' && (next._groupDepth ?? 0) <= groupDepth) break;
+          if (next._type !== 'group-header' && next._type !== 'tree-loading' && next._type !== 'detail') {
+            leafChildren.push(next);
+          }
+        }
+        if (leafChildren.length > 0) {
+          row._aggregates = this._aggregateManager.compute(leafChildren, allLeafCols);
+        }
+      }
+    }
+
+    // Master-Detail 행 주입 (Pivot 모드에서는 비활성)
+    if (this._masterDetailRenderer && !this._pivotManager.isEnabled()) {
+      const injected = [];
+      for (const row of result.displayRows) {
+        const expanded = this._expandedDetailKeys.has(String(row._rowKey));
+        if (row._type !== 'group-header' && row._type !== 'tree-loading' && row._type !== 'detail') {
+          row._detailExpanded = expanded;
+        }
+        injected.push(row);
+        if (expanded) {
+          injected.push({
+            _type: 'detail',
+            _masterRowKey: row._rowKey,
+            _masterRow: row,
+            _rowKey: `__detail__${row._rowKey}`,
+            _rowHeight: this._masterDetailRowHeight,
+          });
+        }
+      }
+      result.displayRows = injected;
+    }
+
     this._flatRows = result.flatRows;
     this._displayRows = result.displayRows;
     this._selectionManager.setCurrentRows(result.displayRows);
     this._viewModel.setTotalCount(result.displayRows.length);
     this._headerModel.rebuild();
+    this._syncColumnWidths();
     this._currentRangeBundle = {
       vertical: this._viewModel.getVerticalRange(),
       horizontal: this._viewModel.getHorizontalRange(),
     };
 
     this._pluginManager.callHook('beforeRender', result);
-    this._syncColumnWidths();
     this._headerRenderer.render(this._currentRangeBundle);
     this._headerRenderer.updateSortIndicators();
     this._renderFooter();
@@ -435,6 +633,23 @@ export class GridCore {
       rowCount: result.totalCount ?? result.displayRows.length,
       colCount: this._columns.getVisibleLeafColumns().length + (this._options.selectable === false ? 0 : 1),
     });
+
+    if (this._statusBarRenderer) {
+      const allLeafCols = this._columns.getAllLeafColumns().map((c) => c.def);
+      const aggResult = this._aggregateManager.compute(result.displayRows, allLeafCols);
+      const selectedCount = this._selectionManager.getSelectedCount();
+      this._statusBarRenderer.render({
+        totalCount: this._dataStore.getAll().length,
+        displayCount: result.displayRows.filter(
+          (r) => r._type !== 'group-header' && r._type !== 'tree-loading' && r._type !== 'detail'
+        ).length,
+        selectedCount,
+        aggregateResult: aggResult,
+      });
+    }
+
+    this._bodyRenderer.renderPinnedRows(this._pinnedTopRows, 'top');
+    this._bodyRenderer.renderPinnedRows(this._pinnedBottomRows, 'bottom');
 
     if (result.displayRows.length === 0) {
       this._bodyRenderer.clear();
@@ -457,16 +672,31 @@ export class GridCore {
       rows: result.displayRows,
       flatRows: result.flatRows,
       totalCount: result.totalCount,
-      visibleCount: result.displayRows.length,
+      visibleCount: result.displayRows.filter(
+        (r) => r._type !== 'group-header' && r._type !== 'tree-loading' && r._type !== 'detail'
+      ).length,
       displayMode: this._displayMode,
     });
     this._pluginManager.callHook('afterRender', result);
     this._settingsPanel?.render();
+    this._applyPendingCellFlash();
   }
 
   setRows(rows) {
     this._invalidateMeasuredRows();
-    this._dataStore.setData(Array.isArray(rows) ? rows : []);
+    const normalizedRows = Array.isArray(rows) ? rows : [];
+    for (const row of normalizedRows) {
+      if (row._formulas) delete row._formulas;
+      for (const field of Object.keys(row)) {
+        if (field.startsWith('_')) continue;
+        const val = row[field];
+        if (typeof val === 'string' && val.startsWith('=')) {
+          row._formulas = row._formulas || {};
+          row._formulas[field] = val;
+        }
+      }
+    }
+    this._dataStore.setData(normalizedRows);
   }
 
   setData(rows) {
@@ -474,19 +704,99 @@ export class GridCore {
   }
 
   appendRows(rows) {
-    this._dataStore.appendRows(Array.isArray(rows) ? rows : [rows]);
+    const normalizedRows = Array.isArray(rows) ? rows : [rows];
+    for (const row of normalizedRows) {
+      if (row._formulas) delete row._formulas;
+      for (const field of Object.keys(row)) {
+        if (field.startsWith('_')) continue;
+        const val = row[field];
+        if (typeof val === 'string' && val.startsWith('=')) {
+          row._formulas = row._formulas || {};
+          row._formulas[field] = val;
+        }
+      }
+    }
+    this._dataStore.appendRows(normalizedRows);
   }
 
   updateRows(rows) {
-    this._dataStore.updateRows(Array.isArray(rows) ? rows : [rows]);
+    const normalizedRows = Array.isArray(rows) ? rows : [rows];
+    for (const row of normalizedRows) {
+      const existing = this._dataStore.getByKey(this._dataStore.getRowKey(row));
+      const formulas = { ...(existing?._formulas || {}) };
+      for (const field of Object.keys(row)) {
+        if (field.startsWith('_')) continue;
+        const val = row[field];
+        if (typeof val === 'string' && val.startsWith('=')) {
+          formulas[field] = val;
+        } else {
+          delete formulas[field];
+        }
+      }
+      if (Object.keys(formulas).length > 0) {
+        row._formulas = formulas;
+      } else {
+        delete row._formulas;
+      }
+    }
+    this._dataStore.updateRows(normalizedRows);
   }
 
   patchRow(key, patch) {
+    const existing = this._dataStore.getByKey(key);
+    if (existing) {
+      const formulas = { ...(existing._formulas || {}) };
+      for (const [field, val] of Object.entries(patch)) {
+        if (field.startsWith('_')) continue;
+        if (typeof val === 'string' && val.startsWith('=')) {
+          formulas[field] = val;
+        } else {
+          delete formulas[field];
+        }
+      }
+      if (Object.keys(formulas).length > 0) {
+        existing._formulas = formulas;
+      } else {
+        delete existing._formulas;
+      }
+    }
     this._dataStore.patchRow(key, patch);
   }
 
   upsertRows(rows) {
-    this._dataStore.upsertRows(Array.isArray(rows) ? rows : [rows]);
+    const normalizedRows = Array.isArray(rows) ? rows : [rows];
+    for (const row of normalizedRows) {
+      const key = this._dataStore.getRowKey(row);
+      if (this._dataStore.has(key)) {
+        const existing = this._dataStore.getByKey(key);
+        const formulas = { ...(existing?._formulas || {}) };
+        for (const field of Object.keys(row)) {
+          if (field.startsWith('_')) continue;
+          const val = row[field];
+          if (typeof val === 'string' && val.startsWith('=')) {
+            formulas[field] = val;
+          } else {
+            delete formulas[field];
+          }
+        }
+        if (Object.keys(formulas).length > 0) {
+          row._formulas = formulas;
+        } else {
+          delete row._formulas;
+        }
+      } else {
+        if (row._formulas) delete row._formulas;
+        for (const field of Object.keys(row)) {
+          if (field.startsWith('_')) continue;
+          const val = row[field];
+          if (typeof val === 'string' && val.startsWith('=')) {
+            row._formulas = row._formulas || {};
+            row._formulas[field] = val;
+          }
+        }
+      }
+    }
+    this._dataStore.upsertRows(normalizedRows);
   }
 
   removeRows(keys) {
@@ -645,6 +955,138 @@ export class GridCore {
 
   getFilterState() {
     return this._filterManager.getState();
+  }
+
+  // ─── Undo/Redo API ────────────────────────────────────────
+  undo() {
+    return this._undoRedoManager.undo((rowKey, colId, value) => {
+      this._applyUndoRedoValue(rowKey, colId, value);
+    });
+  }
+
+  redo() {
+    return this._undoRedoManager.redo((rowKey, colId, value) => {
+      this._applyUndoRedoValue(rowKey, colId, value);
+    });
+  }
+
+  _handlePaste(event) {
+    if (this._destroyed) return;
+    const target = event.target;
+    // 에디터 입력 중이면 기본 붙여넣기 허용
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) return;
+
+    const text = event.clipboardData?.getData('text/plain');
+    if (!text) return;
+
+    if (this._rangeSelectionManager.hasRange()) {
+      event.preventDefault();
+      const { start } = this._rangeSelectionManager.getState();
+      if (start) {
+        this.pasteFromClipboard(text, { startRowKey: start.rowKey, columns: [start.colId] });
+      }
+    }
+  }
+
+  _applyUndoRedoValue(rowKey, colId, value) {
+    const row = this._dataStore.getByKey(rowKey);
+    const column = this._columns.getDef(colId);
+    if (!row || !column) return;
+    const parsed = this._parseCellValue(value, row, column);
+    // patchRow → DataStore.onChanged → refresh() 자동 호출
+    this._dataStore.patchRow(rowKey, { [column.field]: parsed });
+    this._events.emit('cell-value-change', { rowKey, colId, field: column.field, value: parsed, row });
+  }
+
+  canUndo() { return this._undoRedoManager.canUndo(); }
+  canRedo() { return this._undoRedoManager.canRedo(); }
+
+  // ─── Advanced Filter API ──────────────────────────────────
+  setAdvancedFilter(filterTree) {
+    this._advancedFilterManager.setFilter(filterTree);
+  }
+
+  clearAdvancedFilter() {
+    this._advancedFilterManager.clearFilter();
+  }
+
+  // ─── Pivot API ────────────────────────────────────────────
+  enablePivot(config) {
+    this._pivotManager.enable(config);
+  }
+
+  disablePivot() {
+    this._pivotManager.disable();
+    void this.refresh();
+  }
+
+  getPivotConfig() {
+    return this._pivotManager.getConfig();
+  }
+
+  // ─── Master-Detail API ────────────────────────────────────
+  toggleDetail(rowKey) {
+    const key = String(rowKey);
+    if (this._expandedDetailKeys.has(key)) {
+      this._expandedDetailKeys.delete(key);
+    } else {
+      this._expandedDetailKeys.add(key);
+    }
+    void this.refresh();
+    this._events.emit('detail-toggle', { rowKey: key, expanded: this._expandedDetailKeys.has(key) });
+  }
+
+  isDetailExpanded(rowKey) {
+    return this._expandedDetailKeys.has(String(rowKey));
+  }
+
+  // ─── Row Drag API ─────────────────────────────────────────
+  moveRow(fromRowKey, toRowKey) {
+    this._handleRowDragDrop({ fromRowKey, toRowKey });
+  }
+
+  // ─── Aggregate API ────────────────────────────────────────
+  setColumnAggregate(colId, aggType) {
+    this._aggregateManager.setColumnAgg(colId, aggType);
+  }
+
+  clearColumnAggregate(colId) {
+    this._aggregateManager.setColumnAgg(colId, null);
+  }
+
+  getAggregateResult() {
+    const allLeafCols = this._columns.getAllLeafColumns().map((c) => c.def);
+    return this._aggregateManager.compute(this._displayRows, allLeafCols);
+  }
+
+  // ─── Row Pinning API ──────────────────────────────────────
+  setPinnedTopRows(rows) {
+    this._pinnedTopRows = Array.isArray(rows) ? rows : [];
+    void this.refresh();
+  }
+
+  setPinnedBottomRows(rows) {
+    this._pinnedBottomRows = Array.isArray(rows) ? rows : [];
+    void this.refresh();
+  }
+
+  // ─── Range Selection API ─────────────────────────────────
+  clearRangeSelection() {
+    this._rangeSelectionManager.clearRange();
+  }
+
+  copyRangeToClipboard() {
+    const allLeafCols = this._columns.getVisibleLeafColumns().map((c) => c.def);
+    this._rangeSelectionManager.copyToClipboard(this._displayRows, allLeafCols);
+  }
+
+  getRangeSelectionState() {
+    return this._rangeSelectionManager.getState();
+  }
+
+  // ─── Print API ───────────────────────────────────────────
+  printGrid() {
+    window.print();
   }
 
   getColumnFilterChoices(colId) {
@@ -877,7 +1319,7 @@ export class GridCore {
       return false;
     }
 
-    const previous = row[column.field];
+    const previous = row._formulas?.[column.field] ?? row[column.field];
     const editor = this._createCellEditor(row, column, previous);
     cell.classList.add('ag-cell-editing');
     cell.innerHTML = '';
@@ -908,6 +1350,65 @@ export class GridCore {
     return true;
   }
 
+  _startFillHandle(sourceRow, def, sourceValue) {
+    const colId = def.id;
+    const sourceRowKey = String(sourceRow._rowKey);
+    let fillTarget = null;
+
+    const onMouseEnter = (event) => {
+      const target = event.target?.closest('[data-row-key]');
+      if (target) fillTarget = target.dataset.rowKey;
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('mouseenter', onMouseEnter, true);
+      this._container.classList.remove('ag-filling');
+
+      if (!fillTarget || fillTarget === sourceRowKey) return;
+
+      const flatRows = this._displayRows.filter(
+        (r) => r._type !== 'group-header' && r._type !== 'tree-loading' && r._type !== 'detail'
+      );
+      const sourceIdx = flatRows.findIndex((r) => String(r._rowKey) === sourceRowKey);
+      const targetIdx = flatRows.findIndex((r) => String(r._rowKey) === String(fillTarget));
+      if (sourceIdx === -1 || targetIdx === -1) return;
+
+      const minIdx = Math.min(sourceIdx, targetIdx);
+      const maxIdx = Math.max(sourceIdx, targetIdx);
+      for (let i = minIdx; i <= maxIdx; i++) {
+        const r = flatRows[i];
+        if (String(r._rowKey) !== sourceRowKey) {
+          this.setCellValue(r._rowKey, colId, sourceValue);
+        }
+      }
+    };
+
+    this._container.classList.add('ag-filling');
+    document.addEventListener('mouseup', onMouseUp, { once: true });
+    document.addEventListener('mouseenter', onMouseEnter, true);
+  }
+
+  cancelCellEdit() {
+    const editing = this._container.querySelector('.ag-cell-editing');
+    if (!editing) return;
+    editing.classList.remove('ag-cell-editing');
+    void this.refresh();
+  }
+
+  commitCellEdit(rowKey, colId, value) {
+    const editing = this._container.querySelector('.ag-cell-editing');
+    if (!editing) return;
+    editing.classList.remove('ag-cell-editing');
+    this.setCellValue(rowKey, colId, value);
+  }
+
+  get _activeEditorRowKey() {
+    return this._container?.querySelector('.ag-cell-editing')
+      ? this._container.querySelector('.ag-cell-editing')?.closest('[data-row-key]')?.dataset.rowKey ?? null
+      : null;
+  }
+
   setCellValue(rowKey, colId, rawValue) {
     const column = this._columns.getDef(colId);
     const row = this._dataStore.getByKey(rowKey);
@@ -916,8 +1417,21 @@ export class GridCore {
     }
 
     const field = column.field;
-    const value = this._parseCellValue(rawValue, row, column);
-    const error = this._validateCellValue(value, row, column);
+    const isFormula = typeof rawValue === 'string' && rawValue.startsWith('=');
+    if (isFormula) {
+      row._formulas = row._formulas || {};
+      row._formulas[field] = rawValue;
+    } else {
+      if (row._formulas) {
+        delete row._formulas[field];
+        if (Object.keys(row._formulas).length === 0) {
+          delete row._formulas;
+        }
+      }
+    }
+
+    const value = isFormula ? rawValue : this._parseCellValue(rawValue, row, column);
+    const error = isFormula ? null : this._validateCellValue(value, row, column);
     const errorKey = this._getValidationKey(rowKey, colId);
     if (error) {
       this._validationErrors.set(errorKey, error);
@@ -927,17 +1441,33 @@ export class GridCore {
     }
 
     this._validationErrors.delete(errorKey);
+    const previousValue = row[field];
+    this._undoRedoManager.push({ rowKey: String(rowKey), colId, oldValue: previousValue, newValue: value });
     this.patchRow(rowKey, { [field]: value });
     this._events.emit('cell-value-change', {
       rowKey: String(rowKey),
       colId,
       field,
       value,
-      previousValue: row[field],
+      previousValue,
       row,
     });
     this._emitStateChanged('edit');
     return true;
+  }
+
+  _handleRowDragDrop({ fromRowKey, toRowKey }) {
+    const rows = [...this._dataStore.getAll()];
+    const fromIndex = rows.findIndex(r => String(this._getRowKey(r)) === String(fromRowKey));
+    const toIndex = rows.findIndex(r => String(this._getRowKey(r)) === String(toRowKey));
+    
+    if (fromIndex >= 0 && toIndex >= 0) {
+      const [movedRow] = rows.splice(fromIndex, 1);
+      rows.splice(toIndex, 0, movedRow);
+      this._dataStore.setData(rows);
+      void this.refresh();
+      this._events.emit('row-reorder', { fromRowKey, toRowKey, rows });
+    }
   }
 
   validateRows(rows = this._dataStore.getAll()) {
@@ -1162,6 +1692,100 @@ export class GridCore {
     void this.refresh();
   }
 
+  autoSizeColumn(colId) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let cellFont = '14px sans-serif';
+    let headerFont = 'bold 14px sans-serif';
+    
+    const cellEl = this._container.querySelector('.ag-cell');
+    if (cellEl) {
+      cellFont = window.getComputedStyle(cellEl).font || cellFont;
+    }
+    const headerEl = this._container.querySelector('.ag-header-cell');
+    if (headerEl) {
+      headerFont = window.getComputedStyle(headerEl).font || headerFont;
+    }
+
+    const nextWidth = this._calculateColumnAutoSize(colId, ctx, cellFont, headerFont);
+    if (nextWidth !== null) {
+      this._applyColumnResize(colId, nextWidth, { commit: true });
+    }
+  }
+
+  autoSizeAllColumns() {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let cellFont = '14px sans-serif';
+    let headerFont = 'bold 14px sans-serif';
+    
+    const cellEl = this._container.querySelector('.ag-cell');
+    if (cellEl) {
+      cellFont = window.getComputedStyle(cellEl).font || cellFont;
+    }
+    const headerEl = this._container.querySelector('.ag-header-cell');
+    if (headerEl) {
+      headerFont = window.getComputedStyle(headerEl).font || headerFont;
+    }
+
+    const leafCols = this._columns.getVisibleLeafColumns();
+    let anyUpdated = false;
+    for (const col of leafCols) {
+      const colId = col.def.id;
+      const nextWidth = this._calculateColumnAutoSize(colId, ctx, cellFont, headerFont);
+      if (nextWidth !== null) {
+        const updated = this._columns.setWidth(colId, nextWidth);
+        if (updated) anyUpdated = true;
+      }
+    }
+
+    if (anyUpdated) {
+      this._invalidateMeasuredRows();
+      this._syncColumnWidths();
+      this._headerModel.rebuild();
+      this._headerRenderer.render(this._currentRangeBundle);
+      this._headerRenderer.updateSortIndicators();
+      if (this._displayRows.length > 0) {
+        this._bodyRenderer.render(this._displayRows, this._currentRangeBundle);
+      }
+      void this.saveColumnState();
+      this._emitStateChanged('column-resize');
+      this._settingsPanel?.render();
+    }
+  }
+
+  _calculateColumnAutoSize(colId, ctx, cellFont, headerFont) {
+    const column = this._columns.getDef(colId);
+    if (!column) return null;
+
+    let maxWidth = 50;
+
+    // 1. 헤더 텍스트 너비 측정 (정렬 아이콘 및 여백 고려하여 36px 가산)
+    ctx.font = headerFont;
+    const headerText = column.headerName ?? column.header ?? '';
+    const headerWidth = ctx.measureText(headerText).width + 36;
+    maxWidth = Math.max(maxWidth, headerWidth);
+
+    // 2. 셀 텍스트 너비 측정 (여백 고려하여 24px 가산)
+    ctx.font = cellFont;
+    const rows = this._dataStore.getAll();
+    for (const row of rows) {
+      const val = row[column.field];
+      let formattedText = '';
+      if (typeof column.formatter === 'function') {
+        formattedText = String(column.formatter({ value: val, row, def: column }) ?? '');
+      } else {
+        formattedText = val == null ? '' : String(val);
+      }
+      const cellWidth = ctx.measureText(formattedText).width + 24;
+      maxWidth = Math.max(maxWidth, cellWidth);
+    }
+
+    return maxWidth;
+  }
+
   setColumnVisible(colId, visible) {
     this._columns.setVisible(colId, visible);
     this._invalidateMeasuredRows();
@@ -1190,6 +1814,8 @@ export class GridCore {
       this._rowMeasureFrame = null;
     }
     this._dom.getRoot()?.removeEventListener('keydown', this._handleKeydown);
+    this._dom.getRoot()?.removeEventListener('paste', this._handlePaste);
+    document.removeEventListener('mouseup', this._handleGlobalMouseUp);
     void this.saveColumnState();
     this._virtualScrollManager.destroy();
     this._bodyRenderer.destroy();
@@ -1209,6 +1835,13 @@ export class GridCore {
     this._pluginManager.callHook('onDestroy', this);
     this._pluginManager.destroy();
     this._settingsPanel?.destroy();
+    this._rowDragManager.destroy();
+    this._aggregateManager.destroy();
+    this._rangeSelectionManager.destroy();
+    this._undoRedoManager.destroy();
+    this._advancedFilterManager.destroy();
+    this._pivotManager.destroy();
+    this._statusBarRenderer?.destroy();
     this._columns.destroy();
     this._headerModel.destroy();
     this._viewModel.destroy();
@@ -1217,7 +1850,8 @@ export class GridCore {
 
   _syncColumnWidths() {
     const pinnedWidths = this._columns.getPinnedWidths();
-    const selectionWidth = this._options.selectable === false ? 0 : 44;
+    const selectionWidth = this._options.selectable === false ? 0
+      : (this._masterDetailRenderer ? 68 : 44);
     this._dom.updateColumnWidths({
       leftWidth: pinnedWidths.leftWidth + selectionWidth,
       centerWidth: pinnedWidths.centerWidth,
@@ -1239,15 +1873,102 @@ export class GridCore {
     this._pendingDataStoreRefresh = false;
 
     if (batch.added.length > 0) {
+      for (const row of batch.added) {
+        if (row._formulas) delete row._formulas;
+        for (const field of Object.keys(row)) {
+          if (field.startsWith('_')) continue;
+          const val = row[field];
+          if (typeof val === 'string' && val.startsWith('=')) {
+            row._formulas = row._formulas || {};
+            row._formulas[field] = val;
+          }
+        }
+      }
       this._dataStore.appendRows(batch.added);
     }
     if (batch.updated.length > 0) {
+      for (const row of batch.updated) {
+        const rowKey = String(row.id ?? row._rowKey ?? '');
+        if (rowKey) this._liveUpdateManager.registerCellFlash(rowKey, Object.keys(row));
+
+        const existing = this._dataStore.getByKey(this._dataStore.getRowKey(row));
+        const formulas = { ...(existing?._formulas || {}) };
+        for (const field of Object.keys(row)) {
+          if (field.startsWith('_')) continue;
+          const val = row[field];
+          if (typeof val === 'string' && val.startsWith('=')) {
+            formulas[field] = val;
+          } else {
+            delete formulas[field];
+          }
+        }
+        if (Object.keys(formulas).length > 0) {
+          row._formulas = formulas;
+        } else {
+          delete row._formulas;
+        }
+      }
       this._dataStore.updateRows(batch.updated);
     }
     if (batch.patched.length > 0) {
+      for (const { key, patch } of batch.patched) {
+        this._liveUpdateManager.registerCellFlash(key, Object.keys(patch));
+
+        const existing = this._dataStore.getByKey(key);
+        if (existing) {
+          const formulas = { ...(existing._formulas || {}) };
+          for (const [field, val] of Object.entries(patch)) {
+            if (field.startsWith('_')) continue;
+            if (typeof val === 'string' && val.startsWith('=')) {
+              formulas[field] = val;
+            } else {
+              delete formulas[field];
+            }
+          }
+          if (Object.keys(formulas).length > 0) {
+            existing._formulas = formulas;
+          } else {
+            delete existing._formulas;
+          }
+        }
+      }
       this._dataStore.patchRows(batch.patched);
     }
     if (batch.upserted.length > 0) {
+      for (const row of batch.upserted) {
+        const rowKey = String(row.id ?? row._rowKey ?? '');
+        if (rowKey) this._liveUpdateManager.registerCellFlash(rowKey, Object.keys(row));
+
+        const key = this._dataStore.getRowKey(row);
+        if (this._dataStore.has(key)) {
+          const existing = this._dataStore.getByKey(key);
+          const formulas = { ...(existing?._formulas || {}) };
+          for (const field of Object.keys(row)) {
+            if (field.startsWith('_')) continue;
+            const val = row[field];
+            if (typeof val === 'string' && val.startsWith('=')) {
+              formulas[field] = val;
+            } else {
+              delete formulas[field];
+            }
+          }
+          if (Object.keys(formulas).length > 0) {
+            row._formulas = formulas;
+          } else {
+            delete row._formulas;
+          }
+        } else {
+          if (row._formulas) delete row._formulas;
+          for (const field of Object.keys(row)) {
+            if (field.startsWith('_')) continue;
+            const val = row[field];
+            if (typeof val === 'string' && val.startsWith('=')) {
+              row._formulas = row._formulas || {};
+              row._formulas[field] = val;
+            }
+          }
+        }
+      }
       this._dataStore.upsertRows(batch.upserted);
     }
     if (batch.removed.length > 0) {
@@ -1583,13 +2304,13 @@ export class GridCore {
     this._selectionManager.setCurrentRows(result.displayRows);
     this._viewModel.setTotalCount(result.displayRows.length);
     this._headerModel.rebuild();
+    this._syncColumnWidths();
     this._currentRangeBundle = {
       vertical: this._viewModel.getVerticalRange(),
       horizontal: this._viewModel.getHorizontalRange(),
     };
 
     this._pluginManager.callHook('beforeRender', result);
-    this._syncColumnWidths();
     this._headerRenderer.render(this._currentRangeBundle);
     this._headerRenderer.updateSortIndicators();
     this._renderFooter();
@@ -1613,11 +2334,37 @@ export class GridCore {
       rows: result.displayRows,
       flatRows: result.flatRows,
       totalCount: result.totalCount,
-      visibleCount: result.displayRows.length,
+      visibleCount: result.displayRows.filter(
+        (r) => r._type !== 'group-header' && r._type !== 'tree-loading' && r._type !== 'detail'
+      ).length,
       displayMode: this._displayMode,
     });
     this._pluginManager.callHook('afterRender', result);
     this._settingsPanel?.render();
+    this._applyPendingCellFlash();
+  }
+
+  _applyPendingCellFlash() {
+    const flashMap = this._liveUpdateManager.getAndClearFlashCells();
+    if (flashMap.size === 0) return;
+
+    const colModel = this._columns.getVisibleLeafColumns();
+    const fieldToColId = new Map(colModel.map(({ def }) => [def.field, def.id]));
+
+    for (const [rowKey, fields] of flashMap) {
+      for (const field of fields) {
+        const colId = fieldToColId.get(field) ?? field;
+        const cell = this._container.querySelector(
+          `[data-row-key="${escapeCssSelector(String(rowKey))}"] [data-col-id="${escapeCssSelector(colId)}"]`
+        );
+        if (cell instanceof HTMLElement) {
+          cell.classList.remove('ag-cell-flash');
+          void cell.offsetWidth;
+          cell.classList.add('ag-cell-flash');
+          setTimeout(() => cell.classList.remove('ag-cell-flash'), 600);
+        }
+      }
+    }
   }
 
   _applyPendingLiveViewportAdjustment() {
@@ -1738,17 +2485,109 @@ export class GridCore {
       return;
     }
 
+    const key = event.key;
+    const ctrl = event.ctrlKey || event.metaKey;
+
+    // Undo/Redo — 에디터 입력 중에는 브라우저 기본 동작 허용
+    const isEditorFocused = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement;
+    if (!isEditorFocused) {
+      if (ctrl && key === 'z' && !event.shiftKey) {
+        event.preventDefault();
+        this.undo();
+        return;
+      }
+      if (ctrl && (key === 'y' || (key === 'z' && event.shiftKey))) {
+        event.preventDefault();
+        this.redo();
+        return;
+      }
+    }
+
     const focusable = target.closest('[data-grid-focusable]');
     if (!(focusable instanceof HTMLElement)) {
       return;
     }
 
-    const key = event.key;
+    // 범위 선택 복사 (Ctrl+C)
+    if (ctrl && key === 'c' && !isEditorFocused && this._rangeSelectionManager.hasRange()) {
+      event.preventDefault();
+      this.copyRangeToClipboard();
+      return;
+    }
+
+    // Escape: 편집 취소 또는 범위 선택 해제
+    if (key === 'Escape') {
+      if (this._activeEditorRowKey != null) {
+        event.preventDefault();
+        this.cancelCellEdit();
+        return;
+      }
+      if (this._rangeSelectionManager.hasRange()) {
+        event.preventDefault();
+        this._rangeSelectionManager.clearRange();
+        return;
+      }
+    }
+
+    const kind = focusable.dataset.gridFocusable;
+
+    // F2: 셀 편집 진입
+    if (key === 'F2' && kind === 'cell' && !isEditorFocused) {
+      event.preventDefault();
+      const rowKey = focusable.closest('[data-row-key]')?.dataset.rowKey;
+      const colId = focusable.dataset.colId;
+      if (rowKey && colId) this.beginCellEdit(rowKey, colId, { cell: focusable });
+      return;
+    }
+
+    // Enter: 셀 편집 확정 후 아래 이동 / 포커스된 셀에서 편집 진입
+    if (key === 'Enter') {
+      if (isEditorFocused) {
+        event.preventDefault();
+        const rowKey = target.closest('[data-row-key]')?.dataset.rowKey;
+        const colId = target.dataset.colId ?? target.closest('[data-col-id]')?.dataset.colId;
+        if (rowKey && colId) {
+          this.commitCellEdit(rowKey, colId, target.value);
+          const cell = this._container.querySelector(`[data-row-key="${escapeCssSelector(rowKey)}"] [data-grid-focusable="cell"][data-col-id="${escapeCssSelector(colId)}"]`);
+          if (cell instanceof HTMLElement) {
+            cell.focus();
+            this._moveCellFocus(cell, 'ArrowDown', event);
+          }
+        }
+        return;
+      }
+      if (kind === 'cell') {
+        event.preventDefault();
+        const rowKey = focusable.closest('[data-row-key]')?.dataset.rowKey;
+        const colId = focusable.dataset.colId;
+        if (rowKey && colId) this.beginCellEdit(rowKey, colId, { cell: focusable });
+        return;
+      }
+    }
+
+    // Tab: 다음/이전 셀 이동 (편집 확정 포함)
+    if (key === 'Tab') {
+      if (isEditorFocused) {
+        event.preventDefault();
+        const rowKey = target.closest('[data-row-key]')?.dataset.rowKey;
+        const colId = target.dataset.colId ?? target.closest('[data-col-id]')?.dataset.colId;
+        if (rowKey && colId) this.commitCellEdit(rowKey, colId, target.value);
+      }
+      if (kind === 'cell') {
+        event.preventDefault();
+        this._moveCellFocusTab(focusable, event.shiftKey);
+        return;
+      }
+    }
+
+    if (isEditorFocused) {
+      return;
+    }
+
     if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key)) {
       return;
     }
 
-    const kind = focusable.dataset.gridFocusable;
     if (kind === 'header') {
       this._moveHeaderFocus(focusable, key, event);
       return;
@@ -1757,6 +2596,24 @@ export class GridCore {
     if (kind === 'cell') {
       this._moveCellFocus(focusable, key, event);
     }
+  }
+
+  _moveCellFocusTab(current, backwards) {
+    const rowIndex = Number(current.dataset.rowIndex ?? 0);
+    const colIndex = Number(current.dataset.colIndex ?? 0);
+    const totalCols = this._columns.getVisibleLeafColumns().length
+      + (this._options.selectable === false ? 0 : 1);
+
+    let nextRow = rowIndex;
+    let nextCol = backwards ? colIndex - 1 : colIndex + 1;
+
+    if (nextCol >= totalCols) { nextCol = 0; nextRow += 1; }
+    if (nextCol < 0) { nextCol = totalCols - 1; nextRow -= 1; }
+
+    const next = this._container.querySelector(
+      `[data-grid-focusable="cell"][data-row-index="${nextRow}"][data-col-index="${nextCol}"]`
+    );
+    if (next instanceof HTMLElement) next.focus();
   }
 
   _moveHeaderFocus(current, key, event) {
@@ -1912,6 +2769,17 @@ export class GridCore {
   }
 
   _isCellEditable(row, column) {
+    const rowKeyField = typeof this._options.rowKey === 'function' ? null : (this._options.rowKey ?? 'id');
+    if (rowKeyField && (column.field === rowKeyField || column.id === rowKeyField)) {
+      return false;
+    }
+    if (column.sparkline || column.echart) {
+      return false;
+    }
+    // Block editing on columns with custom renderer unless explicitly configured as editable
+    if (column.renderer && column.editable !== true && typeof column.editable !== 'function') {
+      return false;
+    }
     if (column.editable === false) {
       return false;
     }
@@ -1933,9 +2801,19 @@ export class GridCore {
       }
     }
 
+    if (column.editor === 'select') {
+      return createSelectEditor({ row, def: column, value });
+    }
+    if (column.editor === 'date') {
+      return createDateEditor({ row, def: column, value });
+    }
+    if (column.editor === 'textarea') {
+      return createTextareaEditor({ row, def: column, value });
+    }
+
     const input = document.createElement('input');
     input.className = 'ag-cell-editor';
-    input.type = column.type === 'number' ? 'number' : column.type === 'date' ? 'date' : 'text';
+    input.type = 'text';
     input.value = value == null ? '' : String(value);
     return input;
   }

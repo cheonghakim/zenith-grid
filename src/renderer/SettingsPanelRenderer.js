@@ -106,9 +106,42 @@ export class SettingsPanelRenderer {
     columns.forEach((column) => {
       const row = document.createElement('div');
       row.className = 'ag-side-panel-row';
+      row.draggable = true;
+      row.dataset.colId = column.def.id;
+
+      row.addEventListener('dragstart', (e) => {
+        e.dataTransfer?.setData('text/plain', column.def.id);
+        row.classList.add('ag-side-panel-row-dragging');
+      });
+      row.addEventListener('dragend', () => {
+        row.classList.remove('ag-side-panel-row-dragging');
+        section.querySelectorAll('.ag-side-panel-row').forEach((r) => r.classList.remove('ag-side-panel-row-drag-over'));
+      });
+      row.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        section.querySelectorAll('.ag-side-panel-row').forEach((r) => r.classList.remove('ag-side-panel-row-drag-over'));
+        row.classList.add('ag-side-panel-row-drag-over');
+      });
+      row.addEventListener('drop', (e) => {
+        e.preventDefault();
+        row.classList.remove('ag-side-panel-row-drag-over');
+        const fromColId = e.dataTransfer?.getData('text/plain');
+        const toColId = column.def.id;
+        if (fromColId && fromColId !== toColId) {
+          const allCols = this._core.getAllLeafColumns();
+          const toIndex = allCols.findIndex((c) => c.def.id === toColId);
+          if (toIndex !== -1) this._core.moveColumn(fromColId, toIndex);
+        }
+      });
 
       const top = document.createElement('div');
       top.className = 'ag-side-panel-row-top';
+
+      const dragHandle = document.createElement('span');
+      dragHandle.className = 'ag-side-panel-drag-handle';
+      dragHandle.textContent = '⠿';
+      dragHandle.setAttribute('aria-hidden', 'true');
+      top.appendChild(dragHandle);
 
       const label = document.createElement('label');
       label.className = 'ag-side-panel-checkbox';
@@ -209,16 +242,190 @@ export class SettingsPanelRenderer {
       section.appendChild(this._renderColumnFilterField(column, state.columnFilters?.[column.def.id] ?? null));
     });
 
+    // 고급 필터 빌더 UI
+    if (typeof this._core.setAdvancedFilter === 'function') {
+      const advSection = document.createElement('div');
+      advSection.className = 'ag-side-panel-block ag-advanced-filter-section';
+
+      const advTitle = document.createElement('div');
+      advTitle.className = 'ag-side-panel-subtitle';
+      advTitle.textContent = this._t('sidePanel.advancedFilter', 'Advanced Filter');
+      advSection.appendChild(advTitle);
+
+      const addConditionBtn = document.createElement('button');
+      addConditionBtn.type = 'button';
+      addConditionBtn.className = 'ag-side-panel-action';
+      addConditionBtn.textContent = this._t('sidePanel.addCondition', '+ Add Condition');
+      addConditionBtn.addEventListener('click', () => this._openAdvancedFilterBuilder());
+      advSection.appendChild(addConditionBtn);
+
+      const advState = this._core._advancedFilterManager?.getState?.();
+      if (advState?.filter) {
+        const badge = document.createElement('span');
+        badge.className = 'ag-advanced-filter-badge';
+        badge.textContent = this._t('sidePanel.advancedFilterActive', 'Advanced filter active');
+        advSection.appendChild(badge);
+
+        const clearAdv = document.createElement('button');
+        clearAdv.type = 'button';
+        clearAdv.className = 'ag-side-panel-action ag-side-panel-action-danger';
+        clearAdv.textContent = this._t('sidePanel.clearAdvancedFilter', 'Clear Advanced Filter');
+        clearAdv.addEventListener('click', () => {
+          this._core.clearAdvancedFilter();
+          this.render();
+        });
+        advSection.appendChild(clearAdv);
+      }
+
+      section.appendChild(advSection);
+    }
+
     const clearButton = document.createElement('button');
     clearButton.type = 'button';
     clearButton.className = 'ag-side-panel-action';
     clearButton.textContent = this._t('sidePanel.clearAllFilters', 'Clear All Filters');
     clearButton.addEventListener('click', () => {
       this._core.clearFilters();
+      this._core.clearAdvancedFilter?.();
+      this.render();
     });
     section.appendChild(clearButton);
 
     return section;
+  }
+
+  _openAdvancedFilterBuilder() {
+    const existing = document.querySelector('.ag-advanced-filter-dialog');
+    if (existing) { existing.remove(); return; }
+
+    const columns = this._core.getVisibleLeafColumns().filter((c) => c.def.filterable !== false);
+    const dialog = document.createElement('div');
+    dialog.className = 'ag-advanced-filter-dialog';
+
+    const title = document.createElement('div');
+    title.className = 'ag-advanced-filter-dialog-title';
+    title.textContent = this._t('sidePanel.advancedFilter', 'Advanced Filter');
+    dialog.appendChild(title);
+
+    // 조건 목록
+    const conditionsList = document.createElement('div');
+    conditionsList.className = 'ag-advanced-filter-conditions';
+    dialog.appendChild(conditionsList);
+
+    const conditions = [];
+
+    const addCondition = () => {
+      const cond = { field: columns[0]?.def.field ?? '', operator: 'contains', value: '', filterType: 'text' };
+      conditions.push(cond);
+      const row = document.createElement('div');
+      row.className = 'ag-advanced-filter-row';
+
+      if (conditions.length > 1) {
+        const logicSel = document.createElement('select');
+        logicSel.className = 'ag-header-filter-select';
+        ['AND', 'OR'].forEach((v) => {
+          const o = document.createElement('option');
+          o.value = v; o.textContent = v;
+          logicSel.appendChild(o);
+        });
+        logicSel.dataset.logic = 'true';
+        row.appendChild(logicSel);
+      }
+
+      const fieldSel = document.createElement('select');
+      fieldSel.className = 'ag-header-filter-select';
+      columns.forEach((col) => {
+        const o = document.createElement('option');
+        o.value = col.def.field; o.textContent = col.def.headerName ?? col.def.header ?? col.def.id;
+        fieldSel.appendChild(o);
+      });
+      fieldSel.addEventListener('change', () => { cond.field = fieldSel.value; });
+
+      const opSel = document.createElement('select');
+      opSel.className = 'ag-header-filter-select';
+      ['contains', 'notContains', 'equals', 'notEquals', 'startsWith', 'endsWith', 'empty', 'notEmpty'].forEach((op) => {
+        const o = document.createElement('option');
+        o.value = op; o.textContent = op;
+        opSel.appendChild(o);
+      });
+      opSel.addEventListener('change', () => {
+        cond.operator = opSel.value;
+        valueInput.style.display = ['empty', 'notEmpty'].includes(opSel.value) ? 'none' : '';
+      });
+
+      const valueInput = document.createElement('input');
+      valueInput.type = 'text';
+      valueInput.className = 'ag-header-filter-input';
+      valueInput.placeholder = this._t('sidePanel.filterValue', 'Value...');
+      valueInput.addEventListener('input', () => { cond.value = valueInput.value; });
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'ag-advanced-filter-remove';
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', () => {
+        const idx = conditions.indexOf(cond);
+        if (idx >= 0) conditions.splice(idx, 1);
+        row.remove();
+      });
+
+      row.appendChild(fieldSel);
+      row.appendChild(opSel);
+      row.appendChild(valueInput);
+      row.appendChild(removeBtn);
+      conditionsList.appendChild(row);
+    };
+
+    addCondition();
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'ag-side-panel-action';
+    addBtn.textContent = this._t('sidePanel.addCondition', '+ Add Condition');
+    addBtn.addEventListener('click', addCondition);
+
+    const applyBtn = document.createElement('button');
+    applyBtn.type = 'button';
+    applyBtn.className = 'ag-side-panel-action ag-side-panel-action-primary';
+    applyBtn.textContent = this._t('sidePanel.applyFilter', 'Apply');
+    applyBtn.addEventListener('click', () => {
+      if (conditions.length === 0) return;
+      const logicEls = conditionsList.querySelectorAll('[data-logic]');
+      const logics = [...logicEls].map((el) => el.value);
+      let tree;
+      if (conditions.length === 1) {
+        tree = { ...conditions[0] };
+      } else {
+        const logic = logics[0] ?? 'AND';
+        tree = { type: logic, conditions: conditions.map((c) => ({ ...c })) };
+      }
+      this._core.setAdvancedFilter(tree);
+      dialog.remove();
+      this.render();
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'ag-side-panel-action';
+    cancelBtn.textContent = this._t('sidePanel.cancel', 'Cancel');
+    cancelBtn.addEventListener('click', () => dialog.remove());
+
+    const btnRow = document.createElement('div');
+    btnRow.className = 'ag-advanced-filter-actions';
+    btnRow.appendChild(addBtn);
+    btnRow.appendChild(applyBtn);
+    btnRow.appendChild(cancelBtn);
+    dialog.appendChild(btnRow);
+
+    document.body.appendChild(dialog);
+
+    // 외부 클릭 시 닫기
+    setTimeout(() => {
+      const dismiss = (e) => {
+        if (!dialog.contains(e.target)) { dialog.remove(); document.removeEventListener('pointerdown', dismiss, true); }
+      };
+      document.addEventListener('pointerdown', dismiss, true);
+    }, 0);
   }
 
   _renderColumnFilterField(column, filter) {

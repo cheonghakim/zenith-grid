@@ -18,6 +18,10 @@
       "import": "./dist/highgrid-vue.js",
       "default": "./dist/highgrid-vue.js"
     },
+    "./react": {
+      "import": "./src/adapters/react/index.js",
+      "default": "./src/adapters/react/index.js"
+    },
     "./styles/grid.css": "./dist/assets/grid.css",
     "./styles/tokens.css": "./src/styles/tokens.css"
   },
@@ -33,16 +37,25 @@
     "test:ci": "npm test && npm run test:e2e && npm run build:all"
   },
   "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
     "vue": "^3.3.0"
   },
   "peerDependenciesMeta": {
     "vue": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
       "optional": true
     }
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@vitejs/plugin-vue": "^5.0.0",
+    "echarts": "^6.1.0",
     "jsdom": "^26.1.0",
     "vite": "^5.0.0",
     "vitest": "^1.0.0",
@@ -62,5 +75,8 @@
   "homepage": "https://cheonghakim.github.io/high-grid",
   "bugs": {
     "url": "https://github.com/cheonghakim/high-grid/issues"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
   }
 }

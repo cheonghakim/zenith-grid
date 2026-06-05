@@ -2,7 +2,31 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGrid } from '../src/index.js';
-import { createContextMenuPlugin, uppercaseTeamPlugin } from '../src/plugins/index.js';
+import { createContextMenuPlugin, uppercaseTeamPlugin, createXlsxExportPlugin } from '../src/plugins/index.js';
+
+// Hoisted mock functions for exceljs
+const mockAddRow = vi.fn();
+const mockWriteBuffer = vi.fn().mockResolvedValue(Buffer.from([]));
+const mockAddWorksheet = vi.fn().mockReturnValue({
+  addRow: mockAddRow,
+});
+const mockWorkbookInstance = {
+  addWorksheet: mockAddWorksheet,
+  xlsx: {
+    writeBuffer: mockWriteBuffer,
+  }
+};
+
+vi.mock('exceljs', () => {
+  const WorkbookMock = vi.fn().mockImplementation(() => mockWorkbookInstance);
+  return {
+    Workbook: WorkbookMock,
+    default: {
+      Workbook: WorkbookMock,
+    }
+  };
+});
+
 
 function flush() {
   return new Promise((resolve) => setTimeout(resolve, 0));
@@ -502,6 +526,335 @@ describe('GridCore DOM smoke', () => {
     const stats = await grid.benchmarkLiveUpdates({ rowsPerSecond: 5, durationMs: 120, batchSize: 1 });
     expect(stats.generated).toBeGreaterThan(0);
 
+    grid.destroy();
+  });
+
+  it('renders select, date, and textarea editors and supports autoSizeColumn/autoSizeAllColumns', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+
+    const grid = createGrid(host, {
+      rowKey: 'id',
+      editing: { enabled: true },
+      rows: [
+        { id: 1, team: 'Red', joined: '2026-06-05', note: 'Hello world' },
+      ],
+      columns: [
+        { id: 'team', field: 'team', headerName: 'Team', width: 120, editable: true, editor: 'select', options: ['Red', 'Blue'] },
+        { id: 'joined', field: 'joined', headerName: 'Joined Date', width: 120, editable: true, editor: 'date' },
+        { id: 'note', field: 'note', headerName: 'Note', width: 120, editable: true, editor: 'textarea' },
+      ],
+    });
+
+    await flush();
+    await flush();
+
+    // 1. Verify editor rendering
+    grid.beginCellEdit(1, 'team');
+    await flush();
+    let cell = host.querySelector('.ag-cell[data-col-id="team"]');
+    let editor = cell?.querySelector('.ag-cell-editor');
+    expect(editor?.tagName).toBe('SELECT');
+    expect(editor?.value).toBe('Red');
+
+    // Finish team edit
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await flush();
+    await flush();
+
+    grid.beginCellEdit(1, 'joined');
+    await flush();
+    cell = host.querySelector('.ag-cell[data-col-id="joined"]');
+    editor = cell?.querySelector('.ag-cell-editor');
+    expect(editor?.tagName).toBe('INPUT');
+    expect(editor?.type).toBe('date');
+
+    // Finish joined edit
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await flush();
+    await flush();
+
+    grid.beginCellEdit(1, 'note');
+    await flush();
+    cell = host.querySelector('.ag-cell[data-col-id="note"]');
+    editor = cell?.querySelector('.ag-cell-editor');
+    expect(editor?.tagName).toBe('TEXTAREA');
+    expect(editor?.value).toBe('Hello world');
+
+    // Finish note edit
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await flush();
+    await flush();
+
+    // 2. Verify autoSizeColumn
+    const originalCreateElement = document.createElement;
+    document.createElement = function(tagName) {
+      const el = originalCreateElement.call(document, tagName);
+      if (tagName.toLowerCase() === 'canvas') {
+        el.getContext = (type) => {
+          if (type === '2d') {
+            return {
+              font: '',
+              measureText: (text) => ({ width: text.length * 10 }),
+            };
+          }
+          return null;
+        };
+      }
+      return el;
+    };
+
+    grid.autoSizeColumn('team');
+    await flush();
+    expect(grid.getColumnState().columns.find(c => c.colId === 'team').width).toBe(76);
+
+    grid.autoSizeAllColumns();
+    await flush();
+    expect(grid.getColumnState().columns.find(c => c.colId === 'joined').width).toBe(146);
+
+    document.createElement = originalCreateElement;
+    grid.destroy();
+  });
+
+  it('renders Set Filter checkbox list with search and filters rows accordingly', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+
+    const grid = createGrid(host, {
+      rowKey: 'id',
+      rows: [
+        { id: 1, team: 'Red' },
+        { id: 2, team: 'Blue' },
+        { id: 3, team: 'Green' },
+      ],
+      columns: [
+        { id: 'team', field: 'team', headerName: 'Team', width: 120, filterType: 'set' },
+      ],
+    });
+
+    await flush();
+    await flush();
+
+    // Open filter popover
+    host.querySelector('.ag-header-filter-button')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flush();
+
+    const popover = document.body.querySelector('.ag-header-filter-popover');
+    expect(popover).not.toBeNull();
+
+    // Check that there is a search box, select all, and the checkboxes for Red, Blue, Green
+    const searchInput = popover.querySelector('input[type="search"]');
+    const selectAllCheck = popover.querySelector('.ag-filter-checkbox'); // first one is Select All
+    const checkboxes = popover.querySelectorAll('.ag-filter-list-container .ag-filter-checkbox');
+    
+    expect(searchInput).not.toBeNull();
+    expect(selectAllCheck).not.toBeNull();
+    expect(checkboxes.length).toBe(3); // Red, Blue, Green
+
+    // Ticking Blue and Green
+    const blueCheck = [...popover.querySelectorAll('.ag-filter-checkbox-label')].find(el => el.textContent === 'Blue')?.querySelector('input');
+    const greenCheck = [...popover.querySelectorAll('.ag-filter-checkbox-label')].find(el => el.textContent === 'Green')?.querySelector('input');
+    
+    expect(blueCheck).not.toBeUndefined();
+    expect(greenCheck).not.toBeUndefined();
+
+    // Check Blue and Green
+    blueCheck.checked = true;
+    blueCheck.dispatchEvent(new Event('change', { bubbles: true }));
+    greenCheck.checked = true;
+    greenCheck.dispatchEvent(new Event('change', { bubbles: true }));
+    await flush();
+    await flush();
+
+    // The grid should now only contain Blue and Green
+    expect(grid.getRows().length).toBe(2);
+    expect(grid.getRows().map(r => r.team)).toEqual(['Blue', 'Green']);
+
+    // Now test search input inside filter popover
+    searchInput.value = 're';
+    searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+    await flush();
+
+    // Under search query 're', only Red and Green should be listed in the checkboxes list
+    const visibleLabels = [...popover.querySelectorAll('.ag-filter-checkbox-label')].map(el => el.textContent);
+    expect(visibleLabels).toContain('Red');
+    expect(visibleLabels).toContain('Green');
+    expect(visibleLabels).not.toContain('Blue');
+
+    grid.destroy();
+  });
+
+  it('exports to XLSX using xlsxExportPlugin and falls back correctly', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+
+    vi.clearAllMocks();
+
+    const grid = createGrid(host, {
+      rowKey: 'id',
+      rows: [
+        { id: 1, name: 'Alpha', score: 100 },
+      ],
+      columns: [
+        { id: 'name', field: 'name', headerName: 'Name', width: 120 },
+        { id: 'score', field: 'score', headerName: 'Score', width: 100 },
+      ],
+      plugins: [createXlsxExportPlugin({ fileName: 'test.xlsx' })],
+    });
+
+    await flush();
+    await flush();
+
+    // Trigger downloadXlsx
+    await grid.downloadXlsx({ fileName: 'override.xlsx' });
+
+    expect(mockAddWorksheet).toHaveBeenCalledWith('Sheet1');
+    expect(mockAddRow).toHaveBeenCalledWith(['Name', 'Score']);
+    expect(mockAddRow).toHaveBeenCalledWith(['Alpha', 100]);
+    expect(mockWriteBuffer).toHaveBeenCalled();
+
+    grid.destroy();
+  });
+
+  it('supports row dragging and cell spanning (rowSpan/colSpan)', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+
+    const grid = createGrid(host, {
+      rowKey: 'id',
+      rowDragging: true,
+      rows: [
+        { id: 1, name: 'Alpha', score: 100, merge: true },
+        { id: 2, name: 'Beta', score: 200, merge: false },
+        { id: 3, name: 'Gamma', score: 300, merge: false },
+      ],
+      columns: [
+        { id: 'name', field: 'name', headerName: 'Name', width: 120, rowDrag: true },
+        {
+          id: 'score',
+          field: 'score',
+          headerName: 'Score',
+          width: 100,
+          rowSpan: ({ row }) => row.merge ? 2 : 1,
+          colSpan: ({ row }) => row.merge ? 2 : 1,
+        },
+      ],
+    });
+
+    await flush();
+    await flush();
+
+    // 1. Verify row drag handle rendering
+    const dragHandle = host.querySelector('.ag-cell[data-col-id="name"] .ag-row-drag-handle');
+    expect(dragHandle).not.toBeNull();
+
+    // 2. Verify row reordering on drop
+    const firstRowEl = host.querySelector('.ag-row[data-row-key="1"]');
+    const thirdRowEl = host.querySelector('.ag-row[data-row-key="3"]');
+    
+    // Simulate drag start on first row and drop on third row
+    const dragStartEvent = new MouseEvent('dragstart', { bubbles: true });
+    Object.defineProperty(dragStartEvent, 'dataTransfer', {
+      value: {
+        setData: vi.fn(),
+        getData: () => '1',
+      }
+    });
+    dragHandle.dispatchEvent(dragStartEvent);
+    
+    const dropEvent = new MouseEvent('drop', { bubbles: true });
+    Object.defineProperty(dropEvent, 'dataTransfer', {
+      value: {
+        getData: () => '1',
+      }
+    });
+    thirdRowEl.dispatchEvent(dropEvent);
+    await flush();
+    await flush();
+
+    // Verify reordered rows
+    expect(grid.getRows().map(r => r.id)).toEqual([2, 3, 1]);
+
+    // Recreate grid to check spanning
+    grid.destroy();
+    
+    const gridSpanning = createGrid(host, {
+      rowKey: 'id',
+      rows: [
+        { id: 10, name: 'A', score: 10, merge: true },
+        { id: 20, name: 'B', score: 20, merge: false },
+      ],
+      columns: [
+        { id: 'name', field: 'name', headerName: 'Name', width: 120 },
+        {
+          id: 'score',
+          field: 'score',
+          headerName: 'Score',
+          width: 100,
+          rowSpan: ({ row }) => row.merge ? 2 : 1,
+        },
+      ],
+    });
+
+    gridSpanning._viewModel.setViewportSize(960, 480);
+    await gridSpanning.refresh();
+
+    const cellSpanned = host.querySelector('.ag-row[data-row-key="10"] .ag-cell[data-col-id="score"]');
+    const cellSkipped = host.querySelector('.ag-row[data-row-key="20"] .ag-cell[data-col-id="score"]');
+    
+    expect(cellSpanned).not.toBeNull();
+    // rowSpan is 2 -> height should be 36 * 2 = 72px
+    expect(cellSpanned.style.height).toBe('72px');
+    expect(cellSkipped).toBeNull(); // Skipped due to span
+
+    gridSpanning.destroy();
+  });
+
+  it('blocks editing on primary key column and ignores arrow keys in editor', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+
+    const grid = createGrid(host, {
+      rowKey: 'id',
+      editing: { enabled: true },
+      rows: [
+        { id: 1, name: 'Alpha' },
+        { id: 2, name: 'Beta' },
+      ],
+      columns: [
+        { id: 'id', field: 'id', headerName: 'ID', width: 80 },
+        { id: 'name', field: 'name', headerName: 'Name', width: 160, editable: true },
+      ],
+    });
+
+    await flush();
+    await flush();
+
+    // 1. Try to edit 'id' cell (should be blocked)
+    const canEditId = grid.beginCellEdit(1, 'id');
+    expect(canEditId).toBe(false);
+
+    // 2. Edit 'name' cell
+    const canEditName = grid.beginCellEdit(1, 'name');
+    expect(canEditName).toBe(true);
+
+    const cell = host.querySelector('.ag-cell[data-col-id="name"]');
+    const editor = cell?.querySelector('.ag-cell-editor');
+    expect(editor).not.toBeNull();
+
+    // Focus editor
+    editor.focus();
+
+    // Dispatch ArrowDown event on editor (should not call _moveCellFocus / blur editor)
+    const arrowDownEvent = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true });
+    editor.dispatchEvent(arrowDownEvent);
+    await flush();
+
+    // Verify cell is still in editing mode
+    expect(cell.classList.contains('ag-cell-editing')).toBe(true);
+    expect(cell.querySelector('.ag-cell-editor')).not.toBeNull();
+
+    // Clean up
     grid.destroy();
   });
 });

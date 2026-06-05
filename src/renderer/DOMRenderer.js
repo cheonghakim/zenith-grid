@@ -31,6 +31,11 @@ export class DOMRenderer {
 
     const bodyViewport = this._createElement('div', 'ag-body-viewport');
     bodyViewport.setAttribute('role', 'presentation');
+
+    const pinnedTopRows = this._createElement('div', 'ag-pinned-top-rows');
+    pinnedTopRows.setAttribute('role', 'rowgroup');
+    pinnedTopRows.style.display = 'none';
+
     const body = this._createElement('div', 'ag-body');
     body.setAttribute('role', 'rowgroup');
     const bodyLeft = this._createElement('div', 'ag-body-left-pinned');
@@ -42,6 +47,10 @@ export class DOMRenderer {
     const spacerBottom = this._createElement('div', 'ag-virtual-spacer-bottom');
     const bodyRight = this._createElement('div', 'ag-body-right-pinned');
 
+    const pinnedBottomRows = this._createElement('div', 'ag-pinned-bottom-rows');
+    pinnedBottomRows.setAttribute('role', 'rowgroup');
+    pinnedBottomRows.style.display = 'none';
+
     bodyCenterContainer.appendChild(spacerTop);
     bodyCenterContainer.appendChild(rows);
     bodyCenterContainer.appendChild(spacerBottom);
@@ -50,7 +59,9 @@ export class DOMRenderer {
     body.appendChild(bodyLeft);
     body.appendChild(bodyCenterViewport);
     body.appendChild(bodyRight);
+    bodyViewport.appendChild(pinnedTopRows);
     bodyViewport.appendChild(body);
+    bodyViewport.appendChild(pinnedBottomRows);
 
     const infiniteLoader = this._createElement('div', 'ag-infinite-loader');
     infiniteLoader.style.display = 'none';
@@ -62,6 +73,8 @@ export class DOMRenderer {
     bodyViewport.appendChild(infiniteLoader);
 
     const footer = this._createElement('div', 'ag-footer');
+    const statusBar = this._createElement('div', 'ag-status-bar-host');
+    statusBar.style.display = 'none';
     const overlay = this._createElement('div', 'ag-overlay');
     overlay.style.display = 'none';
     overlay.setAttribute('role', 'status');
@@ -96,6 +109,7 @@ export class DOMRenderer {
     this._container.appendChild(header);
     this._container.appendChild(bodyViewport);
     this._container.appendChild(footer);
+    this._container.appendChild(statusBar);
     this._container.appendChild(sidePanel);
 
     this._els = {
@@ -105,12 +119,14 @@ export class DOMRenderer {
       headerCenterContainer,
       headerRight,
       bodyViewport,
+      pinnedTopRows,
       body,
       bodyLeft,
       bodyCenterViewport,
       bodyCenterContainer,
       rows,
       bodyRight,
+      pinnedBottomRows,
       infiniteLoader,
       spacerTop,
       spacerBottom,
@@ -123,6 +139,7 @@ export class DOMRenderer {
       overlaySkeleton,
       banner,
       footer,
+      statusBar,
       sidePanel,
     };
 
@@ -339,6 +356,20 @@ export class DOMRenderer {
 
   getRoot() {
     return this._container;
+  }
+
+  getPinnedTopRowsContainer() {
+    return this._els.pinnedTopRows;
+  }
+
+  getPinnedBottomRowsContainer() {
+    return this._els.pinnedBottomRows;
+  }
+
+  getStatusBarHost() {
+    const host = this._els.statusBar;
+    if (host) host.style.display = 'block';
+    return host;
   }
 
   getSidePanelHost() {

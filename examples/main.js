@@ -2,7 +2,10 @@ import {
   createGrid,
   uppercaseTeamPlugin,
   scorePrefixPlugin,
+  createXlsxExportPlugin,
+  createSparklinePlugin,
 } from '../src/index.js';
+import { createEchartsPlugin } from '../src/plugins/echartsPlugin.js';
 import '../src/styles/grid.css';
 
 const rowCountEl = document.getElementById('rowCount');
@@ -174,17 +177,21 @@ function renderScoreCell({ value }) {
 }
 
 const columns = [
-  { id: 'id', field: 'id', header: 'ID', width: 84, type: 'number', align: 'right' },
-  { id: 'name', field: 'name', header: 'Operator', width: 220 },
+  { id: 'id', field: 'id', header: 'ID', width: 140, type: 'number', align: 'right' },
+  { id: 'name', field: 'name', header: 'Operator', width: 220, tooltip: true, editable: true },
   { id: 'team', field: 'team', header: 'Team', width: 140, filterType: 'select', filterOptions: TEAM_NAMES },
   { id: 'status', field: 'status', header: 'Status', width: 120, filterType: 'select', filterOptions: STATUS_NAMES, renderer: renderStatusBadge },
-  { id: 'score', field: 'score', header: 'Score', width: 140, type: 'number', align: 'right', renderer: renderScoreCell },
+  { id: 'score', field: 'score', header: 'Score', width: 140, type: 'number', align: 'right', renderer: renderScoreCell, aggregate: 'avg', editable: true },
+  // 셀 차트 컬럼 (기본 숨김 → 스파크라인 버튼으로 토글)
+  { id: 'trend',     field: 'history', header: '10-Week Score · Line',  width: 140, visible: false, sparkline: { type: 'line',  field: 'history', color: '#0f4c81' } },
+  { id: 'trendBar',  field: 'history', header: '10-Week Score · Bar',   width: 140, visible: false, sparkline: { type: 'bar',   field: 'history', color: '#7c3aed' } },
+  { id: 'trendArea', field: 'history', header: '10-Week Score · Area',  width: 150, visible: false, echart:    { type: 'area',  dataField: 'history', color: '#16a34a', height: 32 } },
   { id: 'region', field: 'region', header: 'Region', width: 160, filterType: 'select', filterOptions: REGIONS },
   { id: 'severity', field: 'severity', header: 'Severity', width: 140, filterType: 'select', filterOptions: SEVERITIES },
   { id: 'owner', field: 'owner', header: 'Owner', width: 150, filterType: 'select', filterOptions: OWNERS },
   { id: 'queue', field: 'queue', header: 'Queue', width: 160, filterType: 'select', filterOptions: QUEUES },
   { id: 'lastAction', field: 'lastAction', header: 'Last Action', width: 220 },
-  { id: 'notes', field: 'notes', header: 'Notes', width: 420 },
+  { id: 'notes', field: 'notes', header: 'Notes', width: 420, tooltip: true },
   { id: 'updatedAt', field: 'updatedAt', header: 'Updated At', width: 180, type: 'date' },
 ];
 
@@ -223,6 +230,11 @@ function createFlatRows(count = 2500, options = {}) {
       lastAction: LAST_ACTIONS[index % LAST_ACTIONS.length],
       notes: createNotes(index, options),
       updatedAt: toTimestamp(Date.now() - index * 2_700_000),
+      history: Array.from({ length: 10 }, (_, i) => {
+        const seed = id * 17 + i * 31;
+        const sinVal = Math.sin(seed);
+        return Math.abs(Math.round(2000 + sinVal * 1500));
+      }),
     };
   });
 }
@@ -485,6 +497,34 @@ const grid = createGrid(gridHost, {
       description: 'Decorates numeric score cells with a PTS prefix.',
     },
   ],
+  editing: { enabled: true },
+  plugins: [
+    { plugin: createXlsxExportPlugin({ fileName: 'highgrid-export.xlsx' }) },
+    { plugin: createSparklinePlugin() },
+    { plugin: createEchartsPlugin() },
+  ],
+  statusBar: { enabled: true },
+  masterDetail: {
+    detailRenderer: (row) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'padding:16px;display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;';
+      div.innerHTML = `
+        <div style="min-width:200px">
+          <strong style="font-size:15px">${row.name}</strong>
+          <p style="margin:4px 0;color:#556170">팀: ${row.team} · 지역: ${row.region}</p>
+          <p style="margin:4px 0">상태: <b>${row.status}</b> · 심각도: ${row.severity}</p>
+          <p style="margin:4px 0">점수: <b>${row.score?.toLocaleString()}</b></p>
+        </div>
+        <div style="min-width:200px;color:#556170;font-size:13px">
+          <p style="margin:4px 0">담당자: ${row.owner} (${row.queue})</p>
+          <p style="margin:4px 0">최근 작업: ${row.lastAction}</p>
+          <p style="margin:4px 0;white-space:normal;max-width:400px">${row.notes}</p>
+        </div>
+      `;
+      return div;
+    },
+    detailRowHeight: 150,
+  },
   sidePanel: {
     enabled: true,
     quickFilterFields: ['name', 'team', 'status', 'region', 'notes'],
@@ -1376,6 +1416,9 @@ const multiHeaderGrid = createGrid(document.getElementById('multiHeaderGrid'), {
   rowKey: 'id',
   rowHeight: 40,
   tableId: 'multi-header-demo',
+  plugins: [
+    { plugin: createXlsxExportPlugin({ fileName: 'multi-header-grid.xlsx' }) },
+  ],
 });
 
 // ── 다운로드 버튼 ──────────────────────────────────────────────
@@ -1384,7 +1427,11 @@ document.getElementById('downloadMainCsvButton').addEventListener('click', () =>
 });
 
 document.getElementById('downloadMainExcelButton').addEventListener('click', () => {
-  grid.downloadExcel({ fileName: 'main-grid.xls' });
+  if (typeof grid.downloadXlsx === 'function') {
+    grid.downloadXlsx({ fileName: 'main-grid.xlsx' });
+  } else {
+    grid.downloadExcel({ fileName: 'main-grid.xls' });
+  }
 });
 
 document.getElementById('downloadMainSelectedCsvButton').addEventListener('click', () => {
@@ -1396,5 +1443,109 @@ document.getElementById('downloadMultiCsvButton').addEventListener('click', () =
 });
 
 document.getElementById('downloadMultiExcelButton').addEventListener('click', () => {
-  multiHeaderGrid.downloadExcel({ fileName: 'multi-header-grid.xls' });
+  if (typeof multiHeaderGrid.downloadXlsx === 'function') {
+    multiHeaderGrid.downloadXlsx({ fileName: 'multi-header-grid.xlsx' });
+  } else {
+    multiHeaderGrid.downloadExcel({ fileName: 'multi-header-grid.xls' });
+  }
+});
+
+// ── 엔터프라이즈 기능 버튼 ─────────────────────────────────────
+
+// 조건부 서식 토글
+let conditionalFormatActive = false;
+document.getElementById('conditionalFormatButton')?.addEventListener('click', function () {
+  conditionalFormatActive = !conditionalFormatActive;
+  setToggleState(this, conditionalFormatActive);
+  const updated = grid.getAllLeafColumns().map((c) => {
+    if (c.def.id !== 'score') return c.def;
+    return {
+      ...c.def,
+      conditionalFormat: conditionalFormatActive
+        ? (v) => {
+            if (v >= 8000) return { style: { color: '#16a34a', fontWeight: 'bold' } };
+            if (v <= 2000) return { style: { color: '#dc2626' } };
+            return null;
+          }
+        : null,
+    };
+  });
+  grid.setColumns(updated);
+  logEvent('conditional-format', { active: conditionalFormatActive });
+});
+
+// 스파크라인 컬럼 토글 (SVG line·bar + ECharts area 세 종류)
+let sparklineActive = false;
+document.getElementById('sparklineButton')?.addEventListener('click', function () {
+  sparklineActive = !sparklineActive;
+  setToggleState(this, sparklineActive);
+  grid.setColumnVisible('trend', sparklineActive);
+  grid.setColumnVisible('trendBar', sparklineActive);
+  grid.setColumnVisible('trendArea', sparklineActive);
+  logEvent('sparkline', { active: sparklineActive, types: 'SVG line, SVG bar, ECharts area' });
+});
+
+// Pivot 모드 토글
+let pivotActive = false;
+document.getElementById('pivotButton')?.addEventListener('click', function () {
+  pivotActive = !pivotActive;
+  setToggleState(this, pivotActive);
+  if (pivotActive) {
+    grid.enablePivot({ rowFields: ['region'], columnField: 'team', valueField: 'score', aggFunction: 'avg' });
+    logEvent('pivot', { active: true, config: 'region × team, avg(score)' });
+  } else {
+    grid.disablePivot();
+    grid.setColumns(columns);
+    logEvent('pivot', { active: false });
+  }
+});
+
+// 행 고정 토글
+document.getElementById('pinnedRowButton')?.addEventListener('click', () => {
+  const firstRow = grid.getRows()[0];
+  if (firstRow) {
+    grid.setPinnedTopRows([{ ...firstRow, name: '📌 ' + firstRow.name }]);
+    logEvent('pin-row', { rowKey: firstRow._rowKey });
+  }
+  flashActionButton(document.getElementById('pinnedRowButton'));
+});
+
+document.getElementById('clearPinnedButton')?.addEventListener('click', () => {
+  grid.setPinnedTopRows([]);
+  grid.setPinnedBottomRows([]);
+  logEvent('clear-pinned');
+  flashActionButton(document.getElementById('clearPinnedButton'));
+});
+
+// Undo / Redo
+// 사용법: Score 또는 Operator 셀을 더블클릭 → 값 수정 → Enter 후 클릭하거나 그리드 포커스 시 Ctrl+Z/Y
+document.getElementById('undoButton')?.addEventListener('click', () => {
+  if (!grid.canUndo()) {
+    logEvent('undo', { result: '취소할 내용 없음 — Score/Operator 셀 더블클릭 후 편집하세요' });
+    return;
+  }
+  const result = grid.undo();
+  logEvent('undo', result
+    ? { colId: result.colId, 이전값: result.newValue, 복원값: result.oldValue }
+    : { result: '취소할 내용 없음' }
+  );
+  flashActionButton(document.getElementById('undoButton'));
+});
+
+document.getElementById('redoButton')?.addEventListener('click', () => {
+  if (!grid.canRedo()) {
+    logEvent('redo', { result: '다시 실행할 내용 없음' });
+    return;
+  }
+  const result = grid.redo();
+  logEvent('redo', result
+    ? { colId: result.colId, 이전값: result.oldValue, 적용값: result.newValue }
+    : { result: '다시 실행할 내용 없음' }
+  );
+  flashActionButton(document.getElementById('redoButton'));
+});
+
+// 인쇄
+document.getElementById('printButton')?.addEventListener('click', () => {
+  grid.printGrid();
 });

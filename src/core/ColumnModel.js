@@ -70,6 +70,7 @@ export class ColumnModel {
 
   _normalizeDef(def, colId, parentId, depth) {
     return {
+      ...def,
       id: colId,
       field: def.field ?? colId,
       headerName: def.headerName ?? def.header ?? colId,
@@ -82,6 +83,8 @@ export class ColumnModel {
       renderer: def.renderer ?? null,
       editable: def.editable ?? null,
       editor: def.editor ?? null,
+      editorOptions: def.editorOptions ?? null,
+      options: def.options ?? null,
       parser: def.parser ?? null,
       validator: def.validator ?? null,
       headerRenderer: def.headerRenderer ?? null,
@@ -95,6 +98,9 @@ export class ColumnModel {
       filterPlaceholder: def.filterPlaceholder ?? null,
       resizable: def.resizable ?? true,
       reorderable: def.reorderable ?? true,
+      rowDrag: def.rowDrag ?? false,
+      rowSpan: def.rowSpan ?? null,
+      colSpan: def.colSpan ?? null,
       // 너비
       width: def.width ?? 150,
       minWidth: def.minWidth ?? 50,

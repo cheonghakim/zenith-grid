@@ -82,6 +82,11 @@ export class SortManager {
     this._onChanged(this.getState());
   }
 
+  clearSortFor(colId) {
+    this._sortDefs = this._sortDefs.filter((s) => s.field !== colId);
+    this._onChanged(this.getState());
+  }
+
   // ─── 정렬 실행 (메인 스레드 폴백) ─────────────────────────
 
   /**

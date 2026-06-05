@@ -165,6 +165,22 @@ export class LiveUpdateManager {
     }
   }
 
+  // 셀 단위 flash 추적: rowKey → Set<fieldName>
+  _flashCells = new Map();
+
+  registerCellFlash(rowKey, fields) {
+    const key = String(rowKey);
+    if (!this._flashCells.has(key)) this._flashCells.set(key, new Set());
+    const set = this._flashCells.get(key);
+    for (const f of fields) set.add(f);
+  }
+
+  getAndClearFlashCells() {
+    const snapshot = this._flashCells;
+    this._flashCells = new Map();
+    return snapshot;
+  }
+
   _registerAnimatedRows(batch) {
     if (!this._rowAnimationEnabled || this._rowAnimationDuration <= 0) return;
 

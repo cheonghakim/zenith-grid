@@ -21,6 +21,12 @@ export class HeaderRenderer {
     this._renderContainer(this._dom.getHeaderCenterContainer(), columnsByPin.center, 'center', horizontalRange);
     this._renderContainer(this._dom.getHeaderRightContainer(), columnsByPin.right, 'right', null);
     this._syncOpenFilterPopover();
+
+    if (this._options.filterRowEnabled) {
+      this._renderFilterRow(this._dom.getHeaderLeftContainer(), columnsByPin.left, 'left', null);
+      this._renderFilterRow(this._dom.getHeaderCenterContainer(), columnsByPin.center, 'center', horizontalRange);
+      this._renderFilterRow(this._dom.getHeaderRightContainer(), columnsByPin.right, 'right', null);
+    }
   }
 
   updateSortIndicators() {
@@ -57,6 +63,9 @@ export class HeaderRenderer {
     row.className = 'ag-header-row';
     row.setAttribute('role', 'row');
 
+    if (pinArea === 'left' && this._options.rowNumbers) {
+      row.appendChild(this._createRowNumberHeaderCell());
+    }
     if (pinArea === 'left' && this._options.selectionEnabled) {
       row.appendChild(this._createSelectionHeaderCell());
     }
@@ -277,7 +286,7 @@ export class HeaderRenderer {
         colId: cell.colId,
         field: cell.def.field,
         def: cell.def,
-        multiSort: event.ctrlKey || event.metaKey,
+        multiSort: event.ctrlKey || event.metaKey || event.shiftKey,
       });
     });
 
@@ -323,6 +332,12 @@ export class HeaderRenderer {
       });
       domCell.appendChild(resizeHandle);
     }
+
+    domCell.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this._showHeaderContextMenu(cell.colId, cell.def, event);
+    });
 
     return domCell;
   }
@@ -384,10 +399,20 @@ export class HeaderRenderer {
       });
     }
 
+    // WCAG: aria-sort
+    const sortDef = this._options.sortManager?.getSortForField?.(def.field);
+    if (def.sortable !== false) {
+      cell.setAttribute('aria-sort', sortDef
+        ? (sortDef.direction === 'asc' ? 'ascending' : 'descending')
+        : 'none'
+      );
+    }
+
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'ag-header-cell-button';
     button.title = def.headerName;
+    button.setAttribute('aria-label', `${def.headerName}${sortDef ? `, sorted ${sortDef.direction}ending` : ''}`);
     button.dataset.gridFocusable = 'header';
     button.dataset.colIndex = String(this._getVisibleColumnIndex(def.id));
     button.addEventListener('click', (event) => {
@@ -396,7 +421,7 @@ export class HeaderRenderer {
         colId: def.id,
         field: def.field,
         def,
-        multiSort: event.ctrlKey || event.metaKey,
+        multiSort: event.ctrlKey || event.metaKey || event.shiftKey,
       });
     });
 
@@ -429,6 +454,18 @@ export class HeaderRenderer {
       cell.appendChild(this._createFilterAction(def.id, def, cell));
     }
 
+    // ⋮ hover menu button
+    const menuBtn = document.createElement('button');
+    menuBtn.type = 'button';
+    menuBtn.className = 'ag-header-menu-btn';
+    menuBtn.setAttribute('aria-label', `${def.headerName} column menu`);
+    menuBtn.textContent = '⋮';
+    menuBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      this._showHeaderContextMenu(def.id, def, event);
+    });
+    cell.appendChild(menuBtn);
+
     if (def.resizable !== false) {
       const resizeHandle = document.createElement('button');
       resizeHandle.type = 'button';
@@ -442,10 +479,29 @@ export class HeaderRenderer {
       cell.appendChild(resizeHandle);
     }
 
+    cell.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this._showHeaderContextMenu(def.id, def, event);
+    });
+
     return cell;
   }
 
   // ── Shared helpers ────────────────────────────────────────────
+
+  _createRowNumberHeaderCell() {
+    const width = this._options.rowNumberWidth ?? 44;
+    const cell = document.createElement('div');
+    cell.className = 'ag-header-cell ag-row-number-header ag-header-cell-pinned';
+    cell.setAttribute('role', 'columnheader');
+    cell.style.width = `${width}px`;
+    cell.style.minWidth = `${width}px`;
+    cell.style.left = '0px';
+    cell.style.zIndex = '8';
+    cell.textContent = '#';
+    return cell;
+  }
 
   _createSelectionHeaderCell() {
     const width = this._options.selectionColumnWidth ?? 44;
@@ -586,9 +642,82 @@ export class HeaderRenderer {
 
   _getSortGlyph(colId) {
     const def = this._columnModel.getDef(colId);
-    const sort = this._options.sortManager?.getSortForField(def?.field ?? colId);
+    const sortManager = this._options.sortManager;
+    if (!sortManager) return '';
+    const sort = sortManager.getSortForField(def?.field ?? colId);
     if (!sort) return '';
-    return sort.direction === 'asc' ? '↑' : '↓';
+    const glyph = sort.direction === 'asc' ? '↑' : '↓';
+    const state = sortManager.getState();
+    const priority = state.sortDefs.length > 1
+      ? String(state.sortDefs.findIndex((s) => s.field === (def?.field ?? colId)) + 1)
+      : '';
+    return glyph + priority;
+  }
+
+  _renderFilterRow(container, leafColumns, pinArea, horizontalRange) {
+    const existing = container.querySelector('.ag-filter-row');
+    if (existing) existing.remove();
+    if (!leafColumns.length && pinArea !== 'left') return;
+
+    const row = document.createElement('div');
+    row.className = 'ag-filter-row';
+    row.setAttribute('role', 'row');
+
+    // spacer for row-number and selection columns
+    const extraWidth = (this._options.rowNumbers ? (this._options.rowNumberWidth ?? 44) : 0)
+      + (this._options.selectionEnabled ? (this._options.selectionColumnWidth ?? 44) : 0);
+    if (pinArea === 'left' && extraWidth > 0) {
+      const spacer = document.createElement('div');
+      spacer.className = 'ag-filter-cell ag-filter-cell-spacer';
+      spacer.style.width = `${extraWidth}px`;
+      spacer.style.minWidth = `${extraWidth}px`;
+      row.appendChild(spacer);
+    }
+
+    let renderColumns = leafColumns;
+    if (pinArea === 'center' && horizontalRange) {
+      renderColumns = this._sliceColumnsByRange(leafColumns, horizontalRange).columns;
+    }
+
+    for (const { def, state } of renderColumns) {
+      const cell = document.createElement('div');
+      cell.className = 'ag-filter-cell';
+      cell.style.width = `${state.width}px`;
+      cell.style.minWidth = `${state.width}px`;
+
+      if (def.filterable !== false) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'ag-filter-row-input';
+        input.placeholder = def.headerName;
+        const current = this._options.getColumnFilter?.(def.id);
+        if (current?.value) input.value = String(current.value);
+
+        let debounceTimer = null;
+        input.addEventListener('input', () => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            const v = input.value.trim();
+            if (v) {
+              this._options.onColumnFilterChange?.(def.id, {
+                type: def.filterType ?? 'text',
+                field: def.field,
+                operator: 'contains',
+                value: v,
+              });
+            } else {
+              this._options.onColumnFilterClear?.(def.id);
+            }
+          }, 220);
+        });
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') { input.value = ''; this._options.onColumnFilterClear?.(def.id); }
+        });
+        cell.appendChild(input);
+      }
+      row.appendChild(cell);
+    }
+    container.appendChild(row);
   }
 
   _toggleFilterPopover(colId, def, anchorCell, trigger) {
@@ -621,7 +750,7 @@ export class HeaderRenderer {
     title.textContent = def.headerName;
     popover.appendChild(title);
 
-    if (meta.type !== 'select') {
+    if (meta.type !== 'select' && meta.type !== 'set') {
       const operatorSelect = document.createElement('select');
       operatorSelect.className = 'ag-header-filter-select';
       meta.operators.forEach((entry) => {
@@ -653,34 +782,147 @@ export class HeaderRenderer {
         this._renderFilterPopover(colId, def, anchorCell, trigger);
       });
     } else {
-      const select = document.createElement('select');
-      select.className = 'ag-header-filter-select ag-header-filter-select-multiple';
-      select.multiple = meta.multiple;
-      select.size = Math.min(Math.max(meta.choices.length, 3), 6);
-      const selectedValues = Array.isArray(value)
-        ? value.map(String)
-        : value == null || value === ''
-          ? []
-          : [String(value)];
+      // 엑셀식 세트/선택 필터 UI: 검색 입력창 + 전체선택 체크박스 + 스크롤 가능한 체크박스 목록
+      const container = document.createElement('div');
+      container.className = 'ag-header-filter-set-container';
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.gap = '8px';
+      container.style.padding = '4px 0';
+      container.style.width = '200px';
 
-      meta.choices.forEach((choice) => {
-        const option = document.createElement('option');
-        option.value = String(choice.value);
-        option.textContent = choice.label;
-        option.selected = selectedValues.includes(String(choice.value));
-        select.appendChild(option);
-      });
+      // 1. 검색창
+      const searchInput = document.createElement('input');
+      searchInput.type = 'search';
+      searchInput.className = 'ag-header-filter-input';
+      searchInput.placeholder = this._getLocaleText('grid.filter.search', 'Search...');
+      searchInput.style.marginBottom = '4px';
+      container.appendChild(searchInput);
 
-      select.addEventListener('change', () => {
-        const selected = [...select.selectedOptions].map((option) => option.value);
+      // 2. 전체선택 체크박스
+      const selectAllWrap = document.createElement('label');
+      selectAllWrap.className = 'ag-filter-checkbox-label';
+      selectAllWrap.style.display = 'flex';
+      selectAllWrap.style.alignItems = 'center';
+      selectAllWrap.style.gap = '6px';
+      selectAllWrap.style.fontWeight = 'bold';
+      selectAllWrap.style.cursor = 'pointer';
+
+      const selectAllCheck = document.createElement('input');
+      selectAllCheck.type = 'checkbox';
+      selectAllCheck.className = 'ag-filter-checkbox';
+      selectAllWrap.appendChild(selectAllCheck);
+      
+      const selectAllText = document.createElement('span');
+      selectAllText.textContent = this._getLocaleText('grid.filter.selectAll', '(Select All)');
+      selectAllWrap.appendChild(selectAllText);
+      container.appendChild(selectAllWrap);
+
+      // 3. 스크롤 가능한 항목 컨테이너
+      const listContainer = document.createElement('div');
+      listContainer.className = 'ag-filter-list-container';
+      listContainer.style.maxHeight = '150px';
+      listContainer.style.overflowY = 'auto';
+      listContainer.style.display = 'flex';
+      listContainer.style.flexDirection = 'column';
+      listContainer.style.gap = '4px';
+      listContainer.style.padding = '4px';
+      listContainer.style.border = '1px solid var(--ag-border, #e2e8f0)';
+      listContainer.style.borderRadius = '4px';
+      container.appendChild(listContainer);
+
+      const selectedValues = new Set(
+        Array.isArray(value)
+          ? value.map(String)
+          : value == null || value === ''
+            ? []
+            : [String(value)]
+      );
+
+      const commitChange = () => {
+        const selected = [...selectedValues];
         this._options.onColumnFilterChange?.(colId, {
-          type: 'select',
+          type: meta.type,
           field: def.field,
           operator: 'in',
           value: meta.multiple ? selected : selected[0] ?? '',
         });
+      };
+
+      const updateSelectAllState = () => {
+        const visibleChecks = [...listContainer.querySelectorAll('.ag-filter-checkbox')];
+        if (visibleChecks.length === 0) {
+          selectAllCheck.checked = false;
+          selectAllCheck.indeterminate = false;
+          return;
+        }
+        const checkedCount = visibleChecks.filter(c => c.checked).length;
+        selectAllCheck.checked = checkedCount === visibleChecks.length;
+        selectAllCheck.indeterminate = checkedCount > 0 && checkedCount < visibleChecks.length;
+      };
+
+      const renderList = (filterText = '') => {
+        listContainer.innerHTML = '';
+        const query = filterText.toLowerCase();
+        
+        const filteredChoices = meta.choices.filter((choice) =>
+          String(choice.label).toLowerCase().includes(query)
+        );
+
+        filteredChoices.forEach((choice) => {
+          const itemWrap = document.createElement('label');
+          itemWrap.className = 'ag-filter-checkbox-label';
+          itemWrap.style.display = 'flex';
+          itemWrap.style.alignItems = 'center';
+          itemWrap.style.gap = '6px';
+          itemWrap.style.cursor = 'pointer';
+
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.className = 'ag-filter-checkbox';
+          checkbox.value = String(choice.value);
+          checkbox.checked = selectedValues.has(String(choice.value));
+
+          checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+              selectedValues.add(checkbox.value);
+            } else {
+              selectedValues.delete(checkbox.value);
+            }
+            updateSelectAllState();
+            commitChange();
+          });
+
+          const text = document.createElement('span');
+          text.textContent = choice.label;
+
+          itemWrap.appendChild(checkbox);
+          itemWrap.appendChild(text);
+          listContainer.appendChild(itemWrap);
+        });
+      };
+
+      selectAllCheck.addEventListener('change', () => {
+        const visibleChecks = [...listContainer.querySelectorAll('.ag-filter-checkbox')];
+        visibleChecks.forEach((checkbox) => {
+          checkbox.checked = selectAllCheck.checked;
+          if (selectAllCheck.checked) {
+            selectedValues.add(checkbox.value);
+          } else {
+            selectedValues.delete(checkbox.value);
+          }
+        });
+        commitChange();
       });
-      popover.appendChild(select);
+
+      searchInput.addEventListener('input', () => {
+        renderList(searchInput.value);
+        updateSelectAllState();
+      });
+
+      renderList();
+      updateSelectAllState();
+      popover.appendChild(container);
     }
 
     const actions = document.createElement('div');
@@ -853,7 +1095,7 @@ export class HeaderRenderer {
       placeholder: def.filterPlaceholder ?? this._getLocaleText('sidePanel.filterPlaceholder', 'Filter {label}', {
         label: def.headerName,
       }),
-      choices: type === 'select' ? (this._options.getColumnFilterChoices?.(colId) ?? []) : [],
+      choices: type === 'select' || type === 'set' ? (this._options.getColumnFilterChoices?.(colId) ?? []) : [],
     };
   }
 
@@ -864,6 +1106,7 @@ export class HeaderRenderer {
       case 'date':
         return ['equals', 'notEquals', 'before', 'after', 'between'];
       case 'select':
+      case 'set':
         return ['in'];
       default:
         return ['contains', 'startsWith', 'endsWith', 'equals', 'notContains', 'notEquals'];
@@ -914,8 +1157,111 @@ export class HeaderRenderer {
     return getter(key, fallback, params);
   }
 
+  _showHeaderContextMenu(colId, def, event) {
+    this._closeHeaderContextMenu();
+
+    const menu = document.createElement('div');
+    menu.className = 'ag-context-menu ag-header-context-menu';
+    menu.style.position = 'fixed';
+    menu.style.zIndex = '9999';
+    menu.style.left = `${event.clientX}px`;
+    menu.style.top = `${event.clientY}px`;
+
+    const addItem = (label, action, disabled = false) => {
+      const item = document.createElement('div');
+      item.className = 'ag-context-menu-item' + (disabled ? ' ag-context-menu-item-disabled' : '');
+      item.textContent = label;
+      if (!disabled) {
+        item.addEventListener('click', () => {
+          this._closeHeaderContextMenu();
+          action();
+        });
+      }
+      menu.appendChild(item);
+    };
+
+    const addSep = () => {
+      const sep = document.createElement('div');
+      sep.className = 'ag-context-menu-separator';
+      menu.appendChild(sep);
+    };
+
+    const t = (key, fb) => this._getLocaleText(key, fb);
+
+    // 정렬
+    if (def.sortable !== false) {
+      addItem(t('grid.header.menu.sortAsc', 'Sort Ascending'), () =>
+        this._options.onSortClick?.({ colId, field: def.field, def, multiSort: false, direction: 'asc' })
+      );
+      addItem(t('grid.header.menu.sortDesc', 'Sort Descending'), () =>
+        this._options.onSortClick?.({ colId, field: def.field, def, multiSort: false, direction: 'desc' })
+      );
+      addItem(t('grid.header.menu.clearSort', 'Clear Sort'), () =>
+        this._options.onClearSort?.(colId)
+      );
+      addSep();
+    }
+
+    // 자동 크기 조정
+    addItem(t('grid.header.menu.autoSize', 'Auto-size Column'), () =>
+      this._options.onAutoSizeColumn?.(colId)
+    );
+    addItem(t('grid.header.menu.autoSizeAll', 'Auto-size All Columns'), () =>
+      this._options.onAutoSizeAllColumns?.()
+    );
+    addSep();
+
+    // 핀 고정
+    const state = this._columnModel.getState(colId);
+    if (state?.pinned !== 'left') {
+      addItem(t('grid.header.menu.pinLeft', 'Pin Left'), () =>
+        this._options.onColumnPin?.(colId, 'left')
+      );
+    }
+    if (state?.pinned !== 'right') {
+      addItem(t('grid.header.menu.pinRight', 'Pin Right'), () =>
+        this._options.onColumnPin?.(colId, 'right')
+      );
+    }
+    if (state?.pinned) {
+      addItem(t('grid.header.menu.unpin', 'Unpin'), () =>
+        this._options.onColumnPin?.(colId, null)
+      );
+    }
+    addSep();
+
+    // 컬럼 숨기기
+    addItem(t('grid.header.menu.hideColumn', 'Hide Column'), () =>
+      this._options.onColumnVisibilityChange?.(colId, false)
+    );
+
+    document.body.appendChild(menu);
+    this._activeHeaderContextMenu = menu;
+
+    const dismiss = (e) => {
+      if (!menu.contains(e.target)) {
+        this._closeHeaderContextMenu();
+        document.removeEventListener('pointerdown', dismiss, true);
+      }
+    };
+    document.addEventListener('pointerdown', dismiss, true);
+    this._dismissHeaderContextMenu = dismiss;
+  }
+
+  _closeHeaderContextMenu() {
+    if (this._activeHeaderContextMenu) {
+      this._activeHeaderContextMenu.remove();
+      this._activeHeaderContextMenu = null;
+    }
+    if (this._dismissHeaderContextMenu) {
+      document.removeEventListener('pointerdown', this._dismissHeaderContextMenu, true);
+      this._dismissHeaderContextMenu = null;
+    }
+  }
+
   destroy() {
     this._closeFilterPopover();
+    this._closeHeaderContextMenu();
     this._teardownResize();
   }
 }

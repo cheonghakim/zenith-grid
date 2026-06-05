@@ -141,10 +141,15 @@ export interface ColumnDef<Row = GridRow> {
   filterPlaceholder?: string | null;
   resizable?: boolean;
   reorderable?: boolean;
+  rowDrag?: boolean;
+  rowSpan?: number | ((params: { row: Row; def: ColumnDef<Row>; value: any }) => number);
+  colSpan?: number | ((params: { row: Row; def: ColumnDef<Row>; value: any }) => number);
   formatter?: ((value: any, row: Row) => any) | null;
   renderer?: ((params: CellRendererParams<Row>) => HTMLElement | string | number | null | undefined) | null;
   editable?: boolean | ((params: { row: Row; def: ColumnDef<Row> }) => boolean);
-  editor?: ((params: CellEditParams<Row>) => HTMLElement | null | undefined) | null;
+  editor?: 'select' | 'date' | 'textarea' | ((params: CellEditParams<Row>) => HTMLElement | null | undefined) | null;
+  editorOptions?: Record<string, any> | null;
+  options?: any[] | null;
   parser?: ((params: CellEditParams<Row>) => any) | null;
   validator?: ((params: CellValidationParams<Row>) => true | string | null | undefined) | null;
   headerRenderer?: ((def: ColumnDef<Row>) => HTMLElement | string | null | undefined) | null;
@@ -152,6 +157,16 @@ export interface ColumnDef<Row = GridRow> {
   cellClass?: string | null;
   headerClass?: string | null;
   children?: ColumnDef<Row>[];
+  /** 조건부 서식: 셀 값에 따라 class/style 반환 */
+  conditionalFormat?: ((value: any, row: Row) => { class?: string | string[]; style?: Partial<CSSStyleDeclaration> } | null | undefined) | null;
+  /** 셀 툴팁: true면 값 그대로, string이면 고정 텍스트, 함수면 동적 */
+  tooltip?: boolean | string | ((value: any, row: Row) => string | null | undefined) | null;
+  /** 집계 타입 (status bar, aggregate row에 사용) */
+  aggregate?: 'sum' | 'avg' | 'count' | 'min' | 'max' | ((values: number[], rows: Row[], def: ColumnDef<Row>) => any) | null;
+  /** 스파크라인 설정 (순수 SVG, 외부 라이브러리 불필요) */
+  sparkline?: { type?: 'line' | 'bar' | 'area'; field?: string; color?: string; width?: number; height?: number; align?: string } | null;
+  /** ECharts 셀 차트 설정 (echartsPlugin 필요) */
+  echart?: { type?: 'line' | 'bar' | 'area' | 'pie' | 'scatter'; dataField?: string; color?: string; height?: number } | null;
 }
 
 export interface ColumnState {
@@ -167,15 +182,15 @@ export interface ColumnSnapshot<Row = GridRow> {
   state: ColumnState;
 }
 
-export interface GridPlugin<Row = GridRow> {
+export interface GridPlugin {
   name: string;
   label?: string;
   description?: string;
   hooks?: Record<string, (...args: any[]) => any>;
 }
 
-export interface GridAvailablePlugin<Row = GridRow> {
-  plugin: GridPlugin<Row>;
+export interface GridAvailablePlugin {
+  plugin: GridPlugin;
   label?: string;
   description?: string;
   options?: Record<string, any>;
@@ -275,6 +290,7 @@ export interface GridOptions<Row = GridRow> {
   overscanBottom?: number;
   horizontalOverscan?: number;
   selectable?: boolean;
+  rowDragging?: boolean;
   selectionMode?: SelectionMode;
   isRowSelectable?: ((row: Row) => boolean) | null;
   displayMode?: GridDisplayMode;
@@ -282,8 +298,8 @@ export interface GridOptions<Row = GridRow> {
   getRowClassName?: ((row: Row) => string | string[] | null | undefined) | null;
   getRowStyle?: ((row: Row) => Record<string, string | number | null | undefined> | null | undefined) | null;
   hooks?: GridHooks<Row>;
-  availablePlugins?: GridAvailablePlugin<Row>[];
-  plugins?: GridAvailablePlugin<Row>[];
+  availablePlugins?: GridAvailablePlugin[];
+  plugins?: GridAvailablePlugin[];
   sidePanel?: SidePanelOptions;
   pagination?: PaginationOptions<Row>;
   infiniteScroll?: InfiniteScrollOptions<Row>;
@@ -302,6 +318,15 @@ export interface GridOptions<Row = GridRow> {
   renderErrorState?: ((context: GridOverlayRenderContext) => HTMLElement | string | null | undefined) | null;
   columnState?: any;
   columnStatePersistence?: Record<string, any>;
+  /** 상단에 고정할 행 목록 */
+  pinnedTopRows?: Row[];
+  /** 하단에 고정할 행 목록 */
+  pinnedBottomRows?: Row[];
+  /** Status Bar 설정 */
+  statusBar?: { enabled?: boolean };
+  worker?: { enabled?: boolean; url?: string; timeout?: number };
+  onSelectionChange?: ((payload: any) => void) | null;
+  onRowContextMenu?: ((payload: RowContextMenuPayload<Row>) => void) | null;
 }
 
 export interface GridFilterChoice {
@@ -352,11 +377,11 @@ export declare class GridCore<Row = GridRow> {
   getTreeState(): any;
   getRows(): Row[];
   getFlatRows(): Row[];
-  usePlugin(plugin: GridPlugin<Row>, options?: Record<string, any>): void;
+  usePlugin(plugin: GridPlugin, options?: Record<string, any>): void;
   unusePlugin(pluginName: string): void;
   hasPlugin(pluginName: string): boolean;
   getInstalledPlugins(): string[];
-  getAvailablePlugins(): GridAvailablePlugin<Row>[];
+  getAvailablePlugins(): GridAvailablePlugin[];
   setVariableRowHeight(enabled: boolean): void;
   setPaginationMode(mode: PaginationMode): void;
   setInfiniteScrollMode(mode: InfiniteMode): void;
@@ -387,6 +412,7 @@ export declare class GridCore<Row = GridRow> {
   downloadCsv(options?: CsvExportOptions): string;
   exportExcel(options?: ExcelExportOptions): string;
   downloadExcel(options?: ExcelExportOptions): string;
+  downloadXlsx?(options?: ExcelExportOptions): Promise<any>;
   copySelectionToClipboard(options?: ClipboardOptions): string;
   pasteFromClipboard(text: string, options?: ClipboardOptions): number;
   benchmarkLiveUpdates(options?: LiveBenchmarkOptions): Promise<LiveBenchmarkResult>;
@@ -394,27 +420,120 @@ export declare class GridCore<Row = GridRow> {
   loadColumnState(): Promise<void>;
   clearColumnState(): Promise<void>;
   setColumnWidth(colId: string, width: number): void;
+  autoSizeColumn(colId: string): void;
+  autoSizeAllColumns(): void;
   setColumnVisible(colId: string, visible: boolean): void;
   setColumnPinned(colId: string, pin: PinnedPosition): void;
   moveColumn(colId: string, toIndex: number, options?: { restrictToGroup?: boolean }): void;
   setLiveMaxRows(n: number): void;
+  /** 행 재정렬 */
+  moveRow(fromRowKey: GridKey, toRowKey: GridKey): void;
+  /** 집계 타입 설정 */
+  setColumnAggregate(colId: string, aggType: 'sum' | 'avg' | 'count' | 'min' | 'max' | null): void;
+  clearColumnAggregate(colId: string): void;
+  getAggregateResult(): Record<string, { value: any; type: string }>;
+  /** 행 고정 */
+  setPinnedTopRows(rows: GridRow[]): void;
+  setPinnedBottomRows(rows: GridRow[]): void;
+  /** 셀 범위 선택 */
+  clearRangeSelection(): void;
+  copyRangeToClipboard(): void;
+  getRangeSelectionState(): { start: { rowKey: string; colId: string } | null; end: { rowKey: string; colId: string } | null };
+  /** 인쇄 */
+  printGrid(): void;
+  /** Undo/Redo */
+  undo(): any;
+  redo(): any;
+  canUndo(): boolean;
+  canRedo(): boolean;
+  /** 고급 필터 */
+  setAdvancedFilter(filterTree: AdvancedFilterNode): void;
+  clearAdvancedFilter(): void;
+  /** Pivot */
+  enablePivot(config: PivotConfig): void;
+  disablePivot(): void;
+  getPivotConfig(): PivotConfig;
+  /** Master-Detail */
+  toggleDetail(rowKey: GridKey): void;
+  isDetailExpanded(rowKey: GridKey): boolean;
   destroy(): void;
 }
 
-export declare class DataStore<Row = GridRow> {}
-export declare class ViewModel<Row = GridRow> {}
-export declare class ColumnRegistry<Row = GridRow> {}
-export declare class Pipeline<Row = GridRow> {}
-export declare class GroupManager<Row = GridRow> {}
-export declare class TreeManager<Row = GridRow> {}
-export declare class PaginationManager<Row = GridRow> {}
-export declare class InfiniteScrollManager<Row = GridRow> {}
-export declare class LiveUpdateManager<Row = GridRow> {}
-export declare class PluginManager<Row = GridRow> {}
+export type AdvancedFilterOperator =
+  | 'contains' | 'notContains' | 'equals' | 'notEquals'
+  | 'startsWith' | 'endsWith' | 'empty' | 'notEmpty'
+  | 'greaterThan' | 'greaterThanOrEqual' | 'lessThan' | 'lessThanOrEqual'
+  | 'before' | 'after' | 'between';
+
+export type AdvancedFilterNode =
+  | { type: 'AND' | 'OR'; conditions: AdvancedFilterNode[] }
+  | { field: string; operator: AdvancedFilterOperator; value?: any; filterType?: string };
+
+export interface PivotConfig {
+  rowFields?: string[];
+  columnField?: string;
+  valueField?: string;
+  aggFunction?: 'sum' | 'avg' | 'count' | 'min' | 'max';
+}
+
+export declare class UndoRedoManager {
+  constructor(options?: { maxHistory?: number });
+  push(action: { rowKey: string; colId: string; oldValue: any; newValue: any }): void;
+  undo(applyFn?: (rowKey: string, colId: string, value: any) => void): any;
+  redo(applyFn?: (rowKey: string, colId: string, value: any) => void): any;
+  canUndo(): boolean;
+  canRedo(): boolean;
+  clear(): void;
+  destroy(): void;
+}
+
+export declare class AdvancedFilterManager {
+  constructor(options?: { onChanged?: () => void });
+  setFilter(filterTree: AdvancedFilterNode): void;
+  clearFilter(): void;
+  hasFilter(): boolean;
+  evaluate(row: GridRow): boolean;
+  destroy(): void;
+}
+
+export declare class PivotManager {
+  constructor(options?: { onChanged?: () => void });
+  enable(config: PivotConfig): void;
+  disable(): void;
+  isEnabled(): boolean;
+  getConfig(): PivotConfig & { enabled: boolean };
+  process(rows: GridRow[]): { pivotRows: GridRow[]; pivotColumnDefs: ColumnDef[] | null };
+  destroy(): void;
+}
+
+export declare class DataStore {}
+export declare class ViewModel {}
+export declare class ColumnRegistry {}
+export declare class Pipeline {}
+export declare class GroupManager {}
+export declare class TreeManager {}
+export declare class PaginationManager {}
+export declare class InfiniteScrollManager {}
+export declare class LiveUpdateManager {}
+export declare class PluginManager {}
 
 export declare function createGrid<Row = GridRow>(container: HTMLElement | string, options?: GridOptions<Row>): GridCore<Row>;
 
 export declare const uppercaseTeamPlugin: GridPlugin;
 export declare const scorePrefixPlugin: GridPlugin;
-export declare function createContextMenuPlugin<Row = GridRow>(options?: ContextMenuPluginOptions<Row>): GridPlugin<Row>;
+export declare function createContextMenuPlugin<Row = GridRow>(options?: ContextMenuPluginOptions<Row>): GridPlugin;
 export declare function createCsvShortcutPlugin(options?: CsvShortcutPluginOptions): GridPlugin;
+export declare function createXlsxExportPlugin(options?: { name?: string; fileName?: string }): GridPlugin;
+export declare function createSparklinePlugin(options?: { name?: string }): GridPlugin;
+export declare function useHighGridReact(options?: GridOptions): {
+  containerRef: { current: HTMLElement | null };
+  grid: GridCore | null;
+  getGrid: () => GridCore | null;
+  isReady: boolean;
+  state: { selectedKeys: Set<string>; selectionCount: number; isAllSelected: boolean; isSomeSelected: boolean; renderInfo: any; paginationState: any };
+  refresh: (...args: any[]) => any;
+  setRows: (...args: any[]) => any;
+  setColumns: (...args: any[]) => any;
+  setQuickFilter: (...args: any[]) => any;
+  on: (...args: any[]) => any;
+};

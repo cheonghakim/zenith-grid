@@ -142,6 +142,7 @@ export class FilterManager {
       case 'date':
         return this._matchDate(new Date(cellValue), value, operator);
       case 'select':
+      case 'set':
         return this._matchSelect(cellValue, value);
       default:
         return this._matchText(String(cellValue), String(value), operator);
@@ -193,8 +194,10 @@ export class FilterManager {
   }
 
   _matchSelect(cellValue, filterValues) {
-    if (!Array.isArray(filterValues)) return cellValue === filterValues;
-    return filterValues.includes(cellValue);
+    if (!Array.isArray(filterValues)) {
+      return cellValue == filterValues || String(cellValue) === String(filterValues);
+    }
+    return filterValues.some((v) => v == cellValue || String(v) === String(cellValue));
   }
 
   // ─── 조회 ──────────────────────────────────────────────────
