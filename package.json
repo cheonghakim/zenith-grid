@@ -1,6 +1,6 @@
 {
   "name": "highgrid",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Production-ready data grid library in vanilla JavaScript",
   "main": "dist/highgrid.umd.cjs",
   "module": "dist/highgrid.js",
