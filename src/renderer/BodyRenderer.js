@@ -170,7 +170,7 @@ export class BodyRenderer {
           );
           colIndex += 1;
         }
-        if (this._options.selectionEnabled) {
+        if (this._options.selectionEnabled && !this._options.isPivotEnabled?.()) {
           rowElement.appendChild(
             this._createSelectionCell(row, index - startIndex, colIndex),
           );
@@ -384,7 +384,11 @@ export class BodyRenderer {
   }
 
   _createSelectionCell(row, rowIndex, colIndex) {
+    const masterDetailActive = this._options.isMasterDetailEnabled
+      ? this._options.isMasterDetailEnabled()
+      : Boolean(this._options.onMasterDetailToggle);
     const hasMasterDetail = Boolean(
+      masterDetailActive &&
       this._options.onMasterDetailToggle &&
       row._type !== "group-header" &&
       row._type !== "tree-loading" &&
@@ -470,7 +474,7 @@ export class BodyRenderer {
 
   _buildStickyMeta(groups) {
     const stickyMeta = new Map();
-    const selectionOffset = this._options.selectionEnabled
+    const selectionOffset = (this._options.selectionEnabled && !this._options.isPivotEnabled?.())
       ? (this._options.selectionColumnWidth ?? 44)
       : 0;
 
@@ -942,7 +946,7 @@ export class BodyRenderer {
       }
 
       let colIndex = 0;
-      if (this._options.selectionEnabled) {
+      if (this._options.selectionEnabled && !this._options.isPivotEnabled?.()) {
         const sel = document.createElement("div");
         sel.className = "ag-cell ag-cell-pinned";
         sel.style.width = `${this._options.selectionColumnWidth ?? 44}px`;

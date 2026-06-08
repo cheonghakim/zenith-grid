@@ -354,6 +354,7 @@ export class GridCore {
       {
         selectionManager: this._selectionManager,
         selectionEnabled: options.selectable !== false,
+        isPivotEnabled: () => this._pivotManager.isEnabled(),
         selectionColumnWidth: this._masterDetailRenderer ? 68 : 44,
         onRowClick: ({ row, event }) => {
           if (options.selectable !== false && this._selectionManager.isSelectableRow(row)) {
@@ -444,13 +445,19 @@ export class GridCore {
         onRowDragEnd: () => this._rowDragManager.handleDragEnd(),
         getRangeSelectionManager: () => this._rangeSelectionManager,
         getAllLeafColumnDefs: () => this._columns.getVisibleLeafColumns().map((c) => c.def),
+        isMasterDetailEnabled: this._masterDetailRenderer
+          ? () => !this._pivotManager.isEnabled()
+          : null,
         getMasterDetailPanel: this._masterDetailRenderer
           ? (row) => {
+              if (this._pivotManager.isEnabled()) return null;
               try { return this._masterDetailRenderer(row, this); } catch { return null; }
             }
           : null,
         onMasterDetailToggle: this._masterDetailRenderer
-          ? (rowKey) => this.toggleDetail(rowKey)
+          ? (rowKey) => {
+              if (!this._pivotManager.isEnabled()) this.toggleDetail(rowKey);
+            }
           : null,
       }
     );
@@ -513,6 +520,11 @@ export class GridCore {
 
     void this._restoreColumnState();
     void this._initializeRemoteData();
+
+    this._handleBeforePrint = this._handleBeforePrint.bind(this);
+    this._handleAfterPrint = this._handleAfterPrint.bind(this);
+    window.addEventListener('beforeprint', this._handleBeforePrint);
+    window.addEventListener('afterprint', this._handleAfterPrint);
   }
 
   async refresh() {
@@ -1087,6 +1099,37 @@ export class GridCore {
   // ─── Print API ───────────────────────────────────────────
   printGrid() {
     window.print();
+  }
+
+  _handleBeforePrint() {
+    if (this._destroyed) return;
+    const { totalHeight } = this._viewModel.getVerticalRange();
+    const { totalWidth } = this._viewModel.getHorizontalRange();
+    const centerColumns = this._columns.getColumnsByPin().center;
+
+    const fullBundle = {
+      vertical: {
+        startIndex: 0,
+        endIndex: this._displayRows.length - 1,
+        offsetY: 0,
+        totalHeight,
+      },
+      horizontal: {
+        startColIndex: 0,
+        endColIndex: Math.max(0, centerColumns.length - 1),
+        offsetX: 0,
+        totalWidth,
+      },
+    };
+
+    this._headerRenderer.render(fullBundle);
+    this._bodyRenderer.render(this._displayRows, fullBundle);
+  }
+
+  _handleAfterPrint() {
+    if (this._destroyed) return;
+    this._headerRenderer.render(this._currentRangeBundle);
+    this._bodyRenderer.render(this._displayRows, this._currentRangeBundle);
   }
 
   getColumnFilterChoices(colId) {
@@ -1846,11 +1889,14 @@ export class GridCore {
     this._headerModel.destroy();
     this._viewModel.destroy();
     this._events.destroy();
+
+    window.removeEventListener('beforeprint', this._handleBeforePrint);
+    window.removeEventListener('afterprint', this._handleAfterPrint);
   }
 
   _syncColumnWidths() {
     const pinnedWidths = this._columns.getPinnedWidths();
-    const selectionWidth = this._options.selectable === false ? 0
+    const selectionWidth = (this._options.selectable === false || this._pivotManager.isEnabled()) ? 0
       : (this._masterDetailRenderer ? 68 : 44);
     this._dom.updateColumnWidths({
       leftWidth: pinnedWidths.leftWidth + selectionWidth,

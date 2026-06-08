@@ -889,6 +889,11 @@ export class HeaderRenderer {
     popover.setAttribute("aria-modal", "false");
     popover.tabIndex = -1;
 
+    // 그리드 루트의 테마 클래스를 팝오버에 전파 (body에 append되므로 직접 상속 불가)
+    const rootEl = this._dom.getRoot();
+    const themeClass = [...rootEl.classList].find((c) => c.startsWith("ag-theme-"));
+    if (themeClass) popover.classList.add(themeClass);
+
     const meta = this._resolveFilterMeta(def, colId);
     const activeFilter = this._options.getColumnFilter?.(colId);
     const operator = activeFilter?.operator ?? meta.defaultOperator;

@@ -119,6 +119,8 @@
    ─────────────────────────────────────────────────────────── */
 
 .ag-theme-dark {
+  color-scheme: dark;
+
   --ag-surface:              #12181f;
   --ag-surface-elevated:     rgba(22, 30, 40, 0.98);
   --ag-surface-muted:        #1a2330;
