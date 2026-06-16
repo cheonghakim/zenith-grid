@@ -614,7 +614,7 @@ const columns = [
 npm install highgrid
 ```
 
-컴포넌트 방식:
+**컴포넌트 방식:**
 
 ```vue
 <template>
@@ -629,10 +629,11 @@ npm install highgrid
 
 <script setup>
 import { HighGrid } from "highgrid/vue";
+import "highgrid/styles/grid.css";
 </script>
 ```
 
-Composable 방식:
+**Composable 방식:**
 
 ```vue
 <template>
@@ -642,6 +643,7 @@ Composable 방식:
 <script setup>
 import { ref, onMounted } from "vue";
 import { useHighGrid } from "highgrid/vue";
+import "highgrid/styles/grid.css";
 
 const containerRef = ref(null);
 const { grid, state, init, setRows } = useHighGrid(containerRef, {
@@ -652,6 +654,39 @@ const { grid, state, init, setRows } = useHighGrid(containerRef, {
 onMounted(() => init());
 </script>
 ```
+
+**Vue 2 지원:**
+
+HighGrid는 Vue 2.7+ 버전도 지원합니다. `highgrid/vue2`에서 import하세요:
+
+```vue
+<template>
+  <HighGrid :columns="columns" :rows="rows" row-key="id" />
+</template>
+
+<script>
+import { HighGrid } from "highgrid/vue2";
+import "highgrid/styles/grid.css";
+
+export default {
+  components: { HighGrid },
+  data() {
+    return {
+      columns: [
+        { id: "name", field: "name", headerName: "이름", width: 180 },
+        { id: "score", field: "score", headerName: "점수", width: 120 },
+      ],
+      rows: [
+        { id: 1, name: "Alice", score: 1200 },
+        { id: 2, name: "Bob", score: 980 },
+      ],
+    };
+  },
+};
+</script>
+```
+
+Vue 2 어댑터는 Options API를 사용하며 Vue 3와 동일한 컴포넌트 API(props, events, methods)를 제공합니다.
 
 ### 22. 테마 커스터마이징
 

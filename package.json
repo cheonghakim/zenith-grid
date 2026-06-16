@@ -18,6 +18,12 @@
       "import": "./dist/highgrid-vue.js",
       "default": "./dist/highgrid-vue.js"
     },
+    "./vue2": {
+      "types": "./dist/highgrid-vue2.d.ts",
+      "import": "./dist/highgrid-vue2.js",
+      "require": "./dist/highgrid-vue2.umd.cjs",
+      "default": "./dist/highgrid-vue2.js"
+    },
     "./react": {
       "import": "./src/adapters/react/index.js",
       "default": "./src/adapters/react/index.js"
@@ -30,7 +36,8 @@
     "build": "vite build",
     "build:demo": "vite build --config vite.demo.config.js",
     "build:vue": "vite build --config vite.vue.config.js",
-    "build:all": "npm run build && npm run build:vue",
+    "build:vue2": "node build-vue2.js",
+    "build:all": "npm run build && npm run build:vue && npm run build:vue2",
     "test": "vitest run --config vitest.config.js",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -39,7 +46,7 @@
   "peerDependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "vue": "^3.3.0"
+    "vue": "~2.7.10 || ^3.3.0"
   },
   "peerDependenciesMeta": {
     "vue": {

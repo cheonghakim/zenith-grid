@@ -608,7 +608,7 @@ const columns = [
 npm install highgrid
 ```
 
-Component usage:
+**Component usage:**
 
 ```vue
 <template>
@@ -623,10 +623,11 @@ Component usage:
 
 <script setup>
 import { HighGrid } from "highgrid/vue";
+import "highgrid/styles/grid.css";
 </script>
 ```
 
-Composable usage:
+**Composable usage:**
 
 ```vue
 <template>
@@ -636,6 +637,7 @@ Composable usage:
 <script setup>
 import { ref, onMounted } from "vue";
 import { useHighGrid } from "highgrid/vue";
+import "highgrid/styles/grid.css";
 
 const containerRef = ref(null);
 const { grid, state, init, setRows } = useHighGrid(containerRef, {
@@ -646,6 +648,39 @@ const { grid, state, init, setRows } = useHighGrid(containerRef, {
 onMounted(() => init());
 </script>
 ```
+
+**Vue 2 Support:**
+
+HighGrid also supports Vue 2.7+. Import from `highgrid/vue2` instead:
+
+```vue
+<template>
+  <HighGrid :columns="columns" :rows="rows" row-key="id" />
+</template>
+
+<script>
+import { HighGrid } from "highgrid/vue2";
+import "highgrid/styles/grid.css";
+
+export default {
+  components: { HighGrid },
+  data() {
+    return {
+      columns: [
+        { id: "name", field: "name", headerName: "Name", width: 180 },
+        { id: "score", field: "score", headerName: "Score", width: 120 },
+      ],
+      rows: [
+        { id: 1, name: "Alice", score: 1200 },
+        { id: 2, name: "Bob", score: 980 },
+      ],
+    };
+  },
+};
+</script>
+```
+
+The Vue 2 adapter uses Options API and provides the same component API as Vue 3 (props, events, methods).
 
 ### 22. Theming
 
