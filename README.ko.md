@@ -801,6 +801,8 @@ custom domain은 선택 사항입니다. 도메인을 쓰려면 GitHub Pages 설
 npm install highgrid
 ```
 
+**Hook 방식:**
+
 ```jsx
 import { useHighGrid } from "highgrid/react";
 import "highgrid/styles/grid.css";

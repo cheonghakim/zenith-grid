@@ -9,17 +9,20 @@ await build({
   configFile: false,
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/adapters/vue2/index.js'),
-      name: 'HighGridVue2',
-      fileName: 'highgrid-vue2',
-      formats: ['es', 'umd'],
+      entry: resolve(__dirname, 'src/adapters/react/index.js'),
+      name: 'HighGridReact',
+      fileName: 'highgrid-react',
+      formats: ['es', 'cjs'],
     },
     outDir: 'dist',
     emptyOutDir: false,
     rollupOptions: {
-      external: ['vue'],
+      external: ['react', 'react-dom'],
       output: {
-        globals: { vue: 'Vue' },
+        globals: {
+          react: 'React',
+          'react-dom': 'ReactDOM',
+        },
         assetFileNames: 'assets/[name][extname]',
       },
     },
@@ -27,8 +30,8 @@ await build({
 });
 
 copyFileSync(
-  resolve(__dirname, 'src/adapters/vue2/index.d.ts'),
-  resolve(__dirname, 'dist/highgrid-vue2.d.ts')
+  resolve(__dirname, 'src/adapters/react/index.d.ts'),
+  resolve(__dirname, 'dist/highgrid-react.d.ts')
 );
 
-console.log('✓ Vue2 adapter built successfully');
+console.log('✓ React adapter built successfully');

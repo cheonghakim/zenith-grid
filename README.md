@@ -783,11 +783,11 @@ A custom domain is optional. If you use one, configure it in GitHub Pages settin
 
 ### 28. React Adapter
 
-Install HighGrid and import the React hook.
-
 ```bash
 npm install highgrid
 ```
+
+**Hook usage:**
 
 ```jsx
 import { useHighGrid } from "highgrid/react";

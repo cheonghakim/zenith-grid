@@ -1,6 +1,6 @@
 {
   "name": "highgrid",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Production-ready data grid library in vanilla JavaScript",
   "main": "dist/highgrid.umd.cjs",
   "module": "dist/highgrid.js",
@@ -25,8 +25,10 @@
       "default": "./dist/highgrid-vue2.js"
     },
     "./react": {
-      "import": "./src/adapters/react/index.js",
-      "default": "./src/adapters/react/index.js"
+      "types": "./dist/highgrid-react.d.ts",
+      "import": "./dist/highgrid-react.js",
+      "require": "./dist/highgrid-react.cjs",
+      "default": "./dist/highgrid-react.js"
     },
     "./styles/grid.css": "./dist/assets/grid.css",
     "./styles/tokens.css": "./src/styles/tokens.css"
@@ -35,9 +37,10 @@
     "dev": "vite examples",
     "build": "vite build",
     "build:demo": "vite build --config vite.demo.config.js",
-    "build:vue": "vite build --config vite.vue.config.js",
+    "build:vue": "node build-vue3.js",
     "build:vue2": "node build-vue2.js",
-    "build:all": "npm run build && npm run build:vue && npm run build:vue2",
+    "build:react": "node build-react.js",
+    "build:all": "npm run build && npm run build:vue && npm run build:vue2 && npm run build:react",
     "test": "vitest run --config vitest.config.js",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
