@@ -30,7 +30,7 @@
       "require": "./dist/highgrid-react.cjs",
       "default": "./dist/highgrid-react.js"
     },
-    "./styles/grid.css": "./dist/assets/grid.css",
+    "./styles/grid.css": "./src/styles/grid.css",
     "./styles/tokens.css": "./src/styles/tokens.css"
   },
   "scripts": {
