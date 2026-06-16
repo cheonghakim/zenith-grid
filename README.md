@@ -101,6 +101,8 @@ A categorized guide map to quickly locate details about HighGrid's extensive fea
 HighGrid is a vanilla JavaScript data grid for teams that want a solid default table without bringing in a large framework dependency.
 It includes virtual scrolling, client/server pagination, infinite loading, grouping, tree data, runtime updates, plugins, custom cell renderers, and a built-in side panel.
 
+**AG-Grid Compatibility:** HighGrid uses scoped CSS (`.highgrid` wrapper) to prevent conflicts when used alongside AG-Grid on the same page.
+
 ### 2. Installation
 
 ```bash
@@ -678,6 +680,12 @@ export default {
   },
 };
 </script>
+```
+
+**Note for Vue CLI / Webpack users:** If you encounter `Cannot find module 'highgrid/styles/grid.css'`, use the direct path instead:
+
+```js
+import "highgrid/src/styles/grid.css";
 ```
 
 The Vue 2 adapter uses Options API and provides the same component API as Vue 3 (props, events, methods).

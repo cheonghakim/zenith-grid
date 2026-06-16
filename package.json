@@ -31,7 +31,9 @@
       "default": "./dist/highgrid-react.js"
     },
     "./styles/grid.css": "./src/styles/grid.css",
-    "./styles/tokens.css": "./src/styles/tokens.css"
+    "./styles/tokens.css": "./src/styles/tokens.css",
+    "./src/styles/grid.css": "./src/styles/grid.css",
+    "./src/styles/tokens.css": "./src/styles/tokens.css"
   },
   "scripts": {
     "dev": "vite examples",

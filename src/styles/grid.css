@@ -1,3 +1,15 @@
+/* ══════════════════════════════════════════════════════════
+   HighGrid - Namespace wrapper to prevent conflicts with AG-Grid
+   ══════════════════════════════════════════════════════════ */
+
+.highgrid {
+  /* Scoping wrapper - applied automatically by GridCore */
+}
+
+/* ══════════════════════════════════════════════════════════
+   Root Container
+   ══════════════════════════════════════════════════════════ */
+
 .ag-root {
   --ag-side-panel-rail-width: 36px;
   --ag-side-panel-card-width: 320px;

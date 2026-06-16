@@ -10,7 +10,7 @@ export class DOMRenderer {
   build() {
     if (this._built) return;
 
-    this._container.classList.add('ag-root');
+    this._container.classList.add('highgrid', 'ag-root');
     this._container.setAttribute('role', 'grid');
     this._container.setAttribute('aria-rowcount', '0');
     this._container.setAttribute('aria-colcount', '0');
@@ -390,7 +390,7 @@ export class DOMRenderer {
     }
     this._overlayActionHandler = null;
     this._container.innerHTML = '';
-    this._container.classList.remove('ag-root');
+    this._container.classList.remove('highgrid', 'ag-root');
     this._container.removeAttribute('role');
     this._container.removeAttribute('aria-rowcount');
     this._container.removeAttribute('aria-colcount');
