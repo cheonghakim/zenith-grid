@@ -46,7 +46,8 @@
     "test": "vitest run --config vitest.config.js",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:ci": "npm test && npm run test:e2e && npm run build:all"
+    "test:ci": "npm test && npm run test:e2e && npm run build:all",
+    "prepublishOnly": "npm run build:all"
   },
   "peerDependencies": {
     "react": "^18.0.0",
