@@ -1,4 +1,4 @@
-import { createSvgIcon } from "./IconFactory.js";
+﻿import { createSvgIcon } from "./IconFactory.js";
 
 export class BodyRenderer {
   constructor(domRenderer, columnModel, viewModel, options = {}) {
@@ -41,7 +41,7 @@ export class BodyRenderer {
     const container = this._dom.getRowsContainer();
     const now = performance.now?.() ?? Date.now();
     container.style.position = "relative";
-    const previousRows = Array.from(container.querySelectorAll(".ag-row")).map(
+    const previousRows = Array.from(container.querySelectorAll(".ck-high-grid-row")).map(
       (element) => ({
         key: element.dataset.rowKey,
         top: element.offsetTop,
@@ -73,7 +73,7 @@ export class BodyRenderer {
       if (!row) continue;
 
       const rowElement = document.createElement("div");
-      rowElement.className = "ag-row";
+      rowElement.className = "ck-high-grid-row";
       rowElement.dataset.rowKey = row._rowKey;
       rowElement.dataset.rowIndex = String(index - startIndex);
       rowElement.setAttribute("role", "row");
@@ -87,18 +87,18 @@ export class BodyRenderer {
         row._type !== "tree-loading"
       ) {
         rowElement.addEventListener("dragover", (event) => {
-          const draggingRow = container.querySelector(".ag-row-dragging");
+          const draggingRow = container.querySelector(".ck-high-grid-row-dragging");
           if (draggingRow && draggingRow !== rowElement) {
             event.preventDefault();
-            rowElement.classList.add("ag-row-drag-over");
+            rowElement.classList.add("ck-high-grid-row-drck-high-grid-over");
           }
         });
         rowElement.addEventListener("dragleave", () => {
-          rowElement.classList.remove("ag-row-drag-over");
+          rowElement.classList.remove("ck-high-grid-row-drck-high-grid-over");
         });
         rowElement.addEventListener("drop", (event) => {
           event.preventDefault();
-          rowElement.classList.remove("ag-row-drag-over");
+          rowElement.classList.remove("ck-high-grid-row-drck-high-grid-over");
           const fromRowKey = event.dataTransfer?.getData("text/plain");
           const toRowKey = row._rowKey;
           if (fromRowKey && fromRowKey !== toRowKey) {
@@ -110,7 +110,7 @@ export class BodyRenderer {
       const explicitHeight =
         this._options.getRowHeight?.(row) ?? row._rowHeight ?? null;
       if (this._viewModel.isVariableRowHeight()) {
-        rowElement.classList.add("ag-row-variable");
+        rowElement.classList.add("ck-high-grid-row-variable");
         if (explicitHeight != null) {
           rowElement.style.minHeight = `${explicitHeight}px`;
         }
@@ -119,11 +119,11 @@ export class BodyRenderer {
       }
 
       if (index % 2 === 1) {
-        rowElement.classList.add("ag-row-odd");
+        rowElement.classList.add("ck-high-grid-row-odd");
       }
 
       if (this._options.selectionManager?.isSelected?.(row._rowKey)) {
-        rowElement.classList.add("ag-row-selected");
+        rowElement.classList.add("ck-high-grid-row-selected");
       }
 
       this._options.hooks?.beforeRowRender?.({
@@ -140,7 +140,7 @@ export class BodyRenderer {
       });
 
       if (row._type === "detail") {
-        rowElement.classList.add("ag-row-detail");
+        rowElement.classList.add("ck-high-grid-row-detail");
         rowElement.style.height = `${row._rowHeight ?? 200}px`;
         rowElement.style.minHeight = `${row._rowHeight ?? 200}px`;
         const panel = this._options.getMasterDetailPanel?.(
@@ -153,14 +153,14 @@ export class BodyRenderer {
           rowElement.innerHTML = String(panel);
         }
       } else if (row._type === "group-header") {
-        rowElement.classList.add("ag-row-group");
+        rowElement.classList.add("ck-high-grid-row-group");
         rowElement.appendChild(this._createGroupCell(row, totalWidth));
       } else if (row._type === "tree-loading") {
-        rowElement.classList.add("ag-row-tree-loading");
+        rowElement.classList.add("ck-high-grid-row-tree-loading");
         rowElement.appendChild(this._createLoadingCell(totalWidth));
       } else {
         if (row._type === "tree-node") {
-          rowElement.classList.add("ag-row-tree");
+          rowElement.classList.add("ck-high-grid-row-tree");
         }
 
         let colIndex = 0;
@@ -274,7 +274,7 @@ export class BodyRenderer {
       }
     }
 
-    const nextRows = Array.from(container.querySelectorAll(".ag-row")).map(
+    const nextRows = Array.from(container.querySelectorAll(".ck-high-grid-row")).map(
       (element) => ({
         key: element.dataset.rowKey,
         top: element.offsetTop,
@@ -336,7 +336,7 @@ export class BodyRenderer {
 
     removedRows.forEach((entry) => {
       const ghost = entry.element.cloneNode(true);
-      ghost.classList.add("ag-row-exit-ghost");
+      ghost.classList.add("ck-high-grid-row-exit-ghost");
       ghost.style.position = "absolute";
       ghost.style.left = "0";
       ghost.style.top = `${entry.top}px`;
@@ -371,7 +371,7 @@ export class BodyRenderer {
   _createRowNumberCell(rowNumber, rowIndex) {
     const width = this._options.rowNumberWidth ?? 44;
     const cell = document.createElement("div");
-    cell.className = "ag-cell ag-row-number-cell";
+    cell.className = "ck-high-grid-cell ck-high-grid-row-number-cell";
     cell.setAttribute("role", "rowheader");
     cell.style.width = `${width}px`;
     cell.style.minWidth = `${width}px`;
@@ -398,7 +398,7 @@ export class BodyRenderer {
     const width = this._options.selectionColumnWidth ?? 44;
 
     const cell = document.createElement("div");
-    cell.className = "ag-cell ag-selection-cell ag-cell-pinned";
+    cell.className = "ck-high-grid-cell ck-high-grid-selection-cell ck-high-grid-cell-pinned";
     cell.setAttribute("role", "gridcell");
     cell.style.width = `${width}px`;
     cell.style.minWidth = `${width}px`;
@@ -414,7 +414,7 @@ export class BodyRenderer {
     if (hasMasterDetail) {
       const detailBtn = document.createElement("button");
       detailBtn.type = "button";
-      detailBtn.className = "ag-master-detail-toggle";
+      detailBtn.className = "ck-high-grid-master-detail-toggle";
       detailBtn.setAttribute("aria-label", "Toggle row detail");
       detailBtn.setAttribute(
         "aria-expanded",
@@ -432,7 +432,7 @@ export class BodyRenderer {
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.className = "ag-selection-checkbox";
+    checkbox.className = "ck-high-grid-selection-checkbox";
     checkbox.setAttribute("aria-label", `Select row ${row._rowKey}`);
     checkbox.checked =
       this._options.selectionManager?.isRowChecked?.(row) ?? false;
@@ -496,7 +496,7 @@ export class BodyRenderer {
 
   _createSpacer(width) {
     const spacer = document.createElement("div");
-    spacer.className = "ag-col-spacer";
+    spacer.className = "ck-high-grid-col-spacer";
     spacer.style.width = `${width}px`;
     spacer.style.minWidth = `${width}px`;
     return spacer;
@@ -504,18 +504,18 @@ export class BodyRenderer {
 
   _createGroupCell(row, totalWidth) {
     const cell = document.createElement("div");
-    cell.className = "ag-cell ag-group-cell";
+    cell.className = "ck-high-grid-cell ck-high-grid-group-cell";
     cell.style.width = `${totalWidth}px`;
     cell.style.minWidth = `${totalWidth}px`;
     cell.style.paddingLeft = `${12 + (row._groupDepth ?? 0) * 18}px`;
 
     const badge = document.createElement("span");
-    badge.className = "ag-row-kind-badge ag-row-kind-group";
+    badge.className = "ck-high-grid-row-kind-badge ck-high-grid-row-kind-group";
     badge.textContent = this._getLocaleText("grid.badges.group", "GROUP");
 
     const toggle = document.createElement("button");
     toggle.type = "button";
-    toggle.className = "ag-row-toggle";
+    toggle.className = "ck-high-grid-row-toggle";
     toggle.appendChild(
       this._createIcon(row._isExpanded ? "chevronDown" : "chevronRight"),
     );
@@ -526,7 +526,7 @@ export class BodyRenderer {
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.className = "ag-selection-checkbox";
+    checkbox.className = "ck-high-grid-selection-checkbox";
     checkbox.checked =
       this._options.selectionManager?.isRowChecked?.(row) ?? false;
     checkbox.indeterminate =
@@ -537,7 +537,7 @@ export class BodyRenderer {
     });
 
     const label = document.createElement("span");
-    label.className = "ag-group-label";
+    label.className = "ck-high-grid-group-label";
     label.textContent = `${row._groupField}: ${row._groupValue ?? "Empty"} (${row._childCount ?? 0})`;
 
     cell.appendChild(badge);
@@ -548,10 +548,10 @@ export class BodyRenderer {
     // 그룹 행 집계 표시
     if (row._aggregates && Object.keys(row._aggregates).length > 0) {
       const aggWrap = document.createElement("span");
-      aggWrap.className = "ag-group-aggregates";
+      aggWrap.className = "ck-high-grid-group-aggregates";
       for (const [, { value, type }] of Object.entries(row._aggregates)) {
         const chip = document.createElement("span");
-        chip.className = "ag-group-agg-chip";
+        chip.className = "ck-high-grid-group-agg-chip";
         const formatted =
           typeof value === "number"
             ? value % 1 !== 0
@@ -569,7 +569,7 @@ export class BodyRenderer {
 
   _createLoadingCell(totalWidth) {
     const cell = document.createElement("div");
-    cell.className = "ag-cell ag-loading-cell";
+    cell.className = "ck-high-grid-cell ck-high-grid-loading-cell";
     cell.style.width = `${totalWidth}px`;
     cell.style.minWidth = `${totalWidth}px`;
     cell.textContent = this._getLocaleText(
@@ -601,7 +601,7 @@ export class BodyRenderer {
     }
 
     const cell = document.createElement("div");
-    cell.className = "ag-cell";
+    cell.className = "ck-high-grid-cell";
     cell.dataset.colId = def.id;
     cell.dataset.gridFocusable = "cell";
     cell.dataset.rowIndex = String(rowIndex);
@@ -675,7 +675,7 @@ export class BodyRenderer {
     }
 
     if (stickyStyle) {
-      cell.classList.add("ag-cell-pinned");
+      cell.classList.add("ck-high-grid-cell-pinned");
       if (stickyStyle.left != null) cell.style.left = `${stickyStyle.left}px`;
       if (stickyStyle.right != null)
         cell.style.right = `${stickyStyle.right}px`;
@@ -690,7 +690,7 @@ export class BodyRenderer {
     ) {
       const handle = document.createElement("button");
       handle.type = "button";
-      handle.className = "ag-row-drag-handle";
+      handle.className = "ck-high-grid-row-drck-high-grid-handle";
       handle.draggable = true;
       handle.style.cursor = "grab";
       handle.style.marginRight = "8px";
@@ -699,23 +699,23 @@ export class BodyRenderer {
       handle.style.border = "none";
       handle.style.background = "none";
       handle.style.padding = "0";
-      handle.style.color = "var(--ag-text-muted, #64748b)";
+      handle.style.color = "var(--ck-high-grid-text-muted, #64748b)";
       handle.appendChild(createSvgIcon("dragVertical", 14));
 
       handle.addEventListener("dragstart", (event) => {
         event.dataTransfer?.setData("text/plain", row._rowKey);
-        const rowEl = handle.closest(".ag-row");
-        rowEl?.classList.add("ag-row-dragging");
+        const rowEl = handle.closest(".ck-high-grid-row");
+        rowEl?.classList.add("ck-high-grid-row-dragging");
         this._options.onRowDragStart?.({ rowKey: row._rowKey });
       });
 
       handle.addEventListener("dragend", () => {
-        const rowEl = handle.closest(".ag-row");
-        rowEl?.classList.remove("ag-row-dragging");
-        const container = handle.closest(".ag-rows-container");
+        const rowEl = handle.closest(".ck-high-grid-row");
+        rowEl?.classList.remove("ck-high-grid-row-dragging");
+        const container = handle.closest(".ck-high-grid-rows-container");
         container
-          ?.querySelectorAll(".ag-row-drag-over")
-          .forEach((el) => el.classList.remove("ag-row-drag-over"));
+          ?.querySelectorAll(".ck-high-grid-row-drck-high-grid-over")
+          .forEach((el) => el.classList.remove("ck-high-grid-row-drck-high-grid-over"));
         this._options.onRowDragEnd?.();
       });
 
@@ -743,7 +743,7 @@ export class BodyRenderer {
       def.id,
     );
     if (validationError) {
-      cell.classList.add("ag-cell-invalid");
+      cell.classList.add("ck-high-grid-cell-invalid");
       cell.setAttribute("aria-invalid", "true");
       cell.title = String(validationError);
     }
@@ -757,7 +757,7 @@ export class BodyRenderer {
         cell.addEventListener("mouseenter", () => {
           showTimer = setTimeout(() => {
             tooltipEl = document.createElement("div");
-            tooltipEl.className = "ag-rich-tooltip";
+            tooltipEl.className = "ck-high-grid-rich-tooltip";
             const content = def.tooltipComponent({ value, row, def });
             if (content instanceof HTMLElement) {
               tooltipEl.appendChild(content);
@@ -799,26 +799,26 @@ export class BodyRenderer {
           allLeafCols,
         )
       ) {
-        cell.classList.add("ag-cell-range-selected");
+        cell.classList.add("ck-high-grid-cell-range-selected");
       }
     }
 
     if (this._viewModel.isVariableRowHeight()) {
-      cell.classList.add("ag-cell-variable");
+      cell.classList.add("ck-high-grid-cell-variable");
     }
 
     if (row._type === "tree-node" && def._isFirstColumn) {
       cell.style.paddingLeft = `${12 + (row._depth ?? 0) * 18}px`;
 
       const badge = document.createElement("span");
-      badge.className = "ag-row-kind-badge ag-row-kind-tree";
+      badge.className = "ck-high-grid-row-kind-badge ck-high-grid-row-kind-tree";
       badge.textContent = this._getLocaleText("grid.badges.tree", "TREE");
       cell.appendChild(badge);
 
       if (row._hasChildren) {
         const toggle = document.createElement("button");
         toggle.type = "button";
-        toggle.className = "ag-row-toggle";
+        toggle.className = "ck-high-grid-row-toggle";
         toggle.appendChild(
           this._createIcon(row._isExpanded ? "chevronDown" : "chevronRight"),
         );
@@ -829,7 +829,7 @@ export class BodyRenderer {
         cell.appendChild(toggle);
       } else {
         const spacer = document.createElement("span");
-        spacer.className = "ag-row-toggle ag-row-toggle-spacer";
+        spacer.className = "ck-high-grid-row-toggle ck-high-grid-row-toggle-spacer";
         cell.appendChild(spacer);
       }
     }
@@ -843,13 +843,13 @@ export class BodyRenderer {
         cell.appendChild(rendered);
       } else if (rendered != null) {
         const text = document.createElement("span");
-        text.className = "ag-cell-text";
+        text.className = "ck-high-grid-cell-text";
         text.textContent = String(rendered);
         cell.appendChild(text);
       }
     } else {
       const text = document.createElement("span");
-      text.className = "ag-cell-text";
+      text.className = "ck-high-grid-cell-text";
       text.textContent = renderedValue == null ? "" : String(renderedValue);
       cell.appendChild(text);
     }
@@ -893,7 +893,7 @@ export class BodyRenderer {
     // 채우기 핸들 (편집 가능한 셀에만)
     if (this._options.fillHandle && def.editable !== false) {
       const handle = document.createElement("div");
-      handle.className = "ag-fill-handle";
+      handle.className = "ck-high-grid-fill-handle";
       handle.addEventListener("mousedown", (event) => {
         event.stopPropagation();
         event.preventDefault();
@@ -936,19 +936,19 @@ export class BodyRenderer {
 
     rows.forEach((row, index) => {
       const rowEl = document.createElement("div");
-      rowEl.className = `ag-row ag-pinned-row ag-pinned-row-${position}`;
+      rowEl.className = `ck-high-grid-row ck-high-grid-pinned-row ck-high-grid-pinned-row-${position}`;
       rowEl.dataset.rowKey = row._rowKey ?? `pinned-${position}-${index}`;
       rowEl.style.height = `${rowHeight}px`;
       rowEl.setAttribute("role", "row");
 
       if (row._type === "aggregate") {
-        rowEl.classList.add("ag-row-aggregate");
+        rowEl.classList.add("ck-high-grid-row-aggregate");
       }
 
       let colIndex = 0;
       if (this._options.selectionEnabled && !this._options.isPivotEnabled?.()) {
         const sel = document.createElement("div");
-        sel.className = "ag-cell ag-cell-pinned";
+        sel.className = "ck-high-grid-cell ck-high-grid-cell-pinned";
         sel.style.width = `${this._options.selectionColumnWidth ?? 44}px`;
         sel.style.minWidth = `${this._options.selectionColumnWidth ?? 44}px`;
         rowEl.appendChild(sel);
@@ -992,14 +992,14 @@ export class BodyRenderer {
     if (!container) return;
 
     // 기존 하이라이트 제거
-    container.querySelectorAll(".ag-cell-range-selected").forEach((el) => {
-      el.classList.remove("ag-cell-range-selected");
+    container.querySelectorAll(".ck-high-grid-cell-range-selected").forEach((el) => {
+      el.classList.remove("ck-high-grid-cell-range-selected");
     });
 
     if (!rangeManager?.hasRange()) return;
 
-    container.querySelectorAll(".ag-cell[data-col-id]").forEach((cell) => {
-      const rowEl = cell.closest(".ag-row");
+    container.querySelectorAll(".ck-high-grid-cell[data-col-id]").forEach((cell) => {
+      const rowEl = cell.closest(".ck-high-grid-row");
       const rowKey = rowEl?.dataset.rowKey;
       const colId = cell.dataset.colId;
       if (
@@ -1007,7 +1007,7 @@ export class BodyRenderer {
         colId &&
         rangeManager.isInRange(rowKey, colId, this._currentRows, allLeafCols)
       ) {
-        cell.classList.add("ag-cell-range-selected");
+        cell.classList.add("ck-high-grid-cell-range-selected");
       }
     });
   }

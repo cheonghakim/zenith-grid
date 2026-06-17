@@ -1,4 +1,4 @@
-:root, body[data-theme="light"] {
+﻿:root, body[data-theme="light"] {
   color-scheme: light;
   --bg-main: #f8fafc;
   --panel-bg: #ffffff;
@@ -721,163 +721,163 @@ button.btn-xs {
 /* -------------------------------------------------------------
    ★ HighGrid 핵심 스타일 오버라이드 (깨짐 없는 다크/라이트 테마 통합) ★
    ------------------------------------------------------------- */
-.ag-root, .highgrid-container {
+.ck-high-grid-root, .highgrid-container {
   background: var(--grid-bg) !important;
   color: var(--grid-text) !important;
   border-color: var(--panel-border) !important;
 }
 
-.ag-header, .highgrid-header {
+.ck-high-grid-header, .highgrid-header {
   background: var(--grid-header-bg) !important;
   border-bottom: 1px solid var(--grid-cell-border) !important;
 }
 
-.ag-header-cell, .highgrid-header-cell, .ag-header-span-placeholder {
+.ck-high-grid-header-cell, .highgrid-header-cell, .ck-high-grid-header-span-placeholder {
   background: var(--grid-header-bg) !important;
   color: var(--grid-text-muted) !important;
   border-right: 1px solid var(--grid-cell-border) !important;
 }
 
-.ag-header-group-cell {
+.ck-high-grid-header-group-cell {
   background: var(--grid-header-bg) !important;
   color: var(--grid-text) !important;
   border-bottom: 2px solid var(--accent-blue) !important;
   border-right: 1px solid var(--grid-cell-border) !important;
 }
 
-.ag-row-number-header {
+.ck-high-grid-row-number-header {
   background: var(--grid-header-bg) !important;
   border-right-color: var(--grid-cell-border) !important;
   color: var(--grid-text-muted) !important;
 }
 
-.ag-row-number-cell {
+.ck-high-grid-row-number-cell {
   background: var(--grid-bg) !important;
   border-right-color: var(--grid-cell-border) !important;
 }
 
-.ag-row:hover .ag-row-number-cell {
+.ck-high-grid-row:hover .ck-high-grid-row-number-cell {
   background: var(--grid-row-hover) !important;
 }
 
-.ag-row, .highgrid-row {
+.ck-high-grid-row, .highgrid-row {
   background: var(--grid-bg) !important;
   border-bottom: 1px solid var(--grid-cell-border) !important;
 }
 
-.ag-row:hover, .highgrid-row:hover {
+.ck-high-grid-row:hover, .highgrid-row:hover {
   background: var(--grid-row-hover) !important;
 }
 
-/* 선택 행은 별도 오버라이드 (ag-row !important 에 덮이지 않도록) */
-.ag-row-selected {
+/* 선택 행은 별도 오버라이드 (ck-high-grid-row !important 에 덮이지 않도록) */
+.ck-high-grid-row-selected {
   background: var(--grid-row-selected, rgba(37, 99, 235, 0.08)) !important;
   box-shadow:
     inset 3px 0 0 var(--accent-blue),
     inset 0 0 0 1px rgba(59, 130, 246, 0.15) !important;
 }
 
-.ag-row-selected:hover {
+.ck-high-grid-row-selected:hover {
   background: var(--grid-row-selected-hover, rgba(37, 99, 235, 0.12)) !important;
 }
 
-.ag-cell, .highgrid-cell {
+.ck-high-grid-cell, .highgrid-cell {
   color: var(--grid-text) !important;
   border-right: 1px solid var(--grid-cell-border) !important;
   background: transparent !important;
 }
 
-.ag-header-cell-pinned,
-.ag-cell-pinned {
+.ck-high-grid-header-cell-pinned,
+.ck-high-grid-cell-pinned {
   box-shadow: 1px 0 0 var(--grid-cell-border-strong) !important;
 }
 
-.ag-header-cell-pinned[style*="right"],
-.ag-cell-pinned[style*="right"] {
+.ck-high-grid-header-cell-pinned[style*="right"],
+.ck-high-grid-cell-pinned[style*="right"] {
   box-shadow: -1px 0 0 var(--grid-cell-border-strong) !important;
 }
 
 /* 고정 행 */
-.ag-pinned-top-rows,
-.ag-pinned-bottom-rows {
+.ck-high-grid-pinned-top-rows,
+.ck-high-grid-pinned-bottom-rows {
   background: var(--grid-bg) !important;
 }
 
 /* 오버레이 */
-.ag-overlay-card {
+.ck-high-grid-overlay-card {
   background: var(--panel-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
-.ag-overlay-action {
+.ck-high-grid-overlay-action {
   background: var(--panel-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
-.ag-overlay-skeleton-line {
+.ck-high-grid-overlay-skeleton-line {
   background: linear-gradient(90deg, var(--panel-border), var(--grid-header-bg), var(--panel-border)) !important;
   background-size: 200% 100% !important;
 }
 
 /* 컨텍스트 메뉴 */
-.ag-context-menu {
+.ck-high-grid-context-menu {
   background: var(--grid-popup-bg) !important;
   border-color: var(--panel-border) !important;
   box-shadow: var(--grid-popup-shadow) !important;
   color: var(--text-main) !important;
 }
 
-.ag-context-menu-item {
+.ck-high-grid-context-menu-item {
   color: var(--text-main) !important;
 }
 
-.ag-context-menu-item:hover:not(:disabled),
-.ag-context-menu-item:focus-visible {
+.ck-high-grid-context-menu-item:hover:not(:disabled),
+.ck-high-grid-context-menu-item:focus-visible {
   background: var(--accent-soft) !important;
 }
 
 /* 필터 팝오버 */
-.ag-header-filter-popover {
+.ck-high-grid-header-filter-popover {
   background: var(--grid-popup-bg) !important;
   border-color: var(--panel-border) !important;
   box-shadow: var(--grid-popup-shadow) !important;
   color: var(--text-main) !important;
 }
 
-.ag-header-filter-popover-title {
+.ck-high-grid-header-filter-popover-title {
   color: var(--text-main) !important;
 }
 
-.ag-header-filter-input,
-.ag-header-filter-select,
-.ag-header-filter-select-multiple {
+.ck-high-grid-header-filter-input,
+.ck-high-grid-header-filter-select,
+.ck-high-grid-header-filter-select-multiple {
   background: var(--panel-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
-.ag-header-filter-action {
+.ck-high-grid-header-filter-action {
   background: var(--panel-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
 /* 인라인 필터 행 */
-.ag-filter-row {
+.ck-high-grid-filter-row {
   background: var(--grid-header-bg) !important;
   border-bottom-color: var(--grid-cell-border) !important;
 }
 
-.ag-filter-row-input {
+.ck-high-grid-filter-row-input {
   background: var(--panel-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
 /* 인피니트 로더 */
-.ag-infinite-loader {
+.ck-high-grid-infinite-loader {
   background: var(--grid-popup-bg) !important;
   border-color: var(--panel-border) !important;
   box-shadow: var(--grid-popup-shadow) !important;
@@ -885,157 +885,157 @@ button.btn-xs {
 }
 
 /* 라이브 배너 */
-.ag-live-banner {
+.ck-high-grid-live-banner {
   background: var(--panel-bg) !important;
   border-bottom-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
 /* 페이지네이션 영역 */
-.ag-footer {
+.ck-high-grid-footer {
   background: var(--panel-bg) !important;
   border-top-color: var(--panel-border) !important;
 }
 
-.ag-footer-summary {
+.ck-high-grid-footer-summary {
   color: var(--text-muted) !important;
 }
 
-.ag-footer-button {
+.ck-high-grid-footer-button {
   background: linear-gradient(180deg, var(--grid-btn-bg-start, #ffffff), var(--grid-btn-bg-end, #f7f9fc)) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
-.ag-footer-button:hover:not(:disabled) {
+.ck-high-grid-footer-button:hover:not(:disabled) {
   background: var(--grid-row-hover) !important;
 }
 
 /* 마스터-디테일 패널 */
-.ag-row-detail {
+.ck-high-grid-row-detail {
   background: var(--grid-detail-bg) !important;
   border-bottom-color: var(--grid-detail-border) !important;
   color: var(--grid-detail-text) !important;
 }
 
 /* 사이드 패널 관련 오버라이드 (그레이/슬레이트 통일) */
-.ag-side-panel-tab {
+.ck-high-grid-side-panel-tab {
   background: var(--grid-side-tab-bg) !important;
   color: var(--grid-text-muted) !important;
   border-color: var(--panel-border) !important;
 }
 
-.ag-side-panel-tab[data-active="true"] {
+.ck-high-grid-side-panel-tab[data-active="true"] {
   background: var(--accent-blue) !important;
   color: #ffffff !important;
   border-color: var(--accent-blue) !important;
 }
 
-.ag-side-panel-card {
+.ck-high-grid-side-panel-card {
   background: var(--grid-side-card-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--grid-text) !important;
 }
 
-.ag-side-panel-header {
+.ck-high-grid-side-panel-header {
   background: var(--grid-header-bg) !important;
   border-bottom: 1px solid var(--panel-border) !important;
 }
 
-.ag-side-panel-row, .ag-side-panel-field, .ag-side-panel-block {
+.ck-high-grid-side-panel-row, .ck-high-grid-side-panel-field, .ck-high-grid-side-panel-block {
   background: var(--grid-side-item-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--grid-text) !important;
 }
 
-.ag-side-panel-checkbox, .ag-side-panel-checkbox span, .ag-side-panel-copy strong {
+.ck-high-grid-side-panel-checkbox, .ck-high-grid-side-panel-checkbox span, .ck-high-grid-side-panel-copy strong {
   color: var(--grid-text) !important;
 }
 
-.ag-side-panel-copy span {
+.ck-high-grid-side-panel-copy span {
   color: var(--grid-text-muted) !important;
 }
 
-.ag-side-panel-select {
+.ck-high-grid-side-panel-select {
   background: var(--grid-bg) !important;
   color: var(--grid-text) !important;
   border-color: var(--panel-border) !important;
 }
 
-.ag-side-panel-field input,
-.ag-side-panel-select-multiple {
+.ck-high-grid-side-panel-field input,
+.ck-high-grid-side-panel-select-multiple {
   background: var(--grid-bg) !important;
   color: var(--grid-text) !important;
   border-color: var(--panel-border) !important;
 }
 
-.ag-side-panel-empty {
+.ck-high-grid-side-panel-empty {
   background: var(--grid-header-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--grid-text-muted) !important;
 }
 
 /* 사이드 패널 버튼 (Close / Action / Toggle) */
-.ag-side-panel-close,
-.ag-side-panel-action,
-.ag-side-panel-toggle {
+.ck-high-grid-side-panel-close,
+.ck-high-grid-side-panel-action,
+.ck-high-grid-side-panel-toggle {
   background: var(--grid-side-item-bg, #f8fafc) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
-.ag-side-panel-action:hover,
-.ag-side-panel-toggle:hover,
-.ag-side-panel-close:hover {
+.ck-high-grid-side-panel-action:hover,
+.ck-high-grid-side-panel-toggle:hover,
+.ck-high-grid-side-panel-close:hover {
   background: var(--grid-row-hover) !important;
 }
 
-.ag-side-panel-toggle[data-active="true"] {
+.ck-high-grid-side-panel-toggle[data-active="true"] {
   background: var(--accent-blue) !important;
   border-color: var(--accent-blue) !important;
   color: #ffffff !important;
 }
 
-.ag-cell-editor {
+.ck-high-grid-cell-editor {
   background: var(--panel-bg) !important;
   color: var(--text-main) !important;
   border-color: var(--accent-border) !important;
 }
 
 /* 고급 필터 다이얼로그 */
-.ag-advanced-filter-dialog {
+.ck-high-grid-advanced-filter-dialog {
   background: var(--panel-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
 /* 뷰포트 하얀 배경 깨짐 강제 수정 */
-.ag-body-viewport, .ag-body-container, .ag-virtual-canvas, .ag-header-center-viewport, .ag-header-left-pinned, .ag-header-right-pinned {
+.ck-high-grid-body-viewport, .ck-high-grid-body-container, .ck-high-grid-virtual-canvas, .ck-high-grid-header-center-viewport, .ck-high-grid-header-left-pinned, .ck-high-grid-header-right-pinned {
   background: var(--grid-bg) !important;
   background-color: var(--grid-bg) !important;
 }
 
-.ag-body-viewport,
+.ck-high-grid-body-viewport,
 .benchmark-log,
 .event-log {
   scrollbar-width: thin;
   scrollbar-color: var(--grid-scrollbar-thumb) transparent;
 }
 
-.ag-body-viewport::-webkit-scrollbar,
+.ck-high-grid-body-viewport::-webkit-scrollbar,
 .benchmark-log::-webkit-scrollbar,
 .event-log::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-.ag-body-viewport::-webkit-scrollbar-track,
+.ck-high-grid-body-viewport::-webkit-scrollbar-track,
 .benchmark-log::-webkit-scrollbar-track,
 .event-log::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.ag-body-viewport::-webkit-scrollbar-thumb,
+.ck-high-grid-body-viewport::-webkit-scrollbar-thumb,
 .benchmark-log::-webkit-scrollbar-thumb,
 .event-log::-webkit-scrollbar-thumb {
   background: var(--grid-scrollbar-thumb);
@@ -1044,7 +1044,7 @@ button.btn-xs {
   background-clip: padding-box;
 }
 
-.ag-body-viewport::-webkit-scrollbar-thumb:hover,
+.ck-high-grid-body-viewport::-webkit-scrollbar-thumb:hover,
 .benchmark-log::-webkit-scrollbar-thumb:hover,
 .event-log::-webkit-scrollbar-thumb:hover {
   background: var(--grid-scrollbar-thumb-hover);
@@ -1052,7 +1052,7 @@ button.btn-xs {
 }
 
 /* 트리 및 마스터디테일 화살표 버튼 투명화 및 스타일링 */
-.ag-row-toggle, .ag-master-detail-toggle {
+.ck-high-grid-row-toggle, .ck-high-grid-master-detail-toggle {
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
@@ -1071,33 +1071,33 @@ button.btn-xs {
   transition: background-color 0.15s ease;
 }
 
-.ag-row-toggle:hover, .ag-master-detail-toggle:hover {
+.ck-high-grid-row-toggle:hover, .ck-high-grid-master-detail-toggle:hover {
   background: var(--grid-row-hover) !important;
 }
 
-.ag-row-toggle svg, .ag-master-detail-toggle svg {
+.ck-high-grid-row-toggle svg, .ck-high-grid-master-detail-toggle svg {
   width: 17px !important;
   height: 17px !important;
   color: var(--grid-text) !important;
 }
 
 /* 라이브러리 내장 다크 테마 토큰 매핑 */
-.ag-theme-dark {
-  --ag-surface:              var(--grid-bg);
-  --ag-surface-elevated:     var(--panel-bg);
-  --ag-surface-muted:        var(--grid-header-bg);
-  --ag-border:               var(--panel-border);
-  --ag-border-strong:        var(--grid-cell-border-strong);
-  --ag-border-subtle:        var(--grid-cell-border);
-  --ag-header-bg:            var(--grid-header-bg);
-  --ag-header-border:        var(--grid-cell-border);
-  --ag-ink:                  var(--grid-text);
-  --ag-ink-muted:            var(--grid-text-muted);
-  --ag-accent:               var(--accent-blue);
-  --ag-accent-soft:          var(--accent-soft);
-  --ag-row-hover-bg:         var(--grid-row-hover);
-  --ag-row-selected-bg:      var(--grid-row-selected);
-  --ag-overlay-bg:           rgba(11, 15, 23, 0.85);
+.ck-high-grid-theme-dark {
+  --ck-high-grid-surface:              var(--grid-bg);
+  --ck-high-grid-surface-elevated:     var(--panel-bg);
+  --ck-high-grid-surface-muted:        var(--grid-header-bg);
+  --ck-high-grid-border:               var(--panel-border);
+  --ck-high-grid-border-strong:        var(--grid-cell-border-strong);
+  --ck-high-grid-border-subtle:        var(--grid-cell-border);
+  --ck-high-grid-header-bg:            var(--grid-header-bg);
+  --ck-high-grid-header-border:        var(--grid-cell-border);
+  --ck-high-grid-ink:                  var(--grid-text);
+  --ck-high-grid-ink-muted:            var(--grid-text-muted);
+  --ck-high-grid-accent:               var(--accent-blue);
+  --ck-high-grid-accent-soft:          var(--accent-soft);
+  --ck-high-grid-row-hover-bg:         var(--grid-row-hover);
+  --ck-high-grid-row-selected-bg:      var(--grid-row-selected);
+  --ck-high-grid-overlay-bg:           rgba(11, 15, 23, 0.85);
 }
 
 /* ── 인쇄 레이아웃 ─────────────────────────────────────── */
@@ -1135,11 +1135,11 @@ button.btn-xs {
     display: block !important;
   }
 
-  /* ag-has-side-panel 의 margin-right 제거 */
-  .ag-root.ag-has-side-panel .ag-body-viewport,
-  .ag-root.ag-has-side-panel .ag-footer,
-  .ag-root.ag-has-side-panel .ag-live-banner,
-  .ag-root.ag-has-side-panel .ag-header {
+  /* ck-high-grid-has-side-panel 의 margin-right 제거 */
+  .ck-high-grid-root.ck-high-grid-has-side-panel .ck-high-grid-body-viewport,
+  .ck-high-grid-root.ck-high-grid-has-side-panel .ck-high-grid-footer,
+  .ck-high-grid-root.ck-high-grid-has-side-panel .ck-high-grid-live-banner,
+  .ck-high-grid-root.ck-high-grid-has-side-panel .ck-high-grid-header {
     margin-right: 0 !important;
   }
 }

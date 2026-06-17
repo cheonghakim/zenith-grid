@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SelectEditor - 드롭다운(select) 셀 편집기 생성기
  *
  * @param {Object} params
@@ -9,7 +9,7 @@
  */
 export function createSelectEditor({ row, def, value }) {
   const select = document.createElement('select');
-  select.className = 'ag-cell-editor';
+  select.className = 'ck-high-grid-cell-editor';
 
   // 컬럼 정의 또는 editorOptions에서 옵션 배열 추출
   const rawOptions = def.editorOptions?.options ?? def.options ?? [];

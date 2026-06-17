@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGrid } from '../src/index.js';
@@ -88,7 +88,7 @@ describe('GridCore DOM smoke', () => {
     await flush();
     await flush();
     await vi.waitFor(() => {
-      expect(host.querySelectorAll('.ag-row').length).toBeGreaterThan(0);
+      expect(host.querySelectorAll('.ck-high-grid-row').length).toBeGreaterThan(0);
     });
 
     expect(host.textContent).toContain('Row Motion');
@@ -171,10 +171,10 @@ describe('GridCore DOM smoke', () => {
     await flush();
 
     await vi.waitFor(() => {
-      expect(host.querySelector('.ag-row-tree .ag-row-toggle')).not.toBeNull();
+      expect(host.querySelector('.ck-high-grid-row-tree .ck-high-grid-row-toggle')).not.toBeNull();
     });
 
-    expect(host.querySelector('.ag-row-kind-tree')).not.toBeNull();
+    expect(host.querySelector('.ck-high-grid-row-kind-tree')).not.toBeNull();
 
     grid.destroy();
   });
@@ -208,8 +208,8 @@ describe('GridCore DOM smoke', () => {
     await flush();
     await flush();
 
-    const lockedRow = host.querySelector('.ag-row[data-row-key="locked"]');
-    const lockedCheckbox = lockedRow?.querySelector('.ag-selection-checkbox');
+    const lockedRow = host.querySelector('.ck-high-grid-row[data-row-key="locked"]');
+    const lockedCheckbox = lockedRow?.querySelector('.ck-high-grid-selection-checkbox');
 
     expect(lockedRow?.classList.contains('is-locked')).toBe(true);
     expect(lockedRow?.style.opacity).toBe('0.7');
@@ -248,14 +248,14 @@ describe('GridCore DOM smoke', () => {
     await flush();
     await flush();
 
-    expect(host.querySelector('.ag-side-panel-select-multiple')).not.toBeNull();
+    expect(host.querySelector('.ck-high-grid-side-panel-select-multiple')).not.toBeNull();
     expect(grid.getColumnFilterChoices('status').map((entry) => entry.value)).toEqual(['Active', 'Paused']);
-    expect(host.querySelector('.ag-header-filter-button')).not.toBeNull();
+    expect(host.querySelector('.ck-high-grid-header-filter-button')).not.toBeNull();
 
     grid.setColumnFilter('status', { type: 'select', field: 'status', operator: 'in', value: ['Active'] });
     await flush();
 
-    expect(host.querySelector('.ag-header-cell-filtered[data-col-id="status"]')).not.toBeNull();
+    expect(host.querySelector('.ck-high-grid-header-cell-filtered[data-col-id="status"]')).not.toBeNull();
 
     grid.destroy();
   });
@@ -277,10 +277,10 @@ describe('GridCore DOM smoke', () => {
     await flush();
     await flush();
 
-    host.querySelector('.ag-header-filter-button')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    host.querySelector('.ck-high-grid-header-filter-button')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await flush();
 
-    expect(document.body.querySelector('.ag-header-filter-popover')).not.toBeNull();
+    expect(document.body.querySelector('.ck-high-grid-header-filter-popover')).not.toBeNull();
 
     grid.destroy();
   });
@@ -334,7 +334,7 @@ describe('GridCore DOM smoke', () => {
 
     await vi.waitFor(() => {
       expect(host.querySelector('[data-overlay-kind="error"]')).not.toBeNull();
-      expect(host.querySelector('.ag-overlay-action')?.textContent).toBe('Retry');
+      expect(host.querySelector('.ck-high-grid-overlay-action')?.textContent).toBe('Retry');
     });
 
     grid.destroy();
@@ -410,16 +410,16 @@ describe('GridCore DOM smoke', () => {
     await flush();
     await flush();
 
-    secondHost.querySelector('.ag-header-filter-button')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    secondHost.querySelector('.ck-high-grid-header-filter-button')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await flush();
 
-    const popover = document.body.querySelector('.ag-header-filter-popover');
+    const popover = document.body.querySelector('.ck-high-grid-header-filter-popover');
     expect(popover).not.toBeNull();
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     await flush();
 
-    expect(document.body.querySelector('.ag-header-filter-popover')).toBeNull();
+    expect(document.body.querySelector('.ck-high-grid-header-filter-popover')).toBeNull();
 
     firstGrid.destroy();
     secondGrid.destroy();
@@ -457,7 +457,7 @@ describe('GridCore DOM smoke', () => {
     expect(csv).toContain('Name,Team');
     expect(csv).toContain('Alpha,Red');
 
-    host.querySelector('.ag-cell[data-col-id="name"]')?.dispatchEvent(new MouseEvent('contextmenu', {
+    host.querySelector('.ck-high-grid-cell[data-col-id="name"]')?.dispatchEvent(new MouseEvent('contextmenu', {
       bubbles: true,
       cancelable: true,
       clientX: 120,
@@ -465,7 +465,7 @@ describe('GridCore DOM smoke', () => {
     }));
     await flush();
 
-    expect(document.body.querySelector('.ag-context-menu-item')?.textContent).toContain('Inspect Alpha');
+    expect(document.body.querySelector('.ck-high-grid-context-menu-item')?.textContent).toContain('Inspect Alpha');
 
     grid.destroy();
   });
@@ -505,7 +505,7 @@ describe('GridCore DOM smoke', () => {
     expect(grid.setCellValue(1, 'score', -1)).toBe(false);
     await flush();
     expect(grid.getCellValidationError(1, 'score')).toBe('Score must be positive');
-    expect(host.querySelector('.ag-cell-invalid[data-col-id="score"]')).not.toBeNull();
+    expect(host.querySelector('.ck-high-grid-cell-invalid[data-col-id="score"]')).not.toBeNull();
 
     expect(grid.setCellValue(1, 'score', 30)).toBe(true);
     await flush();
@@ -552,8 +552,8 @@ describe('GridCore DOM smoke', () => {
     // 1. Verify editor rendering
     grid.beginCellEdit(1, 'team');
     await flush();
-    let cell = host.querySelector('.ag-cell[data-col-id="team"]');
-    let editor = cell?.querySelector('.ag-cell-editor');
+    let cell = host.querySelector('.ck-high-grid-cell[data-col-id="team"]');
+    let editor = cell?.querySelector('.ck-high-grid-cell-editor');
     expect(editor?.tagName).toBe('SELECT');
     expect(editor?.value).toBe('Red');
 
@@ -564,8 +564,8 @@ describe('GridCore DOM smoke', () => {
 
     grid.beginCellEdit(1, 'joined');
     await flush();
-    cell = host.querySelector('.ag-cell[data-col-id="joined"]');
-    editor = cell?.querySelector('.ag-cell-editor');
+    cell = host.querySelector('.ck-high-grid-cell[data-col-id="joined"]');
+    editor = cell?.querySelector('.ck-high-grid-cell-editor');
     expect(editor?.tagName).toBe('INPUT');
     expect(editor?.type).toBe('date');
 
@@ -576,8 +576,8 @@ describe('GridCore DOM smoke', () => {
 
     grid.beginCellEdit(1, 'note');
     await flush();
-    cell = host.querySelector('.ag-cell[data-col-id="note"]');
-    editor = cell?.querySelector('.ag-cell-editor');
+    cell = host.querySelector('.ck-high-grid-cell[data-col-id="note"]');
+    editor = cell?.querySelector('.ck-high-grid-cell-editor');
     expect(editor?.tagName).toBe('TEXTAREA');
     expect(editor?.value).toBe('Hello world');
 
@@ -636,24 +636,24 @@ describe('GridCore DOM smoke', () => {
     await flush();
 
     // Open filter popover
-    host.querySelector('.ag-header-filter-button')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    host.querySelector('.ck-high-grid-header-filter-button')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await flush();
 
-    const popover = document.body.querySelector('.ag-header-filter-popover');
+    const popover = document.body.querySelector('.ck-high-grid-header-filter-popover');
     expect(popover).not.toBeNull();
 
     // Check that there is a search box, select all, and the checkboxes for Red, Blue, Green
     const searchInput = popover.querySelector('input[type="search"]');
-    const selectAllCheck = popover.querySelector('.ag-filter-checkbox'); // first one is Select All
-    const checkboxes = popover.querySelectorAll('.ag-filter-list-container .ag-filter-checkbox');
+    const selectAllCheck = popover.querySelector('.ck-high-grid-filter-checkbox'); // first one is Select All
+    const checkboxes = popover.querySelectorAll('.ck-high-grid-filter-list-container .ck-high-grid-filter-checkbox');
     
     expect(searchInput).not.toBeNull();
     expect(selectAllCheck).not.toBeNull();
     expect(checkboxes.length).toBe(3); // Red, Blue, Green
 
     // Ticking Blue and Green
-    const blueCheck = [...popover.querySelectorAll('.ag-filter-checkbox-label')].find(el => el.textContent === 'Blue')?.querySelector('input');
-    const greenCheck = [...popover.querySelectorAll('.ag-filter-checkbox-label')].find(el => el.textContent === 'Green')?.querySelector('input');
+    const blueCheck = [...popover.querySelectorAll('.ck-high-grid-filter-checkbox-label')].find(el => el.textContent === 'Blue')?.querySelector('input');
+    const greenCheck = [...popover.querySelectorAll('.ck-high-grid-filter-checkbox-label')].find(el => el.textContent === 'Green')?.querySelector('input');
     
     expect(blueCheck).not.toBeUndefined();
     expect(greenCheck).not.toBeUndefined();
@@ -676,7 +676,7 @@ describe('GridCore DOM smoke', () => {
     await flush();
 
     // Under search query 're', only Red and Green should be listed in the checkboxes list
-    const visibleLabels = [...popover.querySelectorAll('.ag-filter-checkbox-label')].map(el => el.textContent);
+    const visibleLabels = [...popover.querySelectorAll('.ck-high-grid-filter-checkbox-label')].map(el => el.textContent);
     expect(visibleLabels).toContain('Red');
     expect(visibleLabels).toContain('Green');
     expect(visibleLabels).not.toContain('Blue');
@@ -745,12 +745,12 @@ describe('GridCore DOM smoke', () => {
     await flush();
 
     // 1. Verify row drag handle rendering
-    const dragHandle = host.querySelector('.ag-cell[data-col-id="name"] .ag-row-drag-handle');
+    const dragHandle = host.querySelector('.ck-high-grid-cell[data-col-id="name"] .ck-high-grid-row-drck-high-grid-handle');
     expect(dragHandle).not.toBeNull();
 
     // 2. Verify row reordering on drop
-    const firstRowEl = host.querySelector('.ag-row[data-row-key="1"]');
-    const thirdRowEl = host.querySelector('.ag-row[data-row-key="3"]');
+    const firstRowEl = host.querySelector('.ck-high-grid-row[data-row-key="1"]');
+    const thirdRowEl = host.querySelector('.ck-high-grid-row[data-row-key="3"]');
     
     // Simulate drag start on first row and drop on third row
     const dragStartEvent = new MouseEvent('dragstart', { bubbles: true });
@@ -799,8 +799,8 @@ describe('GridCore DOM smoke', () => {
     gridSpanning._viewModel.setViewportSize(960, 480);
     await gridSpanning.refresh();
 
-    const cellSpanned = host.querySelector('.ag-row[data-row-key="10"] .ag-cell[data-col-id="score"]');
-    const cellSkipped = host.querySelector('.ag-row[data-row-key="20"] .ag-cell[data-col-id="score"]');
+    const cellSpanned = host.querySelector('.ck-high-grid-row[data-row-key="10"] .ck-high-grid-cell[data-col-id="score"]');
+    const cellSkipped = host.querySelector('.ck-high-grid-row[data-row-key="20"] .ck-high-grid-cell[data-col-id="score"]');
     
     expect(cellSpanned).not.toBeNull();
     // rowSpan is 2 -> height should be 36 * 2 = 72px
@@ -838,8 +838,8 @@ describe('GridCore DOM smoke', () => {
     const canEditName = grid.beginCellEdit(1, 'name');
     expect(canEditName).toBe(true);
 
-    const cell = host.querySelector('.ag-cell[data-col-id="name"]');
-    const editor = cell?.querySelector('.ag-cell-editor');
+    const cell = host.querySelector('.ck-high-grid-cell[data-col-id="name"]');
+    const editor = cell?.querySelector('.ck-high-grid-cell-editor');
     expect(editor).not.toBeNull();
 
     // Focus editor
@@ -851,8 +851,8 @@ describe('GridCore DOM smoke', () => {
     await flush();
 
     // Verify cell is still in editing mode
-    expect(cell.classList.contains('ag-cell-editing')).toBe(true);
-    expect(cell.querySelector('.ag-cell-editor')).not.toBeNull();
+    expect(cell.classList.contains('ck-high-grid-cell-editing')).toBe(true);
+    expect(cell.querySelector('.ck-high-grid-cell-editor')).not.toBeNull();
 
     // Clean up
     grid.destroy();

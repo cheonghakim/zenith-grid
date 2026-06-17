@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createGrid } from '../src/index.js';
@@ -142,7 +142,7 @@ describe('FormulaManager', () => {
     expect(gridRows[0].c).toBe(30);
 
     // Simulate editing
-    const cellEl = container.querySelector('.ag-row[data-row-key="1"] .ag-cell[data-col-id="colC"]');
+    const cellEl = container.querySelector('.ck-high-grid-row[data-row-key="1"] .ck-high-grid-cell[data-col-id="colC"]');
     expect(cellEl).toBeTruthy();
 
     grid.beginCellEdit('1', 'colC', { cell: cellEl });
@@ -225,7 +225,7 @@ describe('FormulaManager', () => {
     await grid.refresh();
     await flush();
 
-    const cellEl = container.querySelector('.ag-row[data-row-key="1"] .ag-cell[data-col-id="colA"]');
+    const cellEl = container.querySelector('.ck-high-grid-row[data-row-key="1"] .ck-high-grid-cell[data-col-id="colA"]');
     grid.beginCellEdit('1', 'colA', { cell: cellEl });
     await flush();
 

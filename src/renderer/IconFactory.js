@@ -1,4 +1,4 @@
-const ICON_SVG_PATHS = {
+﻿const ICON_SVG_PATHS = {
   chevronRight: "M10,17L15,12L10,7V17Z",
   chevronDown: "M7,10L12,15L17,10H7Z",
   filterVariant: "M3,5H21L14,12V19L10,16V12L3,5Z",
@@ -18,7 +18,7 @@ const ICON_SVG_PATHS = {
     "M12,2L2,7L12,12L22,7L12,2M2,17L12,22L22,17V14L12,19L2,14V17M2,12L12,17L22,12V9L12,14L2,9V12Z",
 };
 
-export function createSvgIcon(type, size = 14, className = "ag-icon") {
+export function createSvgIcon(type, size = 14, className = "ck-high-grid-icon") {
   const pathData = ICON_SVG_PATHS[type];
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 24 24");

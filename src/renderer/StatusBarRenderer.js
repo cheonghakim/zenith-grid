@@ -1,4 +1,4 @@
-export class StatusBarRenderer {
+﻿export class StatusBarRenderer {
   constructor(dom, options = {}) {
     this._dom = dom;
     this._options = options;
@@ -9,7 +9,7 @@ export class StatusBarRenderer {
     const host = this._dom.getStatusBarHost();
     if (!host) return;
     const el = document.createElement('div');
-    el.className = 'ag-status-bar';
+    el.className = 'ck-high-grid-status-bar';
     host.appendChild(el);
     this._el = el;
   }
@@ -19,14 +19,14 @@ export class StatusBarRenderer {
     this._el.innerHTML = '';
 
     const left = document.createElement('div');
-    left.className = 'ag-status-bar-left';
+    left.className = 'ck-high-grid-status-bar-left';
 
     const getLocale = (key, fallback, params = {}) =>
       this._options.getLocaleText?.(key, fallback, params) ?? fallback;
 
     // 행 수 정보
     const rowInfo = document.createElement('span');
-    rowInfo.className = 'ag-status-bar-item';
+    rowInfo.className = 'ck-high-grid-status-bar-item';
     if (displayCount < totalCount) {
       rowInfo.textContent = getLocale(
         'grid.statusBar.filteredRows',
@@ -44,12 +44,12 @@ export class StatusBarRenderer {
 
     if (selectedCount > 0) {
       const sep = document.createElement('span');
-      sep.className = 'ag-status-bar-sep';
+      sep.className = 'ck-high-grid-status-bar-sep';
       sep.textContent = '·';
       left.appendChild(sep);
 
       const selInfo = document.createElement('span');
-      selInfo.className = 'ag-status-bar-item ag-status-bar-selected';
+      selInfo.className = 'ck-high-grid-status-bar-item ck-high-grid-status-bar-selected';
       selInfo.textContent = getLocale(
         'grid.statusBar.selectedRows',
         '{count} selected',
@@ -64,11 +64,11 @@ export class StatusBarRenderer {
     const aggEntries = Object.entries(aggregateResult);
     if (aggEntries.length > 0) {
       const right = document.createElement('div');
-      right.className = 'ag-status-bar-right';
+      right.className = 'ck-high-grid-status-bar-right';
 
       for (const [colId, { value, type }] of aggEntries) {
         const item = document.createElement('span');
-        item.className = 'ag-status-bar-item ag-status-bar-agg';
+        item.className = 'ck-high-grid-status-bar-item ck-high-grid-status-bar-agg';
         const colLabel = this._options.getColumnLabel?.(colId) ?? colId;
         const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
         const formattedValue = typeof value === 'number'

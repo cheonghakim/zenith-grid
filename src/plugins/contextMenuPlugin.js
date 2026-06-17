@@ -1,4 +1,4 @@
-function removeMenu(state) {
+﻿function removeMenu(state) {
   state.menu?.remove();
   state.menu = null;
 }
@@ -50,7 +50,7 @@ export function createContextMenuPlugin(options = {}) {
     payload.event.preventDefault();
 
     const menu = document.createElement('div');
-    menu.className = 'ag-context-menu';
+    menu.className = 'ck-high-grid-context-menu';
     menu.setAttribute('role', 'menu');
     menu.style.position = 'fixed';
     menu.style.left = `${payload.event.clientX}px`;
@@ -59,7 +59,7 @@ export function createContextMenuPlugin(options = {}) {
     items.forEach((item) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'ag-context-menu-item';
+      button.className = 'ck-high-grid-context-menu-item';
       button.setAttribute('role', 'menuitem');
       button.textContent = item.label ?? 'Action';
       button.disabled = item.disabled === true;

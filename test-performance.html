@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
   <title>Performance Test</title>
@@ -14,8 +14,8 @@
   <h1>HighGrid Performance Test</h1>
 
   <div class="controls">
-    <button id="addTheme">Add ag-theme-dark</button>
-    <button id="removeTheme">Remove ag-theme-dark</button>
+    <button id="addTheme">Add ck-high-grid-theme-dark</button>
+    <button id="removeTheme">Remove ck-high-grid-theme-dark</button>
     <button id="toggleTheme">Toggle Theme (10x)</button>
   </div>
 
@@ -45,14 +45,14 @@
 
     document.querySelector('#addTheme').onclick = () => {
       const start = performance.now();
-      container.classList.add('ag-theme-dark');
+      container.classList.add('ck-high-grid-theme-dark');
       const duration = performance.now() - start;
       perfDiv.textContent = `Theme added in ${duration.toFixed(2)}ms`;
     };
 
     document.querySelector('#removeTheme').onclick = () => {
       const start = performance.now();
-      container.classList.remove('ag-theme-dark');
+      container.classList.remove('ck-high-grid-theme-dark');
       const duration = performance.now() - start;
       perfDiv.textContent = `Theme removed in ${duration.toFixed(2)}ms`;
     };
@@ -61,7 +61,7 @@
       const times = [];
       for (let i = 0; i < 10; i++) {
         const start = performance.now();
-        container.classList.toggle('ag-theme-dark');
+        container.classList.toggle('ck-high-grid-theme-dark');
         times.push(performance.now() - start);
       }
       const avg = times.reduce((a, b) => a + b, 0) / times.length;

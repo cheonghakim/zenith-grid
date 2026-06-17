@@ -1,4 +1,4 @@
-import {
+﻿import {
   createGrid,
   uppercaseTeamPlugin,
   scorePrefixPlugin,
@@ -1410,7 +1410,7 @@ benchmarkScenarioButton.addEventListener("click", async () => {
 
 benchmarkScrollButton.addEventListener("click", async () => {
   const viewport =
-    document.getElementById("grid-live").querySelector(".ag-body-viewport") ||
+    document.getElementById("grid-live").querySelector(".ck-high-grid-body-viewport") ||
     document
       .getElementById("grid-live")
       .querySelector(".highgrid-body-viewport");
@@ -1557,9 +1557,9 @@ function applyTheme(theme) {
   gridHosts.forEach((host) => {
     if (!host) return;
     if (theme === "dark") {
-      host.classList.add("ag-theme-dark");
+      host.classList.add("ck-high-grid-theme-dark");
     } else {
-      host.classList.remove("ag-theme-dark");
+      host.classList.remove("ck-high-grid-theme-dark");
     }
   });
 }

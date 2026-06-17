@@ -1,4 +1,4 @@
-# HighGrid
+﻿# HighGrid
 
 HighGrid is a vanilla JavaScript data grid library.
 It covers the pieces you usually need in a real table: virtual scrolling, paging, infinite loading, grouping, tree data, live updates, plugins, and custom cell rendering.
@@ -61,7 +61,7 @@ A categorized guide map to quickly locate details about HighGrid's extensive fea
 - [13. Cell Editing, Validation, and Clipboard](#13-cell-editing-validation-and-clipboard)
 - [29. Custom Cell Editors](#29-custom-cell-editors)
 - [34. Undo / Redo](#34-undo--redo)
-- [35. Row Drag & Drop](#35-row-drag--drop)
+- [35. Row Drag & Drop](#35-row-drck-high-grid--drop)
 - [36. Range Selection](#36-range-selection)
 - [47. 2D Rectangular Range Copy/Paste](#47-2d-rectangular-range-copypaste)
 - [48. Functional Cell Edit Locking](#48-functional-cell-edit-locking)
@@ -81,7 +81,7 @@ A categorized guide map to quickly locate details about HighGrid's extensive fea
 - [38. Sparkline Plugin (Inline Charts)](#38-sparkline-plugin-inline-charts)
 - [39. XLSX Export Plugin](#39-xlsx-export-plugin)
 - [42. Print](#42-print)
-- [54. Side Panel Drag & Drop Column Reordering](#54-side-panel-drag--drop-column-reordering)
+- [54. Side Panel Drag & Drop Column Reordering](#54-side-panel-drck-high-grid--drop-column-reordering)
 - [56. Rich HTML Tooltip (Custom Popups)](#56-rich-html-tooltip-custom-popups)
 
 #### 6. Framework Integrations
@@ -101,7 +101,7 @@ A categorized guide map to quickly locate details about HighGrid's extensive fea
 HighGrid is a vanilla JavaScript data grid for teams that want a solid default table without bringing in a large framework dependency.
 It includes virtual scrolling, client/server pagination, infinite loading, grouping, tree data, runtime updates, plugins, custom cell renderers, and a built-in side panel.
 
-**AG-Grid Compatibility:** HighGrid uses scoped CSS (`.highgrid` wrapper) to prevent conflicts when used alongside AG-Grid on the same page.
+**CSS Isolation:** HighGrid prefixes all internal CSS class names with `ck-high-grid-` and all CSS custom properties with `--ck-high-grid-`, preventing conflicts when used alongside AG-Grid or other grid libraries on the same page.
 
 ### 2. Installation
 
@@ -703,9 +703,9 @@ Override any token on a parent element:
 
 ```css
 #my-grid {
-  --ag-accent: #7c3aed;
-  --ag-row-height: 48px;
-  --ag-font-size: 15px;
+  --ck-high-grid-accent: #7c3aed;
+  --ck-high-grid-row-height: 48px;
+  --ck-high-grid-font-size: 15px;
 }
 ```
 
@@ -713,13 +713,13 @@ Built-in theme presets:
 
 ```html
 <!-- Dark mode -->
-<div class="ag-theme-dark"><div id="my-grid"></div></div>
+<div class="ck-high-grid-theme-dark"><div id="my-grid"></div></div>
 
 <!-- Compact (32 px rows) -->
-<div class="ag-theme-compact"><div id="my-grid"></div></div>
+<div class="ck-high-grid-theme-compact"><div id="my-grid"></div></div>
 
 <!-- Spacious (52 px rows) -->
-<div class="ag-theme-spacious"><div id="my-grid"></div></div>
+<div class="ck-high-grid-theme-spacious"><div id="my-grid"></div></div>
 ```
 
 ### 23. TypeScript
@@ -903,7 +903,7 @@ Custom editor factory — the `editor` property accepts any function with signat
     const input = document.createElement("input");
     input.type = "number";
     input.value = String(value ?? "");
-    input.className = "ag-cell-editor";
+    input.className = "ck-high-grid-cell-editor";
     return input;
   },
 }
@@ -1074,8 +1074,8 @@ const grid = createGrid(container, {
 Listen to drag lifecycle events:
 
 ```js
-grid.on("row-drag-start", ({ rowKey }) => console.log("drag start", rowKey));
-grid.on("row-drag-end", ({ rowKey }) => console.log("drag end", rowKey));
+grid.on("row-drck-high-grid-start", ({ rowKey }) => console.log("drag start", rowKey));
+grid.on("row-drck-high-grid-end", ({ rowKey }) => console.log("drag end", rowKey));
 ```
 
 ### 36. Range Selection

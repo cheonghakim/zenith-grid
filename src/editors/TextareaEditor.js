@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TextareaEditor - 장문 텍스트(textarea) 셀 편집기 생성기
  *
  * @param {Object} params
@@ -9,7 +9,7 @@
  */
 export function createTextareaEditor({ row, def, value }) {
   const textarea = document.createElement('textarea');
-  textarea.className = 'ag-cell-editor';
+  textarea.className = 'ck-high-grid-cell-editor';
   textarea.style.resize = 'vertical';
   textarea.style.minHeight = '60px';
 

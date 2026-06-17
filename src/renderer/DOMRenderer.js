@@ -1,4 +1,4 @@
-export class DOMRenderer {
+﻿export class DOMRenderer {
   constructor(container, options = {}) {
     this._container = container;
     this._options = options;
@@ -10,44 +10,44 @@ export class DOMRenderer {
   build() {
     if (this._built) return;
 
-    this._container.classList.add('highgrid', 'ag-root');
+    this._container.classList.add('highgrid', 'ck-high-grid-root');
     this._container.setAttribute('role', 'grid');
     this._container.setAttribute('aria-rowcount', '0');
     this._container.setAttribute('aria-colcount', '0');
     this._container.setAttribute('aria-busy', 'false');
     this._container.innerHTML = '';
 
-    const header = this._createElement('div', 'ag-header');
+    const header = this._createElement('div', 'ck-high-grid-header');
     header.setAttribute('role', 'rowgroup');
-    const headerLeft = this._createElement('div', 'ag-header-left-pinned');
-    const headerCenterViewport = this._createElement('div', 'ag-header-center-viewport');
-    const headerCenterContainer = this._createElement('div', 'ag-header-center-container');
-    const headerRight = this._createElement('div', 'ag-header-right-pinned');
+    const headerLeft = this._createElement('div', 'ck-high-grid-header-left-pinned');
+    const headerCenterViewport = this._createElement('div', 'ck-high-grid-header-center-viewport');
+    const headerCenterContainer = this._createElement('div', 'ck-high-grid-header-center-container');
+    const headerRight = this._createElement('div', 'ck-high-grid-header-right-pinned');
 
     headerCenterViewport.appendChild(headerCenterContainer);
     header.appendChild(headerLeft);
     header.appendChild(headerCenterViewport);
     header.appendChild(headerRight);
 
-    const bodyViewport = this._createElement('div', 'ag-body-viewport');
+    const bodyViewport = this._createElement('div', 'ck-high-grid-body-viewport');
     bodyViewport.setAttribute('role', 'presentation');
 
-    const pinnedTopRows = this._createElement('div', 'ag-pinned-top-rows');
+    const pinnedTopRows = this._createElement('div', 'ck-high-grid-pinned-top-rows');
     pinnedTopRows.setAttribute('role', 'rowgroup');
     pinnedTopRows.style.display = 'none';
 
-    const body = this._createElement('div', 'ag-body');
+    const body = this._createElement('div', 'ck-high-grid-body');
     body.setAttribute('role', 'rowgroup');
-    const bodyLeft = this._createElement('div', 'ag-body-left-pinned');
-    const bodyCenterViewport = this._createElement('div', 'ag-body-center-viewport');
-    const bodyCenterContainer = this._createElement('div', 'ag-body-center-container');
-    const spacerTop = this._createElement('div', 'ag-virtual-spacer-top');
-    const rows = this._createElement('div', 'ag-rows');
+    const bodyLeft = this._createElement('div', 'ck-high-grid-body-left-pinned');
+    const bodyCenterViewport = this._createElement('div', 'ck-high-grid-body-center-viewport');
+    const bodyCenterContainer = this._createElement('div', 'ck-high-grid-body-center-container');
+    const spacerTop = this._createElement('div', 'ck-high-grid-virtual-spacer-top');
+    const rows = this._createElement('div', 'ck-high-grid-rows');
     rows.setAttribute('role', 'presentation');
-    const spacerBottom = this._createElement('div', 'ag-virtual-spacer-bottom');
-    const bodyRight = this._createElement('div', 'ag-body-right-pinned');
+    const spacerBottom = this._createElement('div', 'ck-high-grid-virtual-spacer-bottom');
+    const bodyRight = this._createElement('div', 'ck-high-grid-body-right-pinned');
 
-    const pinnedBottomRows = this._createElement('div', 'ag-pinned-bottom-rows');
+    const pinnedBottomRows = this._createElement('div', 'ck-high-grid-pinned-bottom-rows');
     pinnedBottomRows.setAttribute('role', 'rowgroup');
     pinnedBottomRows.style.display = 'none';
 
@@ -63,34 +63,34 @@ export class DOMRenderer {
     bodyViewport.appendChild(body);
     bodyViewport.appendChild(pinnedBottomRows);
 
-    const infiniteLoader = this._createElement('div', 'ag-infinite-loader');
+    const infiniteLoader = this._createElement('div', 'ck-high-grid-infinite-loader');
     infiniteLoader.style.display = 'none';
-    const infiniteSpinner = this._createElement('span', 'ag-infinite-loader-spinner');
-    const infiniteLabel = this._createElement('span', 'ag-infinite-loader-label');
+    const infiniteSpinner = this._createElement('span', 'ck-high-grid-infinite-loader-spinner');
+    const infiniteLabel = this._createElement('span', 'ck-high-grid-infinite-loader-label');
     infiniteLabel.textContent = this._getLocaleText('grid.loading.infiniteSpinner', 'Loading more rows');
     infiniteLoader.appendChild(infiniteSpinner);
     infiniteLoader.appendChild(infiniteLabel);
     bodyViewport.appendChild(infiniteLoader);
 
-    const footer = this._createElement('div', 'ag-footer');
-    const statusBar = this._createElement('div', 'ag-status-bar-host');
+    const footer = this._createElement('div', 'ck-high-grid-footer');
+    const statusBar = this._createElement('div', 'ck-high-grid-status-bar-host');
     statusBar.style.display = 'none';
-    const overlay = this._createElement('div', 'ag-overlay');
+    const overlay = this._createElement('div', 'ck-high-grid-overlay');
     overlay.style.display = 'none';
     overlay.setAttribute('role', 'status');
     overlay.setAttribute('aria-live', 'polite');
-    const overlayCard = this._createElement('div', 'ag-overlay-card');
-    const overlayTitle = this._createElement('strong', 'ag-overlay-title');
-    const overlayMessage = this._createElement('p', 'ag-overlay-message');
-    const overlayCustom = this._createElement('div', 'ag-overlay-custom');
+    const overlayCard = this._createElement('div', 'ck-high-grid-overlay-card');
+    const overlayTitle = this._createElement('strong', 'ck-high-grid-overlay-title');
+    const overlayMessage = this._createElement('p', 'ck-high-grid-overlay-message');
+    const overlayCustom = this._createElement('div', 'ck-high-grid-overlay-custom');
     overlayCustom.style.display = 'none';
-    const overlayAction = this._createElement('button', 'ag-overlay-action');
+    const overlayAction = this._createElement('button', 'ck-high-grid-overlay-action');
     overlayAction.type = 'button';
     overlayAction.style.display = 'none';
-    const overlaySkeleton = this._createElement('div', 'ag-overlay-skeleton');
+    const overlaySkeleton = this._createElement('div', 'ck-high-grid-overlay-skeleton');
     overlaySkeleton.style.display = 'none';
     for (let index = 0; index < 5; index += 1) {
-      const line = this._createElement('span', 'ag-overlay-skeleton-line');
+      const line = this._createElement('span', 'ck-high-grid-overlay-skeleton-line');
       overlaySkeleton.appendChild(line);
     }
     overlayCard.appendChild(overlayTitle);
@@ -99,9 +99,9 @@ export class DOMRenderer {
     overlayCard.appendChild(overlaySkeleton);
     overlayCard.appendChild(overlayAction);
     overlay.appendChild(overlayCard);
-    const banner = this._createElement('div', 'ag-live-banner');
+    const banner = this._createElement('div', 'ck-high-grid-live-banner');
     banner.style.display = 'none';
-    const sidePanel = this._createElement('div', 'ag-side-panel-host');
+    const sidePanel = this._createElement('div', 'ck-high-grid-side-panel-host');
 
     bodyViewport.appendChild(overlay);
 
@@ -251,7 +251,7 @@ export class DOMRenderer {
   showLiveBanner(message, onClick) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'ag-live-banner-button';
+    button.className = 'ck-high-grid-live-banner-button';
     button.textContent = message;
     if (typeof onClick === 'function') {
       button.addEventListener('click', onClick, { once: true });
@@ -390,7 +390,7 @@ export class DOMRenderer {
     }
     this._overlayActionHandler = null;
     this._container.innerHTML = '';
-    this._container.classList.remove('highgrid', 'ag-root');
+    this._container.classList.remove('highgrid', 'ck-high-grid-root');
     this._container.removeAttribute('role');
     this._container.removeAttribute('aria-rowcount');
     this._container.removeAttribute('aria-colcount');

@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 
 import { describe, expect, it, vi } from 'vitest';
 import { BodyRenderer } from '../src/renderer/BodyRenderer.js';
@@ -146,8 +146,8 @@ describe('BodyRenderer', () => {
 
     expect(beforeRowRender).toHaveBeenCalled();
     expect(afterCellRender).toHaveBeenCalled();
-    expect(rowsContainer.querySelector('.ag-row')?.dataset.hooked).toBe('true');
-    expect(rowsContainer.querySelector('.ag-cell[data-after-cell="done"]')).not.toBeNull();
-    expect(rowsContainer.querySelector('.ag-selection-checkbox')?.disabled).toBe(true);
+    expect(rowsContainer.querySelector('.ck-high-grid-row')?.dataset.hooked).toBe('true');
+    expect(rowsContainer.querySelector('.ck-high-grid-cell[data-after-cell="done"]')).not.toBeNull();
+    expect(rowsContainer.querySelector('.ck-high-grid-selection-checkbox')?.disabled).toBe(true);
   });
 });

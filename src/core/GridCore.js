@@ -1,4 +1,4 @@
-import { EventBus } from './EventBus.js';
+﻿import { EventBus } from './EventBus.js';
 import { DataStore } from './DataStore.js';
 import { ViewModel } from './ViewModel.js';
 import { WorkerBridge } from './WorkerBridge.js';
@@ -223,8 +223,8 @@ export class GridCore {
     });
 
     this._rowDragManager = new RowDragManager({
-      onRowDragStart: (payload) => this._events.emit('row-drag-start', payload),
-      onRowDragEnd: (payload) => this._events.emit('row-drag-end', payload),
+      onRowDragStart: (payload) => this._events.emit('row-drck-high-grid-start', payload),
+      onRowDragEnd: (payload) => this._events.emit('row-drck-high-grid-end', payload),
       onRowDrop: ({ fromRowKey, toRowKey }) => this._handleRowDragDrop({ fromRowKey, toRowKey }),
     });
 
@@ -1357,14 +1357,14 @@ export class GridCore {
 
     const cell = options.cell instanceof HTMLElement
       ? options.cell
-      : this._container.querySelector(`.ag-row[data-row-key="${String(rowKey)}"] .ag-cell[data-col-id="${colId}"]`);
+      : this._container.querySelector(`.ck-high-grid-row[data-row-key="${String(rowKey)}"] .ck-high-grid-cell[data-col-id="${colId}"]`);
     if (!(cell instanceof HTMLElement)) {
       return false;
     }
 
     const previous = row._formulas?.[column.field] ?? row[column.field];
     const editor = this._createCellEditor(row, column, previous);
-    cell.classList.add('ag-cell-editing');
+    cell.classList.add('ck-high-grid-cell-editing');
     cell.innerHTML = '';
     cell.appendChild(editor);
     editor.focus();
@@ -1406,7 +1406,7 @@ export class GridCore {
     const onMouseUp = () => {
       document.removeEventListener('mouseup', onMouseUp);
       document.removeEventListener('mouseenter', onMouseEnter, true);
-      this._container.classList.remove('ag-filling');
+      this._container.classList.remove('ck-high-grid-filling');
 
       if (!fillTarget || fillTarget === sourceRowKey) return;
 
@@ -1427,28 +1427,28 @@ export class GridCore {
       }
     };
 
-    this._container.classList.add('ag-filling');
+    this._container.classList.add('ck-high-grid-filling');
     document.addEventListener('mouseup', onMouseUp, { once: true });
     document.addEventListener('mouseenter', onMouseEnter, true);
   }
 
   cancelCellEdit() {
-    const editing = this._container.querySelector('.ag-cell-editing');
+    const editing = this._container.querySelector('.ck-high-grid-cell-editing');
     if (!editing) return;
-    editing.classList.remove('ag-cell-editing');
+    editing.classList.remove('ck-high-grid-cell-editing');
     void this.refresh();
   }
 
   commitCellEdit(rowKey, colId, value) {
-    const editing = this._container.querySelector('.ag-cell-editing');
+    const editing = this._container.querySelector('.ck-high-grid-cell-editing');
     if (!editing) return;
-    editing.classList.remove('ag-cell-editing');
+    editing.classList.remove('ck-high-grid-cell-editing');
     this.setCellValue(rowKey, colId, value);
   }
 
   get _activeEditorRowKey() {
-    return this._container?.querySelector('.ag-cell-editing')
-      ? this._container.querySelector('.ag-cell-editing')?.closest('[data-row-key]')?.dataset.rowKey ?? null
+    return this._container?.querySelector('.ck-high-grid-cell-editing')
+      ? this._container.querySelector('.ck-high-grid-cell-editing')?.closest('[data-row-key]')?.dataset.rowKey ?? null
       : null;
   }
 
@@ -1742,11 +1742,11 @@ export class GridCore {
     let cellFont = '14px sans-serif';
     let headerFont = 'bold 14px sans-serif';
     
-    const cellEl = this._container.querySelector('.ag-cell');
+    const cellEl = this._container.querySelector('.ck-high-grid-cell');
     if (cellEl) {
       cellFont = window.getComputedStyle(cellEl).font || cellFont;
     }
-    const headerEl = this._container.querySelector('.ag-header-cell');
+    const headerEl = this._container.querySelector('.ck-high-grid-header-cell');
     if (headerEl) {
       headerFont = window.getComputedStyle(headerEl).font || headerFont;
     }
@@ -1764,11 +1764,11 @@ export class GridCore {
     let cellFont = '14px sans-serif';
     let headerFont = 'bold 14px sans-serif';
     
-    const cellEl = this._container.querySelector('.ag-cell');
+    const cellEl = this._container.querySelector('.ck-high-grid-cell');
     if (cellEl) {
       cellFont = window.getComputedStyle(cellEl).font || cellFont;
     }
-    const headerEl = this._container.querySelector('.ag-header-cell');
+    const headerEl = this._container.querySelector('.ck-high-grid-header-cell');
     if (headerEl) {
       headerFont = window.getComputedStyle(headerEl).font || headerFont;
     }
@@ -2063,10 +2063,10 @@ export class GridCore {
 
     const state = this._paginationManager.getState();
     const footer = document.createElement('div');
-    footer.className = 'ag-footer-bar';
+    footer.className = 'ck-high-grid-footer-bar';
 
     const summary = document.createElement('div');
-    summary.className = 'ag-footer-summary';
+    summary.className = 'ck-high-grid-footer-summary';
     summary.textContent = this.getLocaleText(
       'grid.pagination.summary',
       '{startRow}-{endRow} of {totalCount}',
@@ -2074,7 +2074,7 @@ export class GridCore {
     );
 
     const controls = document.createElement('div');
-    controls.className = 'ag-footer-controls';
+    controls.className = 'ck-high-grid-footer-controls';
 
     const buttons = [
       { label: this.getLocaleText('grid.pagination.first', 'First'), disabled: state.isFirst, onClick: () => this._paginationManager.firstPage() },
@@ -2095,7 +2095,7 @@ export class GridCore {
     buttons.forEach((config) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'ag-footer-button';
+      button.className = 'ck-high-grid-footer-button';
       button.textContent = config.label;
       button.disabled = config.disabled;
       if (config.onClick) {
@@ -2404,10 +2404,10 @@ export class GridCore {
           `[data-row-key="${escapeCssSelector(String(rowKey))}"] [data-col-id="${escapeCssSelector(colId)}"]`
         );
         if (cell instanceof HTMLElement) {
-          cell.classList.remove('ag-cell-flash');
+          cell.classList.remove('ck-high-grid-cell-flash');
           void cell.offsetWidth;
-          cell.classList.add('ag-cell-flash');
-          setTimeout(() => cell.classList.remove('ag-cell-flash'), 600);
+          cell.classList.add('ck-high-grid-cell-flash');
+          setTimeout(() => cell.classList.remove('ck-high-grid-cell-flash'), 600);
         }
       }
     }
@@ -2858,7 +2858,7 @@ export class GridCore {
     }
 
     const input = document.createElement('input');
-    input.className = 'ag-cell-editor';
+    input.className = 'ck-high-grid-cell-editor';
     input.type = 'text';
     input.value = value == null ? '' : String(value);
     return input;

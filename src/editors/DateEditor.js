@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DateEditor - 날짜(input[type="date"]) 셀 편집기 생성기
  *
  * @param {Object} params
@@ -10,7 +10,7 @@
 export function createDateEditor({ row, def, value }) {
   const input = document.createElement('input');
   input.type = 'date';
-  input.className = 'ag-cell-editor';
+  input.className = 'ck-high-grid-cell-editor';
 
   // 값을 YYYY-MM-DD 형식으로 포맷팅
   let dateStr = '';
