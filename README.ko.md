@@ -705,12 +705,19 @@ import "highgrid/styles/tokens.css";
 import "highgrid/styles/grid.css";
 ```
 
+토큰 오버라이드는 `.ck-high-grid-root`를 직접 타겟해야 합니다. 색상 토큰은 `.ck-high-grid-root` 자체에 선언되어 있어 부모 셀렉터만으로는 가려집니다:
+
 ```css
-/* 특정 그리드만 테마 변경 */
-#my-grid {
+/* ✅ 모든 토큰에서 작동 */
+#my-grid .ck-high-grid-root {
   --ck-high-grid-accent: #7c3aed;
   --ck-high-grid-row-height: 48px;
   --ck-high-grid-font-size: 15px;
+}
+
+/* ❌ 색상 토큰은 .ck-high-grid-root 선언에 가려짐 (v2.x) */
+#my-grid {
+  --ck-high-grid-accent: #7c3aed;
 }
 ```
 

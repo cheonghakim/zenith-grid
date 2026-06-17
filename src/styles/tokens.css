@@ -2,14 +2,23 @@
  * HighGrid Design Tokens
  *
  * CSS custom properties that control every visual aspect of the grid.
- * Override any token on a parent element or on .ck-high-grid-root to theme the grid.
  *
  * Usage:
  *   import 'highgrid/styles/tokens.css';
  *   import 'highgrid/styles/grid.css';
  *
- * Or inline override:
- *   #myGrid { --ck-high-grid-accent: #7c3aed; --ck-high-grid-row-height: 48px; }
+ * Theming:
+ *   .ck-high-grid-root redefines tokens on itself, so overrides must target
+ *   .ck-high-grid-root directly (or use a higher-specificity descendant selector):
+ *
+ *   // ✅ works — targets the root element
+ *   #myGrid .ck-high-grid-root { --ck-high-grid-accent: #7c3aed; }
+ *
+ *   // ❌ shadowed by .ck-high-grid-root's own declaration (v2.x limitation)
+ *   #myGrid { --ck-high-grid-accent: #7c3aed; }
+ *
+ *   TODO(v3): variables will be moved from .ck-high-grid-root to :root,
+ *   at which point parent-element overrides will work as expected.
  */
 
 :root {
@@ -118,53 +127,17 @@
    Add class="ck-high-grid-theme-dark" to the grid container to activate.
    ─────────────────────────────────────────────────────────── */
 
+/* color-scheme만 래퍼에 적용 — native 스크롤바 등 브라우저 UI 다크 모드 처리 */
 .ck-high-grid-theme-dark {
   color-scheme: dark;
-
-  --ck-high-grid-surface:              #12181f;
-  --ck-high-grid-surface-elevated:     rgba(22, 30, 40, 0.98);
-  --ck-high-grid-surface-muted:        #1a2330;
-
-  --ck-high-grid-border:               #2d3a47;
-  --ck-high-grid-border-strong:        #3d4e5e;
-  --ck-high-grid-border-subtle:        #222e3c;
-
-  --ck-high-grid-ink:                  #e8edf3;
-  --ck-high-grid-ink-muted:            #8fa5bc;
-  --ck-high-grid-ink-disabled:         #4e6070;
-
-  --ck-high-grid-accent:               #4a9eed;
-  --ck-high-grid-accent-hover:         #3a8edc;
-  --ck-high-grid-accent-soft:          #162436;
-  --ck-high-grid-accent-focus-ring:    rgba(74, 158, 237, 0.22);
-
-  --ck-high-grid-row-selected-bg:      #162a42;
-  --ck-high-grid-row-hover-bg:         #1b2733;
-  --ck-high-grid-row-odd-bg:           #141c25;
-  --ck-high-grid-row-group-bg:         linear-gradient(90deg, #1a2635, #152030);
-  --ck-high-grid-row-tree-bg:          rgba(74, 158, 237, 0.08);
-
-  --ck-high-grid-header-bg:            linear-gradient(180deg, #1c2836, #141e2a);
-  --ck-high-grid-header-group-bg:      linear-gradient(180deg, #1e3a5c, #152d4a);
-  --ck-high-grid-header-group-color:   #88c4f0;
-  --ck-high-grid-header-border:        #283848;
-
-  --ck-high-grid-overlay-bg:           rgba(12, 18, 25, 0.82);
-  --ck-high-grid-live-banner-bg:       linear-gradient(90deg, #162840, #1a2e48);
-  --ck-high-grid-live-banner-border:   #24384e;
-
-  --ck-high-grid-side-panel-bg:        linear-gradient(180deg, rgba(20,28,38,0.99), rgba(16,24,33,0.99));
-  --ck-high-grid-side-panel-rail-bg:   linear-gradient(180deg, rgba(22,30,42,0.98), rgba(18,26,36,0.98));
-  --ck-high-grid-side-panel-rail-active: linear-gradient(180deg, #1e3a5c, #152d4a);
 }
 
-/* ── Dark theme: high-specificity override for .ck-high-grid-root ─────────────
-   .ck-high-grid-root redefines CSS variables on itself (specificity 0-1-0),
-   which shadows the parent .ck-high-grid-theme-dark variables via inheritance.
-   These two selectors (specificity 0-2-0) win regardless of import order and
-   cover both usage patterns:
+/* ── Dark theme variables (single source of truth) ────────────────────────────
+   specificity 0-2-0 으로 .ck-high-grid-root(0-1-0)의 변수 재정의를 이김.
+   두 가지 사용 패턴을 모두 커버:
      1. <div class="ck-high-grid-theme-dark"><div class="ck-high-grid-root">
      2. <div class="ck-high-grid-root ck-high-grid-theme-dark">
+   TODO(v3): .ck-high-grid-root의 변수 선언을 :root로 이전하면 이 블록 제거 가능.
    ─────────────────────────────────────────────────────────── */
 .ck-high-grid-theme-dark .ck-high-grid-root,
 .ck-high-grid-root.ck-high-grid-theme-dark {

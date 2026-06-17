@@ -699,13 +699,19 @@ import "highgrid/styles/tokens.css";
 import "highgrid/styles/grid.css";
 ```
 
-Override any token on a parent element:
+To override tokens, target `.ck-high-grid-root` directly. Color tokens are defined on `.ck-high-grid-root` itself, so a plain parent selector is shadowed — use a descendant selector instead:
 
 ```css
-#my-grid {
+/* ✅ works for all tokens */
+#my-grid .ck-high-grid-root {
   --ck-high-grid-accent: #7c3aed;
   --ck-high-grid-row-height: 48px;
   --ck-high-grid-font-size: 15px;
+}
+
+/* ❌ color tokens are shadowed by .ck-high-grid-root's own declarations (v2.x) */
+#my-grid {
+  --ck-high-grid-accent: #7c3aed;
 }
 ```
 
