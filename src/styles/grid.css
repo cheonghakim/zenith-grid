@@ -1309,21 +1309,21 @@
 .ck-high-grid-header-cell-pinned,
 .ck-high-grid-cell-pinned {
   position: sticky;
-  background: #ffffff;
+  background: var(--ck-high-grid-surface, #ffffff);
 }
 
 .ck-high-grid-header-cell-pinned {
-  background: linear-gradient(180deg, #f8fafd, #eef3f8);
-  box-shadow: 1px 0 0 #dbe3ec;
+  background: var(--ck-high-grid-header-bg, linear-gradient(180deg, #f8fafd, #eef3f8));
+  box-shadow: 1px 0 0 var(--ck-high-grid-border, #dbe3ec);
 }
 
 .ck-high-grid-cell-pinned {
-  box-shadow: 1px 0 0 #e4eaf0;
+  box-shadow: 1px 0 0 var(--ck-high-grid-border, #e4eaf0);
 }
 
 .ck-high-grid-cell-pinned[style*="right"],
 .ck-high-grid-header-cell-pinned[style*="right"] {
-  box-shadow: -1px 0 0 #e4eaf0;
+  box-shadow: -1px 0 0 var(--ck-high-grid-border, #e4eaf0);
 }
 
 .ck-high-grid-drck-high-grid-origin {

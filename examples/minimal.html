@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HighGrid – Minimal CSS Test</title>
+    <style>
+      body {
+        margin: 32px;
+        font-family: sans-serif;
+      }
+      h1 {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+        color: #333;
+      }
+      p {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 16px;
+      }
+      #grid-light {
+        height: 420px;
+        margin-bottom: 32px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      #grid-dark {
+        height: 420px;
+        border: 1px solid #333;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>HighGrid – 라이브러리 기본 CSS 검증 페이지</h1>
+    <p>
+      <code>tokens.css</code> + <code>grid.css</code> 두 파일만 import한 상태.
+      데모 전용 styles.css 없음.
+    </p>
+
+    <h2 style="font-size:0.9rem; color:#444; margin-bottom:6px;">Light (기본)</h2>
+    <div id="grid-light"></div>
+
+    <h2 style="font-size:0.9rem; color:#444; margin: 24px 0 6px;">Dark (<code>ck-high-grid-theme-dark</code> 클래스)</h2>
+    <div id="grid-dark" class="ck-high-grid-theme-dark"></div>
+
+    <script type="module" src="./minimal.js"></script>
+  </body>
+</html>
