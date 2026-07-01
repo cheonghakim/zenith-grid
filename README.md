@@ -61,7 +61,7 @@ A categorized guide map to quickly locate details about HighGrid's extensive fea
 - [13. Cell Editing, Validation, and Clipboard](#13-cell-editing-validation-and-clipboard)
 - [29. Custom Cell Editors](#29-custom-cell-editors)
 - [34. Undo / Redo](#34-undo--redo)
-- [35. Row Drag & Drop](#35-row-drck-high-grid--drop)
+- [35. Row Drag & Drop](#35-row-drag--drop)
 - [36. Range Selection](#36-range-selection)
 - [47. 2D Rectangular Range Copy/Paste](#47-2d-rectangular-range-copypaste)
 - [48. Functional Cell Edit Locking](#48-functional-cell-edit-locking)
@@ -81,7 +81,7 @@ A categorized guide map to quickly locate details about HighGrid's extensive fea
 - [38. Sparkline Plugin (Inline Charts)](#38-sparkline-plugin-inline-charts)
 - [39. XLSX Export Plugin](#39-xlsx-export-plugin)
 - [42. Print](#42-print)
-- [54. Side Panel Drag & Drop Column Reordering](#54-side-panel-drck-high-grid--drop-column-reordering)
+- [54. Side Panel Drag & Drop Column Reordering](#54-side-panel-drag--drop-column-reordering)
 - [56. Rich HTML Tooltip (Custom Popups)](#56-rich-html-tooltip-custom-popups)
 
 #### 6. Framework Integrations
@@ -164,13 +164,46 @@ Common column properties:
 - `id`: unique column id
 - `field`: row field name
 - `headerName` or `header`: header label
-- `width`: default width
+- `width`: fixed width in pixels
+- `flex`: proportional width (alternative to `width`)
 - `align`: `left`, `center`, `right`
 - `type`: sorting/comparison hint such as `number` or `date`
 - `renderer`: custom cell renderer
 - `formatter`: value formatter
 - `pinned`: `left` or `right`
-- `minWidth`, `maxWidth`: resize limits
+- `minWidth`, `maxWidth`: resize limits (applies to both `width` and `flex`)
+
+#### Flex Columns (Proportional Width)
+
+Use `flex` instead of `width` to make columns resize proportionally based on available space:
+
+```js
+const columns = [
+  { id: "id", field: "id", headerName: "ID", width: 80 },        // Fixed 80px
+  { id: "name", field: "name", headerName: "Name", flex: 2 },    // Takes 2x space
+  { id: "email", field: "email", headerName: "Email", flex: 1 }, // Takes 1x space
+  { id: "actions", headerName: "Actions", width: 120 },          // Fixed 120px
+];
+
+// In a 1000px grid:
+// - Fixed columns: 80 + 120 = 200px
+// - Remaining space: 800px
+// - name column: 800 × (2/3) ≈ 533px
+// - email column: 800 × (1/3) ≈ 267px
+```
+
+**Flex with constraints:**
+
+```js
+{
+  id: "description",
+  field: "description",
+  headerName: "Description",
+  flex: 1,
+  minWidth: 200,  // Won't shrink below 200px
+  maxWidth: 600,  // Won't grow above 600px
+}
+```
 
 Example:
 
@@ -1080,8 +1113,8 @@ const grid = createGrid(container, {
 Listen to drag lifecycle events:
 
 ```js
-grid.on("row-drck-high-grid-start", ({ rowKey }) => console.log("drag start", rowKey));
-grid.on("row-drck-high-grid-end", ({ rowKey }) => console.log("drag end", rowKey));
+grid.on("row-drag-start", ({ rowKey }) => console.log("drag start", rowKey));
+grid.on("row-drag-end", ({ rowKey }) => console.log("drag end", rowKey));
 ```
 
 ### 36. Range Selection
@@ -1456,5 +1489,24 @@ const rows = [
   { id: 2, a: 15, b: 25, c: "=AVG(A1:B2)" }, // Evaluates to 17.5
 ];
 ```
+
+### 60. Formula Engine Plugin (full Excel-style functions)
+
+The built-in formula engine above only understands `=SUM` and `=AVG`. Installing `createFormulaPlugin` swaps in [hot-formula-parser](https://github.com/handsontable/formula-parser) — loaded from npm if available, otherwise falling back to a CDN — unlocking arithmetic operators (`+ - * / ^`), comparisons, and the full [formula.js](https://github.com/handsontable/formula.js) function set (`MIN`, `MAX`, `IF`, `COUNT`, `VLOOKUP`, string/logical functions, ...). The `row._formulas[field] = "=..."` authoring convention and circular-reference guard (`#REF!`) stay the same as the built-in engine.
+
+```js
+import { createGrid, createFormulaPlugin } from "highgrid";
+
+const grid = createGrid(container, {
+  columns,
+  rows: [
+    { id: 1, a: 10, b: 20, c: "=IF(A1>B1, A1, B1)" },
+    { id: 2, a: 15, b: 25, c: "=MIN(A1:B2) + MAX(A1:B2)" },
+  ],
+  plugins: [{ plugin: createFormulaPlugin() }],
+});
+```
+
+While hot-formula-parser is still loading (or if it fails to load), formulas keep evaluating with the built-in `=SUM` / `=AVG` engine, then automatically re-evaluate once the full parser is ready.
 
 ---

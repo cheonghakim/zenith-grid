@@ -44,7 +44,8 @@
 .ck-high-grid-root.ck-high-grid-has-side-panel .ck-high-grid-footer,
 .ck-high-grid-root.ck-high-grid-has-side-panel .ck-high-grid-live-banner {
   margin-right: calc(
-    var(--ck-high-grid-side-panel-rail-width) + var(--ck-high-grid-side-panel-edge-gap)
+    var(--ck-high-grid-side-panel-rail-width) +
+      var(--ck-high-grid-side-panel-edge-gap)
   );
 }
 
@@ -55,7 +56,8 @@
   right: 0;
   bottom: 10px;
   width: calc(
-    var(--ck-high-grid-side-panel-card-width) + var(--ck-high-grid-side-panel-rail-width)
+    var(--ck-high-grid-side-panel-card-width) +
+      var(--ck-high-grid-side-panel-rail-width)
   );
   pointer-events: none;
   z-index: 30;
@@ -171,7 +173,10 @@
 @media (max-width: 900px) {
   .ck-high-grid-side-panel-host {
     width: min(
-      calc(var(--ck-high-grid-side-panel-card-width) + var(--ck-high-grid-side-panel-rail-width)),
+      calc(
+        var(--ck-high-grid-side-panel-card-width) +
+          var(--ck-high-grid-side-panel-rail-width)
+      ),
       calc(100% - 12px)
     );
   }
@@ -255,11 +260,11 @@
   opacity: 0.5;
   border-color: var(--ck-high-grid-accent, #0f4c81);
 }
-.ck-high-grid-side-panel-row-drck-high-grid-over {
+.ck-high-grid-side-panel-row-drag-over {
   border-color: var(--ck-high-grid-accent, #0f4c81);
-  box-shadow: 0 0 0 2px rgba(15,76,129,.2);
+  box-shadow: 0 0 0 2px rgba(15, 76, 129, 0.2);
 }
-.ck-high-grid-side-panel-drck-high-grid-handle {
+.ck-high-grid-side-panel-drag-handle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -518,7 +523,12 @@
 
 .ck-high-grid-body-viewport {
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--ck-high-grid-ink-muted, #556170) 60%, transparent) transparent;
+  scrollbar-color: color-mix(
+      in srgb,
+      var(--ck-high-grid-ink-muted, #556170) 60%,
+      transparent
+    )
+    transparent;
 }
 
 .ck-high-grid-body-viewport::-webkit-scrollbar {
@@ -531,14 +541,22 @@
 }
 
 .ck-high-grid-body-viewport::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--ck-high-grid-ink-muted, #556170) 60%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--ck-high-grid-ink-muted, #556170) 60%,
+    transparent
+  );
   border: 2px solid transparent;
   border-radius: 999px;
   background-clip: padding-box;
 }
 
 .ck-high-grid-body-viewport::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--ck-high-grid-ink-muted, #556170) 78%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--ck-high-grid-ink-muted, #556170) 78%,
+    transparent
+  );
   background-clip: padding-box;
 }
 
@@ -645,6 +663,7 @@
   height: 40px;
   border-bottom: 1px solid #dde5ee;
   background: linear-gradient(180deg, #f8fafd, #eef3f8);
+  container-type: inline-size;
 }
 
 .ck-high-grid-header-cell-filtered {
@@ -693,11 +712,19 @@
   overflow: hidden;
 }
 
+.ck-high-grid-header-cell-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .ck-high-grid-sort-indicator {
   display: inline-flex;
   align-items: center;
   gap: 2px;
   min-width: 14px;
+  flex-shrink: 0;
   color: var(--ck-high-grid-accent, #0f4c81);
 }
 
@@ -756,6 +783,19 @@
 .ck-high-grid-header-menu-btn:focus-visible {
   outline: 2px solid rgba(15, 76, 129, 0.32);
   outline-offset: -2px;
+}
+
+/* Too narrow for both action icons to sit next to the title without
+   colliding with it — drop the dedicated filter icon and let the column
+   menu (which also offers "Filter...") take its slot instead. */
+@container (max-width: 130px) {
+  .ck-high-grid-header-filter-button {
+    display: none;
+  }
+
+  .ck-high-grid-header-menu-btn {
+    right: 6px;
+  }
 }
 
 .ck-high-grid-header-filter-popover {
@@ -878,7 +918,7 @@
 }
 .ck-high-grid-filter-row-input:focus {
   border-color: var(--ck-high-grid-accent, #0f4c81);
-  box-shadow: 0 0 0 2px rgba(15,76,129,.15);
+  box-shadow: 0 0 0 2px rgba(15, 76, 129, 0.15);
 }
 
 .ck-high-grid-row-number-header,
@@ -966,7 +1006,8 @@
 }
 
 .ck-high-grid-row-live-enter {
-  animation: ck-high-grid-row-live-enter var(--ck-high-grid-live-enter-duration, 700ms)
+  animation: ck-high-grid-row-live-enter
+    var(--ck-high-grid-live-enter-duration, 700ms)
     cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: center top;
 }
@@ -1137,38 +1178,46 @@
 
 .ck-high-grid-context-menu {
   z-index: 1200;
-  min-width: 176px;
-  padding: 8px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
-  backdrop-filter: blur(16px);
-  display: grid;
-  gap: 4px;
+  min-width: 180px;
+  background: var(--ck-high-grid-surface-elevated, #fff);
+  border: 1px solid var(--ck-high-grid-border, #d7dee7);
+  border-radius: var(--ck-high-grid-radius-sm, 6px);
+  box-shadow: var(--ck-high-grid-shadow, 0 20px 48px rgba(15, 23, 42, 0.12));
+  padding: 4px 0;
+  font-size: var(--ck-high-grid-font-size-sm, 13px);
+  color: var(--ck-high-grid-ink, #18212b);
 }
 
 .ck-high-grid-context-menu-item {
   width: 100%;
   border: 0;
-  border-radius: 10px;
   background: transparent;
   color: var(--ck-high-grid-ink);
   text-align: left;
-  padding: 9px 10px;
+  padding: 7px 14px;
   font: inherit;
   cursor: pointer;
+  transition: background var(--ck-high-grid-transition-fast, 120ms ease);
+  white-space: nowrap;
 }
 
 .ck-high-grid-context-menu-item:hover:not(:disabled),
 .ck-high-grid-context-menu-item:focus-visible {
-  background: rgba(37, 99, 235, 0.08);
+  background: var(--ck-high-grid-accent-soft, #e6f0fa);
+  color: var(--ck-high-grid-accent, #0f4c81);
   outline: none;
 }
 
 .ck-high-grid-context-menu-item:disabled {
   opacity: 0.48;
   cursor: not-allowed;
+}
+
+.ck-high-grid-context-menu-separator {
+  height: 1px;
+  background: var(--ck-high-grid-border-subtle, #e6ebf1);
+  margin: 4px 0;
+  border: none;
 }
 
 .ck-high-grid-live-banner,
@@ -1277,7 +1326,7 @@
   font-weight: 500;
   padding: 1px 7px;
   border-radius: 10px;
-  background: var(--ck-high-grid-accent-alpha, rgba(15,76,129,.1));
+  background: var(--ck-high-grid-accent-alpha, rgba(15, 76, 129, 0.1));
   color: var(--ck-high-grid-accent, #0f4c81);
   white-space: nowrap;
 }
@@ -1313,7 +1362,10 @@
 }
 
 .ck-high-grid-header-cell-pinned {
-  background: var(--ck-high-grid-header-bg, linear-gradient(180deg, #f8fafd, #eef3f8));
+  background: var(
+    --ck-high-grid-header-bg,
+    linear-gradient(180deg, #f8fafd, #eef3f8)
+  );
   box-shadow: 1px 0 0 var(--ck-high-grid-border, #dbe3ec);
 }
 
@@ -1326,11 +1378,11 @@
   box-shadow: -1px 0 0 var(--ck-high-grid-border, #e4eaf0);
 }
 
-.ck-high-grid-drck-high-grid-origin {
+.ck-high-grid-drag-origin {
   opacity: 0.45;
 }
 
-.ck-high-grid-drck-high-grid-target {
+.ck-high-grid-drag-target {
   outline: 2px solid rgba(15, 76, 129, 0.35);
   outline-offset: -2px;
 }
@@ -1484,13 +1536,19 @@
   font-size: 13px;
   line-height: 1.5;
   border-radius: 6px;
-  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   pointer-events: none;
   animation: ck-high-grid-tooltip-in 120ms ease;
 }
 @keyframes ck-high-grid-tooltip-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .ck-high-grid-fill-handle {
@@ -1515,8 +1573,15 @@
 }
 
 @keyframes ck-high-grid-cell-flash {
-  0%   { background-color: rgba(var(--ck-high-grid-flash-color-rgb, 34,197,94), 0.35); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: rgba(
+      var(--ck-high-grid-flash-color-rgb, 34, 197, 94),
+      0.35
+    );
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 .ck-high-grid-cell-flash {
   animation: ck-high-grid-cell-flash 600ms ease-out forwards;
@@ -1644,6 +1709,7 @@
   height: 1px;
   background: var(--ck-high-grid-border-subtle, #e6ebf1);
   margin: 4px 0;
+  border: none;
 }
 
 /* ── Print ───────────────────────────────────────────────── */
@@ -1742,7 +1808,6 @@
   .ck-high-grid-header-cell {
     flex-shrink: 0;
   }
-
 }
 
 /* ── Group Row Aggregates ─────────────────────────────────── */
@@ -1909,6 +1974,17 @@
   color-scheme: dark;
 }
 
+/* --ck-high-grid-ink(-muted) is declared on .ck-high-grid-root (specificity 0-1-0)
+   with light-theme values, so var(--ck-high-grid-ink, <dark-fallback>) below never
+   falls back to <dark-fallback> — it resolves to the already-defined light value.
+   Redefine it here at 0-2-0 (covers both host class patterns) so dark-theme text
+   colors actually flip. */
+.ck-high-grid-theme-dark .ck-high-grid-root,
+.ck-high-grid-root.ck-high-grid-theme-dark {
+  --ck-high-grid-ink: #e8edf3;
+  --ck-high-grid-ink-muted: #8fa5bc;
+}
+
 .ck-high-grid-theme-dark .ck-high-grid-root {
   background: var(--ck-high-grid-surface, #12181f);
 }
@@ -1916,12 +1992,18 @@
 /* ── Header ─────────────────────────────────────────────── */
 
 .ck-high-grid-theme-dark .ck-high-grid-header {
-  background: var(--ck-high-grid-header-bg, linear-gradient(180deg, #1c2836, #141e2a));
+  background: var(
+    --ck-high-grid-header-bg,
+    linear-gradient(180deg, #1c2836, #141e2a)
+  );
   border-bottom-color: var(--ck-high-grid-border, #2d3a47);
 }
 
 .ck-high-grid-theme-dark .ck-high-grid-header-cell {
-  background: var(--ck-high-grid-header-bg, linear-gradient(180deg, #1c2836, #141e2a));
+  background: var(
+    --ck-high-grid-header-bg,
+    linear-gradient(180deg, #1c2836, #141e2a)
+  );
   border-bottom-color: var(--ck-high-grid-header-border, #283848);
 }
 
@@ -1931,12 +2013,18 @@
 }
 
 .ck-high-grid-theme-dark .ck-high-grid-header-span-placeholder {
-  background: var(--ck-high-grid-header-bg, linear-gradient(180deg, #1c2836, #141e2a));
+  background: var(
+    --ck-high-grid-header-bg,
+    linear-gradient(180deg, #1c2836, #141e2a)
+  );
   border-bottom-color: var(--ck-high-grid-header-border, #283848);
 }
 
 .ck-high-grid-theme-dark .ck-high-grid-header-group-cell {
-  background: var(--ck-high-grid-header-group-bg, linear-gradient(180deg, #1e3a5c, #152d4a));
+  background: var(
+    --ck-high-grid-header-group-bg,
+    linear-gradient(180deg, #1e3a5c, #152d4a)
+  );
   border-bottom-color: #24384e;
   color: var(--ck-high-grid-header-group-color, #88c4f0);
 }
@@ -1948,7 +2036,9 @@
 
 .ck-high-grid-theme-dark .ck-high-grid-header-filter-button:hover,
 .ck-high-grid-theme-dark .ck-high-grid-header-menu-btn:hover,
-.ck-high-grid-theme-dark .ck-high-grid-header-cell-filtered .ck-high-grid-header-filter-button {
+.ck-high-grid-theme-dark
+  .ck-high-grid-header-cell-filtered
+  .ck-high-grid-header-filter-button {
   background: rgba(74, 158, 237, 0.12);
   color: var(--ck-high-grid-accent, #4a9eed);
 }
@@ -1957,15 +2047,22 @@
   background: transparent;
 }
 
-.ck-high-grid-theme-dark .ck-high-grid-header-cell:hover .ck-high-grid-header-resize-handle::before,
-.ck-high-grid-theme-dark .ck-high-grid-column-resizing .ck-high-grid-header-resize-handle::before {
+.ck-high-grid-theme-dark
+  .ck-high-grid-header-cell:hover
+  .ck-high-grid-header-resize-handle::before,
+.ck-high-grid-theme-dark
+  .ck-high-grid-column-resizing
+  .ck-high-grid-header-resize-handle::before {
   background: rgba(74, 158, 237, 0.35);
 }
 
 /* ── Header Cell Pinned ──────────────────────────────────── */
 
 .ck-high-grid-theme-dark .ck-high-grid-header-cell-pinned {
-  background: var(--ck-high-grid-header-bg, linear-gradient(180deg, #1c2836, #141e2a));
+  background: var(
+    --ck-high-grid-header-bg,
+    linear-gradient(180deg, #1c2836, #141e2a)
+  );
   box-shadow: 1px 0 0 var(--ck-high-grid-border, #2d3a47);
 }
 
@@ -1976,7 +2073,10 @@
 /* ── Row Number Column ───────────────────────────────────── */
 
 .ck-high-grid-theme-dark .ck-high-grid-row-number-header {
-  background: var(--ck-high-grid-header-bg, linear-gradient(180deg, #1c2836, #141e2a));
+  background: var(
+    --ck-high-grid-header-bg,
+    linear-gradient(180deg, #1c2836, #141e2a)
+  );
   border-right-color: var(--ck-high-grid-border, #2d3a47);
   color: var(--ck-high-grid-ink-muted, #8fa5bc);
 }
@@ -1993,7 +2093,10 @@
 /* ── Filter Row ──────────────────────────────────────────── */
 
 .ck-high-grid-theme-dark .ck-high-grid-filter-row {
-  background: var(--ck-high-grid-header-bg, linear-gradient(180deg, #1c2836, #141e2a));
+  background: var(
+    --ck-high-grid-header-bg,
+    linear-gradient(180deg, #1c2836, #141e2a)
+  );
   border-bottom-color: var(--ck-high-grid-border, #2d3a47);
 }
 
@@ -2073,7 +2176,10 @@
 }
 
 .ck-high-grid-theme-dark .ck-high-grid-row-group {
-  background: var(--ck-high-grid-row-group-bg, linear-gradient(90deg, #1a2635, #152030));
+  background: var(
+    --ck-high-grid-row-group-bg,
+    linear-gradient(90deg, #1a2635, #152030)
+  );
   color: var(--ck-high-grid-ink, #e8edf3);
 }
 
@@ -2171,7 +2277,10 @@
 /* ── Live Banner / Footer / Infinite Loader ─────────────── */
 
 .ck-high-grid-theme-dark .ck-high-grid-live-banner {
-  background: var(--ck-high-grid-live-banner-bg, linear-gradient(90deg, #162840, #1a2e48));
+  background: var(
+    --ck-high-grid-live-banner-bg,
+    linear-gradient(90deg, #162840, #1a2e48)
+  );
   border-bottom-color: var(--ck-high-grid-live-banner-border, #24384e);
 }
 
@@ -2197,24 +2306,37 @@
 /* ── Side Panel ──────────────────────────────────────────── */
 
 .ck-high-grid-theme-dark .ck-high-grid-side-panel-tab {
-  background: var(--ck-high-grid-side-panel-rail-bg, linear-gradient(180deg, rgba(22, 30, 42, 0.98), rgba(18, 26, 36, 0.98)));
+  background: var(
+    --ck-high-grid-side-panel-rail-bg,
+    linear-gradient(180deg, rgba(22, 30, 42, 0.98), rgba(18, 26, 36, 0.98))
+  );
   border-color: var(--ck-high-grid-border, #2d3a47);
   color: var(--ck-high-grid-ink-muted, #8fa5bc);
 }
 
 .ck-high-grid-theme-dark .ck-high-grid-side-panel-tab[data-active="true"] {
-  background: var(--ck-high-grid-side-panel-rail-active, linear-gradient(180deg, #1e3a5c, #152d4a));
+  background: var(
+    --ck-high-grid-side-panel-rail-active,
+    linear-gradient(180deg, #1e3a5c, #152d4a)
+  );
   border-color: #152d4a;
   color: var(--ck-high-grid-ink, #e8edf3);
 }
 
 .ck-high-grid-theme-dark .ck-high-grid-side-panel-card {
-  background: var(--ck-high-grid-side-panel-bg, linear-gradient(180deg, rgba(20, 28, 38, 0.99), rgba(16, 24, 33, 0.99)));
+  background: var(
+    --ck-high-grid-side-panel-bg,
+    linear-gradient(180deg, rgba(20, 28, 38, 0.99), rgba(16, 24, 33, 0.99))
+  );
   border-color: var(--ck-high-grid-border, #2d3a47);
 }
 
 .ck-high-grid-theme-dark .ck-high-grid-side-panel-header {
-  background: linear-gradient(180deg, rgba(28, 38, 52, 0.9), rgba(22, 30, 40, 0.7));
+  background: linear-gradient(
+    180deg,
+    rgba(28, 38, 52, 0.9),
+    rgba(22, 30, 40, 0.7)
+  );
   border-bottom-color: var(--ck-high-grid-border, #2d3a47);
 }
 
@@ -2325,33 +2447,39 @@
   color: var(--ck-high-grid-ink, #e8edf3);
 }
 
-.ck-high-grid-header-filter-popover.ck-high-grid-theme-dark .ck-high-grid-header-filter-popover-title {
+.ck-high-grid-header-filter-popover.ck-high-grid-theme-dark
+  .ck-high-grid-header-filter-popover-title {
   color: var(--ck-high-grid-ink, #e8edf3);
 }
 
-.ck-high-grid-header-filter-popover.ck-high-grid-theme-dark .ck-high-grid-header-filter-input {
+.ck-high-grid-header-filter-popover.ck-high-grid-theme-dark
+  .ck-high-grid-header-filter-input {
   background: var(--ck-high-grid-surface, #12181f);
   border-color: var(--ck-high-grid-border, #2d3a47);
   color: var(--ck-high-grid-ink, #e8edf3);
 }
 
-.ck-high-grid-header-filter-popover.ck-high-grid-theme-dark .ck-high-grid-header-filter-input:focus {
+.ck-high-grid-header-filter-popover.ck-high-grid-theme-dark
+  .ck-high-grid-header-filter-input:focus {
   background: #161e28;
   border-color: var(--ck-high-grid-accent, #4a9eed);
   box-shadow: 0 0 0 3px rgba(74, 158, 237, 0.15);
 }
 
-.ck-high-grid-header-filter-popover.ck-high-grid-theme-dark .ck-high-grid-header-filter-action {
+.ck-high-grid-header-filter-popover.ck-high-grid-theme-dark
+  .ck-high-grid-header-filter-action {
   background: linear-gradient(180deg, #1e2d3e, #182536);
   border-color: var(--ck-high-grid-border, #2d3a47);
   color: var(--ck-high-grid-ink, #e8edf3);
 }
 
-.ck-high-grid-header-filter-popover.ck-high-grid-theme-dark .ck-high-grid-filter-checkbox-label {
+.ck-high-grid-header-filter-popover.ck-high-grid-theme-dark
+  .ck-high-grid-filter-checkbox-label {
   color: var(--ck-high-grid-ink, #e8edf3);
 }
 
-.ck-high-grid-header-filter-popover.ck-high-grid-theme-dark .ck-high-grid-filter-checkbox-label:hover {
+.ck-high-grid-header-filter-popover.ck-high-grid-theme-dark
+  .ck-high-grid-filter-checkbox-label:hover {
   background: rgba(74, 158, 237, 0.08);
   border-radius: 4px;
 }
@@ -2362,16 +2490,19 @@
   width: 6px;
 }
 
-.ck-high-grid-theme-dark .ck-high-grid-side-panel-body::-webkit-scrollbar-track {
+.ck-high-grid-theme-dark
+  .ck-high-grid-side-panel-body::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.ck-high-grid-theme-dark .ck-high-grid-side-panel-body::-webkit-scrollbar-thumb {
+.ck-high-grid-theme-dark
+  .ck-high-grid-side-panel-body::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 999px;
 }
 
-.ck-high-grid-theme-dark .ck-high-grid-side-panel-body::-webkit-scrollbar-thumb:hover {
+.ck-high-grid-theme-dark
+  .ck-high-grid-side-panel-body::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
 
@@ -2400,13 +2531,15 @@
   color: var(--ck-high-grid-ink, #e8edf3);
 }
 
-.ck-high-grid-theme-dark .ck-high-grid-header-context-menu .ck-high-grid-context-menu-item:hover {
+.ck-high-grid-theme-dark
+  .ck-high-grid-header-context-menu
+  .ck-high-grid-context-menu-item:hover {
   background: rgba(74, 158, 237, 0.1);
 }
 
 /* ── Drag Target (dark) ──────────────────────────────────────── */
 
-.ck-high-grid-theme-dark .ck-high-grid-drck-high-grid-target {
+.ck-high-grid-theme-dark .ck-high-grid-drag-target {
   outline-color: rgba(74, 158, 237, 0.45);
 }
 
@@ -2422,7 +2555,9 @@
 /* ── Context Menu Separator (dark) ──────────────────────────── */
 
 .ck-high-grid-theme-dark .ck-high-grid-context-menu-separator,
-.ck-high-grid-theme-dark .ck-high-grid-header-context-menu .ck-high-grid-context-menu-separator {
+.ck-high-grid-theme-dark
+  .ck-high-grid-header-context-menu
+  .ck-high-grid-context-menu-separator {
   background: var(--ck-high-grid-border, #2d3a47);
 }
 

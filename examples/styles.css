@@ -821,7 +821,7 @@ button.btn-xs {
   background-size: 200% 100% !important;
 }
 
-/* 컨텍스트 메뉴 */
+/* 컨텍스트 메뉴 - 헤더와 동일한 스타일 사용 (grid.css에서 통일) */
 .ck-high-grid-context-menu {
   background: var(--grid-popup-bg) !important;
   border-color: var(--panel-border) !important;
@@ -836,6 +836,7 @@ button.btn-xs {
 .ck-high-grid-context-menu-item:hover:not(:disabled),
 .ck-high-grid-context-menu-item:focus-visible {
   background: var(--accent-soft) !important;
+  color: var(--accent-blue) !important;
 }
 
 /* 필터 팝오버 */

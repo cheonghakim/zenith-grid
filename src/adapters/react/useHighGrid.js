@@ -98,6 +98,7 @@ export function useHighGrid(options = {}) {
     liveRemoveRows:    (...a) => gridRef.current?.liveRemoveRows(...a),
     on:                (...a) => gridRef.current?.on(...a),
     getSelectedKeys:    ()   => gridRef.current?.getSelectedKeys(),
+    getSelectedRows:    ()   => gridRef.current?.getSelectedRows(),
     getColumnState:     ()   => gridRef.current?.getColumnState(),
     getPaginationState: ()   => gridRef.current?.getPaginationState(),
   };

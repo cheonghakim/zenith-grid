@@ -14,6 +14,13 @@ export class HeaderRenderer {
     this._handleDocumentPointerDown =
       this._handleDocumentPointerDown.bind(this);
     this._handleViewportReposition = this._positionFilterPopover.bind(this);
+
+    // Operator picked in the header filter popover before a value is entered.
+    // onColumnFilterChange() drops the filter entry while value is empty, so
+    // _renderFilterPopover's re-render would otherwise fall back to the
+    // column's default operator and undo the user's pick — see the same
+    // fix in SettingsPanelRenderer._pendingFilterOperator.
+    this._pendingFilterOperator = new Map();
   }
 
   render(rangeBundle = null) {
@@ -405,6 +412,17 @@ export class HeaderRenderer {
       );
     }
 
+    const menuBtn = document.createElement("button");
+    menuBtn.type = "button";
+    menuBtn.className = "ck-high-grid-header-menu-btn";
+    menuBtn.setAttribute("aria-label", `${cell.headerName} column menu`);
+    menuBtn.appendChild(createSvgIcon("dotsVertical", 14));
+    menuBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this._showHeaderContextMenu(cell.colId, cell.def, event);
+    });
+    domCell.appendChild(menuBtn);
+
     const state = this._columnModel.getState(cell.colId);
     if (cell.def.resizable !== false) {
       const resizeHandle = document.createElement("button");
@@ -465,27 +483,27 @@ export class HeaderRenderer {
           return;
         }
         event.dataTransfer?.setData("text/plain", def.id);
-        cell.classList.add("ck-high-grid-drck-high-grid-origin");
+        cell.classList.add("ck-high-grid-drag-origin");
       });
       cell.addEventListener("dragend", () => {
-        cell.classList.remove("ck-high-grid-drck-high-grid-origin");
+        cell.classList.remove("ck-high-grid-drag-origin");
         const container = cell.closest(
           ".ck-high-grid-header-left-pinned, .ck-high-grid-header-center-container, .ck-high-grid-header-right-pinned",
         );
         container
-          ?.querySelectorAll(".ck-high-grid-drck-high-grid-target")
-          .forEach((el) => el.classList.remove("ck-high-grid-drck-high-grid-target"));
+          ?.querySelectorAll(".ck-high-grid-drag-target")
+          .forEach((el) => el.classList.remove("ck-high-grid-drag-target"));
       });
       cell.addEventListener("dragover", (event) => {
         event.preventDefault();
-        cell.classList.add("ck-high-grid-drck-high-grid-target");
+        cell.classList.add("ck-high-grid-drag-target");
       });
       cell.addEventListener("dragleave", () => {
-        cell.classList.remove("ck-high-grid-drck-high-grid-target");
+        cell.classList.remove("ck-high-grid-drag-target");
       });
       cell.addEventListener("drop", (event) => {
         event.preventDefault();
-        cell.classList.remove("ck-high-grid-drck-high-grid-target");
+        cell.classList.remove("ck-high-grid-drag-target");
         const fromColId = event.dataTransfer?.getData("text/plain");
         if (!fromColId || fromColId === def.id) return;
         this._options.onColumnDrop?.({
@@ -896,7 +914,8 @@ export class HeaderRenderer {
 
     const meta = this._resolveFilterMeta(def, colId);
     const activeFilter = this._options.getColumnFilter?.(colId);
-    const operator = activeFilter?.operator ?? meta.defaultOperator;
+    const operator =
+      activeFilter?.operator ?? this._pendingFilterOperator.get(colId) ?? meta.defaultOperator;
     const value =
       activeFilter?.value ??
       (operator === "between" ? ["", ""] : meta.type === "select" ? [] : "");
@@ -934,6 +953,7 @@ export class HeaderRenderer {
       popover.appendChild(editor);
 
       operatorSelect.addEventListener("change", () => {
+        this._pendingFilterOperator.set(colId, operatorSelect.value);
         this._options.onColumnFilterChange?.(colId, {
           type: meta.type,
           field: def.field,
@@ -1108,6 +1128,7 @@ export class HeaderRenderer {
       "Clear",
     );
     clearButton.addEventListener("click", () => {
+      this._pendingFilterOperator.delete(colId);
       this._options.onColumnFilterClear?.(colId);
       this._closeFilterPopover();
     });
@@ -1417,6 +1438,12 @@ export class HeaderRenderer {
     menu.style.left = `${event.clientX}px`;
     menu.style.top = `${event.clientY}px`;
 
+    // Inherit theme class from grid root
+    const gridRoot = this._dom?.getRoot?.();
+    if (gridRoot?.classList.contains('ck-high-grid-theme-dark')) {
+      menu.classList.add('ck-high-grid-theme-dark');
+    }
+
     const addItem = (label, action, disabled = false) => {
       const item = document.createElement("div");
       item.className =
@@ -1463,6 +1490,17 @@ export class HeaderRenderer {
       addItem(t("grid.header.menu.clearSort", "Clear Sort"), () =>
         this._options.onClearSort?.(colId),
       );
+      addSep();
+    }
+
+    // 필터 — narrow columns collapse the dedicated filter icon into this menu
+    if (def.filterable !== false) {
+      addItem(t("grid.header.menu.filter", "Filter..."), () => {
+        const cellEl = event.target.closest(".ck-high-grid-header-cell");
+        if (cellEl) {
+          this._toggleFilterPopover(colId, def, cellEl, cellEl);
+        }
+      });
       addSep();
     }
 

@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.1.0] - 2026-07-01
+
+### Added
+- **Flex Columns**: Added support for proportional column widths using `flex` property (AG-Grid style)
+  - Use `flex` instead of `width` for responsive, ratio-based column sizing
+  - Supports `minWidth` and `maxWidth` constraints with flex columns
+  - Automatically recalculates on grid resize
+  - Example: `{ id: 'name', flex: 2, minWidth: 120, maxWidth: 300 }`
+  - Mixed usage with fixed-width columns is supported
+- **Formula Engine Plugin**: Added the new `createFormulaPlugin` using `hot-formula-parser` for full Excel-like functions.
+  - Supports arithmetic operators (`+ - * / ^`), comparison operations, and the full formula.js function set (`MIN`, `MAX`, `IF`, `COUNT`, `VLOOKUP`, logical/string functions, etc.).
+  - Preserves standard formula authoring via `row._formulas[field] = "=..."` and circular reference guard.
+- **Context Menu Enhancements**: Added support for both `action` and `onSelect` callbacks in context menu items, and context menu separators.
+
+### Fixed
+- **Korean/CJK IME Input**: Fixed character loss in quick filter when typing Korean, Chinese, or Japanese text
+  - Added composition event tracking (`compositionstart`/`compositionend`)
+  - Prevented rendering during IME composition to protect character input
+  - Added 50ms protection window after composition end for rapid consecutive typing
+  - Input focus and cursor position now properly restored after re-rendering
+- **Quick Filter Focus**: Fixed input losing focus during typing
+  - Preserved user input value during component re-renders
+  - Restored cursor position after DOM reconstruction
+- **Settings Panel Range Slider**: Prevented slider handles from triggering drag-and-drop actions.
+- **Drag & Drop Typos**: Corrected typographical errors in CSS classes, JavaScript code, and event APIs related to row dragging (restored back to `drag`, e.g. `.ck-high-grid-row-drag-handle` and event `row-drag-start`).
+- **UTF-8 BOM Test Fix**: Removed dynamic BOM characters in `tests/grid-core.dom.spec.js` that caused parsing errors in Vitest/Vite.
+
+---
+
 ## [1.3.0] - 2026-06-17
 
 ### Breaking Changes

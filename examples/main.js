@@ -4,6 +4,9 @@
   scorePrefixPlugin,
   createXlsxExportPlugin,
   createSparklinePlugin,
+  createContextMenuPlugin,
+  createCsvShortcutPlugin,
+  createFormulaPlugin,
 } from "../src/index.js";
 import { createEchartsPlugin } from "../src/plugins/echartsPlugin.js";
 import { createSvgIcon } from "../src/renderer/IconFactory.js";
@@ -216,7 +219,9 @@ const getBaseColumns = () => [
     id: "name",
     field: "name",
     header: "Operator",
-    width: 180,
+    flex: 2, // ✨ Flex 2 - 남은 공간의 2배 비율
+    minWidth: 120,
+    maxWidth: 300,
     tooltip: true,
     editable: true,
   },
@@ -236,6 +241,11 @@ const getBaseColumns = () => [
     filterType: "select",
     filterOptions: STATUS_NAMES,
     renderer: renderStatusBadge,
+    editable: true,
+    editor: "select",
+    editorOptions: {
+      options: STATUS_NAMES,
+    },
   },
   {
     id: "score",
@@ -280,8 +290,8 @@ const getBaseColumns = () => [
     filterType: "select",
     filterOptions: QUEUES,
   },
-  { id: "lastAction", field: "lastAction", header: "Last Action", width: 200 },
-  { id: "notes", field: "notes", header: "Notes", width: 320, tooltip: true },
+  { id: "lastAction", field: "lastAction", header: "Last Action", flex: 1, minWidth: 150 }, // ✨ Flex 1
+  { id: "notes", field: "notes", header: "Notes", flex: 1, minWidth: 200, tooltip: true }, // ✨ Flex 1
   {
     id: "updatedAt",
     field: "updatedAt",
@@ -862,9 +872,91 @@ const gridEnterprise = createGrid(document.getElementById("grid-enterprise"), {
   locale: koreanLocale,
   editing: { enabled: true },
   plugins: [
+    // Export plugins
     { plugin: createXlsxExportPlugin({ fileName: "enterprise-grid.xlsx" }) },
+    { plugin: createCsvShortcutPlugin({ key: 'e', fileName: 'enterprise-grid.csv' }) },
+
+    // Formula engine (full Excel-style functions via hot-formula-parser)
+    { plugin: createFormulaPlugin() },
+
+    // Chart plugins
     { plugin: createSparklinePlugin() },
     { plugin: createEchartsPlugin() },
+
+    // Data transformation plugins
+    { plugin: uppercaseTeamPlugin },
+    { plugin: scorePrefixPlugin },
+
+    // Context menu plugin
+    {
+      plugin: createContextMenuPlugin({
+        getItems: ({ type, row, column, core }) => {
+          const items = [];
+
+          // Cell/Row context menu
+          if (type === 'cell' || type === 'row') {
+            items.push({
+              label: 'Copy Row Data',
+              action: () => {
+                const text = JSON.stringify(row, null, 2);
+                navigator.clipboard?.writeText(text);
+                console.log('Copied row:', row);
+              },
+            });
+
+            if (row.team) {
+              items.push({
+                label: `Filter: ${row.team}`,
+                action: () => {
+                  core.setColumnFilter('team', {
+                    type: 'select',
+                    values: [row.team],
+                  });
+                },
+              });
+            }
+          }
+
+          // Header context menu
+          if (type === 'header' && column) {
+            items.push({
+              label: `Hide Column`,
+              action: () => {
+                core.setColumnVisible(column.def.id, false);
+              },
+            });
+
+            items.push({
+              label: 'Auto-size',
+              action: () => {
+                core.autoSizeColumn(column.def.id);
+              },
+            });
+          }
+
+          // Common actions (only if we have other items)
+          if (items.length > 0) {
+            items.push({ type: 'separator' });
+          }
+
+          items.push({
+            label: 'Export CSV',
+            action: () => {
+              core.downloadCsv({ fileName: 'enterprise-grid.csv' });
+            },
+          });
+
+          items.push({
+            label: 'Export Excel',
+            action: () => {
+              core.downloadXlsx?.({ fileName: 'enterprise-grid.xlsx' });
+            },
+          });
+
+          return items;
+        },
+      }),
+    },
   ],
   sidePanel: {
     enabled: true,
@@ -905,9 +997,7 @@ function refreshGlobalStats() {
   // Update Header Counters
   rowCountEl.textContent = activeGrid.getRows().length.toLocaleString();
   visibleCountEl.textContent = activeGrid.getFlatRows().length.toLocaleString();
-  selectedCountEl.textContent = activeGrid.getSelectedRows
-    ? activeGrid.getSelectedRows().length.toLocaleString()
-    : "0";
+  selectedCountEl.textContent = activeGrid.getSelectedRows().length.toLocaleString();
 
   // Update Footer Details
   modeValueEl.textContent = activeGrid.getDisplayMode
@@ -933,9 +1023,8 @@ function refreshGlobalStats() {
     const plugins = gridOverview.getInstalledPlugins();
     pluginsValueEl.textContent = plugins.length ? plugins.join(", ") : "none";
   } else if (activeGrid === gridHierarchy) {
-    const isTree = gridHierarchy.isTreeEnabled && gridHierarchy.isTreeEnabled();
-    const isGroup =
-      gridHierarchy.isGroupingEnabled && gridHierarchy.isGroupingEnabled();
+    const isTree = gridHierarchy.isTreeEnabled();
+    const isGroup = gridHierarchy.isGroupingEnabled();
 
     datasetValueEl.textContent = isTree ? "tree (Division)" : "flat (1,500)";
     groupingValueEl.textContent = isGroup ? "on (team)" : "off";
@@ -1410,7 +1499,9 @@ benchmarkScenarioButton.addEventListener("click", async () => {
 
 benchmarkScrollButton.addEventListener("click", async () => {
   const viewport =
-    document.getElementById("grid-live").querySelector(".ck-high-grid-body-viewport") ||
+    document
+      .getElementById("grid-live")
+      .querySelector(".ck-high-grid-body-viewport") ||
     document
       .getElementById("grid-live")
       .querySelector(".highgrid-body-viewport");

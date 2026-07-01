@@ -41,7 +41,43 @@ loaded at runtime only when the corresponding feature/plugin is used.
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-2.  Apache ECharts
+2.  hot-formula-parser
+    Version: 4.0.0
+    License: MIT
+    Homepage: https://github.com/handsontable/formula-parser
+    Usage: Dynamically loaded (lazy import, with CDN fallback) by formulaPlugin
+    to evaluate Excel-style formulas (arithmetic operators, comparisons, and
+    the full formula.js function set — MIN, MAX, IF, COUNT, VLOOKUP, etc.).
+    Without this plugin, the core FormulaManager only supports =SUM / =AVG
+    and bare cell references. Install separately: `npm install hot-formula-parser`
+
+    (The MIT License)
+    Copyright (c) Handsoncode sp. z o.o. <hello@handsoncode.net>
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+    Transitive dependencies (pulled in only when this plugin is installed):
+    @handsontable/formulajs (MIT), tiny-emitter (MIT), jstat (MIT), and
+    bessel (Apache-2.0, used internally by formulajs for statistical
+    functions). None of these are bundled into HighGrid core.
+
+3.  Apache ECharts
     Version: ^5.x / 6.1.0 (devDependency for demo; user-supplied for production)
     License: Apache License 2.0
     Homepage: https://echarts.apache.org
@@ -72,7 +108,7 @@ loaded at runtime only when the corresponding feature/plugin is used.
     NOTICE: Apache ECharts, Apache, and the Apache feather logo are either
     registered trademarks or trademarks of the Apache Software Foundation.
 
-3.  Material Design Icons (MDI)
+4.  Material Design Icons (MDI)
     Version: Path data copied from the public Material Design Icons collection
     License: Apache License 2.0
     Homepage: https://pictogrammers.com/library/mdi/
@@ -84,7 +120,7 @@ loaded at runtime only when the corresponding feature/plugin is used.
     Material Design Icons are maintained by Pictogrammers. The icon SVG/path
     assets are licensed under the Apache License 2.0.
 
-4.  Google Fonts: Inter and Plus Jakarta Sans
+5.  Google Fonts: Inter and Plus Jakarta Sans
     Version: Served by Google Fonts CDN for the demo page
     License: SIL Open Font License 1.1
     Homepage: https://fonts.google.com/
@@ -98,7 +134,7 @@ loaded at runtime only when the corresponding feature/plugin is used.
 PEER DEPENDENCIES (not bundled — installed by the end user)
 ────────────────────────────────────────────────────────────────────────────────
 
-5. Vue
+6. Vue
    Version: ^3.3.0 (peer dependency)
    License: MIT
    Homepage: https://vuejs.org
@@ -110,7 +146,7 @@ PEER DEPENDENCIES (not bundled — installed by the end user)
 
    (Full MIT license text: https://github.com/vuejs/core/blob/main/LICENSE)
 
-6. React & ReactDOM
+7. React & ReactDOM
    Version: ^18.0.0 (peer dependency)
    License: MIT
    Homepage: https://react.dev
@@ -130,25 +166,25 @@ These packages are listed in devDependencies and are used only in the
 development/build/test pipeline. They are NOT included in the published
 npm package or any distributed bundle.
 
-7.  Vite
+8.  Vite
     Version: 5.4.21
     License: MIT
     Homepage: https://vite.dev
     Usage: Build tool for bundling the library and serving the demo.
 
-8.  Vitest
+9.  Vitest
     Version: 1.6.1
     License: MIT
     Homepage: https://vitest.dev
     Usage: Unit and DOM test runner.
 
-9.  jsdom
+10. jsdom
     Version: 26.1.0
     License: MIT
     Homepage: https://github.com/jsdom/jsdom
     Usage: DOM environment emulation for unit tests (via Vitest).
 
-10. @playwright/test
+11. @playwright/test
     Version: 1.60.0
     License: Apache-2.0
     Homepage: https://playwright.dev
@@ -163,7 +199,7 @@ npm package or any distributed bundle.
 
         http://www.apache.org/licenses/LICENSE-2.0
 
-11. @vitejs/plugin-vue
+12. @vitejs/plugin-vue
     License: MIT
     Homepage: https://github.com/vitejs/vite-plugin-vue
     Usage: Vite plugin for Vue 3 single-file component (.vue) support.
@@ -173,15 +209,20 @@ NOTES
 ────────────────────────────────────────────────────────────────────────────────
 
 - The HighGrid core library (src/) is original work licensed under MIT, except
-  for the selected MDI icon path data listed in entry #3.
+  for the selected MDI icon path data listed in entry #4.
 
 - sparklinePlugin (src/plugins/sparklinePlugin.js) renders mini charts using
   native browser SVG APIs only. No external charting library is required or
   bundled.
 
 - echartsPlugin (src/plugins/echartsPlugin.js) optionally lazy-loads Apache
-  ECharts (entry #2 above) via dynamic import. ECharts is Apache-2.0, which
+  ECharts (entry #3 above) via dynamic import. ECharts is Apache-2.0, which
   is compatible with MIT for use in open-source and commercial projects.
+
+- formulaPlugin (src/plugins/formulaPlugin.js) optionally lazy-loads
+  hot-formula-parser (entry #2 above) via dynamic import, with a CDN fallback.
+  Without it, the core FormulaManager still works with its built-in =SUM / =AVG
+  support — the plugin only unlocks the full Excel-style function set.
 
 - MIT and Apache-2.0 are both permissive licenses. You can use MIT-licensed
   HighGrid together with Apache-2.0 ECharts without license conflicts.

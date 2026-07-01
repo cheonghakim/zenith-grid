@@ -106,6 +106,7 @@ export function useHighGrid(containerRef, options = {}) {
     livePatchRow:      (...a) => grid.value?.livePatchRow(...a),
     liveRemoveRows:    (...a) => grid.value?.liveRemoveRows(...a),
     getSelectedKeys:    ()    => grid.value?.getSelectedKeys(),
+    getSelectedRows:    ()    => grid.value?.getSelectedRows(),
     getSelectionState:  ()    => grid.value?.getSelectionState(),
     getPaginationState: ()    => grid.value?.getPaginationState(),
     getColumnState:     ()    => grid.value?.getColumnState(),

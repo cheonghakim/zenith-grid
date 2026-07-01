@@ -1,4 +1,4 @@
-﻿// @vitest-environment jsdom
+// @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGrid } from '../src/index.js';
@@ -745,7 +745,7 @@ describe('GridCore DOM smoke', () => {
     await flush();
 
     // 1. Verify row drag handle rendering
-    const dragHandle = host.querySelector('.ck-high-grid-cell[data-col-id="name"] .ck-high-grid-row-drck-high-grid-handle');
+    const dragHandle = host.querySelector('.ck-high-grid-cell[data-col-id="name"] .ck-high-grid-row-drag-handle');
     expect(dragHandle).not.toBeNull();
 
     // 2. Verify row reordering on drop

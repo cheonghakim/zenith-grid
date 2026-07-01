@@ -101,8 +101,9 @@ export class ColumnModel {
       rowDrag: def.rowDrag ?? false,
       rowSpan: def.rowSpan ?? null,
       colSpan: def.colSpan ?? null,
-      // 너비
-      width: def.width ?? 150,
+      // 너비 - flex와 width는 상호 배타적
+      flex: def.flex ?? null,
+      width: def.width ?? (def.flex ? null : 150),
       minWidth: def.minWidth ?? 50,
       maxWidth: def.maxWidth ?? Infinity,
       // 기타
@@ -131,6 +132,7 @@ export class ColumnModel {
     return {
       colId,
       width: def.width ?? 150,
+      flex: def.flex ?? null,
       visible: def.visible ?? true,
       pinned: def.pinned ?? null, // 'left' | 'right' | null
       order: this._leafOrder.length, // 현재 순서 (순서 배열로 관리하므로 참고용)
@@ -273,6 +275,90 @@ export class ColumnModel {
     this._buildFromDefs(columnDefs, {});
     if (preserveState) {
       this.applySerializedState(prevState);
+    }
+  }
+
+  // ─── Flex 너비 계산 ─────────────────────────────────────────
+
+  /**
+   * Flex 컬럼의 너비를 계산하여 state.width에 적용
+   * @param {number} availableWidth - 사용 가능한 전체 너비
+   * @param {string[]} visibleColIds - 보이는 컬럼 ID 목록
+   */
+  calculateFlexWidths(availableWidth, visibleColIds = null) {
+    const colIds = visibleColIds ?? this._leafOrder.filter((id) => this._states.get(id)?.visible);
+
+    // 1. 고정 너비 컬럼들의 총 너비 계산
+    let fixedWidth = 0;
+    let totalFlex = 0;
+    const flexColumns = [];
+
+    for (const colId of colIds) {
+      const def = this._defs.get(colId);
+      const state = this._states.get(colId);
+      if (!def || !state) continue;
+
+      if (def.flex && def.flex > 0) {
+        // Flex 컬럼
+        totalFlex += def.flex;
+        flexColumns.push({ colId, def, state });
+      } else {
+        // 고정 너비 컬럼
+        fixedWidth += state.width;
+      }
+    }
+
+    // 2. Flex 컬럼이 없으면 종료
+    if (flexColumns.length === 0) {
+      return;
+    }
+
+    // 3. Flex 컬럼에 분배할 수 있는 너비
+    let remainingWidth = Math.max(0, availableWidth - fixedWidth);
+
+    // 4. 각 Flex 컬럼의 너비 계산 (minWidth/maxWidth 고려)
+    const widths = new Map();
+    let constrainedFlex = 0; // 제약에 걸린 flex 값
+
+    // 첫 패스: 제약 없이 계산
+    for (const { colId, def } of flexColumns) {
+      const idealWidth = (def.flex / totalFlex) * remainingWidth;
+      const clampedWidth = Math.max(
+        def.minWidth,
+        Math.min(def.maxWidth, idealWidth)
+      );
+
+      widths.set(colId, clampedWidth);
+
+      // 제약에 걸린 경우
+      if (clampedWidth !== idealWidth) {
+        constrainedFlex += def.flex;
+        remainingWidth -= clampedWidth;
+      }
+    }
+
+    // 두 번째 패스: 제약에 걸린 컬럼 제외하고 재계산
+    if (constrainedFlex > 0 && constrainedFlex < totalFlex) {
+      const freeFlex = totalFlex - constrainedFlex;
+      for (const { colId, def } of flexColumns) {
+        const firstPass = widths.get(colId);
+        const idealWidth = (def.flex / totalFlex) * (availableWidth - fixedWidth);
+
+        // 첫 패스에서 제약에 걸리지 않은 컬럼만 재계산
+        if (firstPass === idealWidth) {
+          const newIdealWidth = (def.flex / freeFlex) * remainingWidth;
+          const clampedWidth = Math.max(
+            def.minWidth,
+            Math.min(def.maxWidth, newIdealWidth)
+          );
+          widths.set(colId, clampedWidth);
+        }
+      }
+    }
+
+    // 5. State에 계산된 너비 적용
+    for (const { colId, state } of flexColumns) {
+      state.width = Math.round(widths.get(colId));
     }
   }
 

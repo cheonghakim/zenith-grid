@@ -51,5 +51,6 @@ export { createContextMenuPlugin } from './contextMenuPlugin.js';
 export { createCsvShortcutPlugin } from './csvShortcutPlugin.js';
 export { createXlsxExportPlugin } from './xlsxExportPlugin.js';
 export { createSparklinePlugin } from './sparklinePlugin.js';
+export { createFormulaPlugin } from './formulaPlugin.js';
 // createEchartsPlugin: echarts 패키지 필요 → 직접 import 사용
 // export { createEchartsPlugin } from './echartsPlugin.js';

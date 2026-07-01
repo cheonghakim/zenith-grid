@@ -1,4 +1,4 @@
-﻿const ICON_SVG_PATHS = {
+const ICON_SVG_PATHS = {
   chevronRight: "M10,17L15,12L10,7V17Z",
   chevronDown: "M7,10L12,15L17,10H7Z",
   filterVariant: "M3,5H21L14,12V19L10,16V12L3,5Z",
@@ -16,6 +16,8 @@
   lightningBolt: "M7,2V13H10V22L17,10H13L17,2H7Z",
   layers:
     "M12,2L2,7L12,12L22,7L12,2M2,17L12,22L22,17V14L12,19L2,14V17M2,12L12,17L22,12V9L12,14L2,9V12Z",
+  lightbulb:
+    "M12,2A7,7 0 0,0 5,9C5,11.38 6.19,13.47 8,14.74V17A2,2 0 0,0 10,19H14A2,2 0 0,0 16,17V14.74C17.81,13.47 19,11.38 19,9A7,7 0 0,0 12,2M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21Z",
 };
 
 export function createSvgIcon(type, size = 14, className = "ck-high-grid-icon") {

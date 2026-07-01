@@ -47,6 +47,7 @@ export interface UseHighGridReturn {
   liveRemoveRows: (...args: any[]) => any;
   on: (...args: any[]) => any;
   getSelectedKeys: () => Set<string> | undefined;
+  getSelectedRows: () => any[] | undefined;
   getColumnState: () => any;
   getPaginationState: () => any;
 }

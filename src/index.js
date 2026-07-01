@@ -25,6 +25,7 @@ export {
   createCsvShortcutPlugin,
   createXlsxExportPlugin,
   createSparklinePlugin,
+  createFormulaPlugin,
 } from './plugins/index.js';
 // ECharts 플러그인: echarts 패키지 필요 → 별도 import 사용
 // import { createEchartsPlugin } from 'highgrid/src/plugins/echartsPlugin.js';

@@ -178,11 +178,13 @@ defineExpose({
   // Grouping
   enableGrouping:     (...a) => grid.value?.enableGrouping(...a),
   disableGrouping:    ()     => grid.value?.disableGrouping(),
+  isGroupingEnabled:  ()     => grid.value?.isGroupingEnabled(),
   toggleGroup:        (...a) => grid.value?.toggleGroup(...a),
 
   // Tree
   enableTree:         (...a) => grid.value?.enableTree(...a),
   disableTree:        ()     => grid.value?.disableTree(),
+  isTreeEnabled:      ()     => grid.value?.isTreeEnabled(),
   toggleTreeRow:      (...a) => grid.value?.toggleTreeRow(...a),
   expandAllTree:      ()     => grid.value?.expandAllTree(),
   collapseAllTree:    ()     => grid.value?.collapseAllTree(),
@@ -197,6 +199,7 @@ defineExpose({
   toggleSelectAll:    ()     => grid.value?.toggleSelectAll(),
   setRowSelected:     (...a) => grid.value?.setRowSelected(...a),
   getSelectedKeys:    ()     => grid.value?.getSelectedKeys(),
+  getSelectedRows:    ()     => grid.value?.getSelectedRows(),
   getSelectionState:  ()     => grid.value?.getSelectionState(),
 
   // Live updates
@@ -237,6 +240,7 @@ defineExpose({
   // Pivot
   enablePivot:        (...a) => grid.value?.enablePivot(...a),
   disablePivot:       ()     => grid.value?.disablePivot(),
+  isPivotEnabled:     ()     => grid.value?.isPivotEnabled(),
 
   // Export
   exportCsv:          (...a) => grid.value?.exportCsv(...a),

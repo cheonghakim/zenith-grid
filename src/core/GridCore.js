@@ -223,8 +223,8 @@ export class GridCore {
     });
 
     this._rowDragManager = new RowDragManager({
-      onRowDragStart: (payload) => this._events.emit('row-drck-high-grid-start', payload),
-      onRowDragEnd: (payload) => this._events.emit('row-drck-high-grid-end', payload),
+      onRowDragStart: (payload) => this._events.emit('row-drag-start', payload),
+      onRowDragEnd: (payload) => this._events.emit('row-drag-end', payload),
       onRowDrop: ({ fromRowKey, toRowKey }) => this._handleRowDragDrop({ fromRowKey, toRowKey }),
     });
 
@@ -529,6 +529,9 @@ export class GridCore {
 
   async refresh() {
     if (this._destroyed) return;
+
+    // Calculate flex column widths before rendering
+    this._calculateFlexColumnWidths();
 
     if (this._formulaManager) {
       this._formulaManager.evaluateAll();
@@ -857,6 +860,10 @@ export class GridCore {
     this._groupManager.disable();
   }
 
+  isGroupingEnabled() {
+    return this._groupManager.isEnabled();
+  }
+
   enableTree(options = {}) {
     if (this._groupManager.isEnabled()) {
       this._groupManager.disable();
@@ -877,6 +884,10 @@ export class GridCore {
     this._invalidateMeasuredRows();
     this._treeManager.disable();
     void this.refresh();
+  }
+
+  isTreeEnabled() {
+    return this._treeManager.isEnabled();
   }
 
   toggleTreeRow(rowKey) {
@@ -925,6 +936,10 @@ export class GridCore {
 
   getSelectedKeys() {
     return this._selectionManager.getSelectedKeys();
+  }
+
+  getSelectedRows() {
+    return this._selectionManager.getSelectedRows();
   }
 
   getSelectionState() {
@@ -1030,6 +1045,10 @@ export class GridCore {
   disablePivot() {
     this._pivotManager.disable();
     void this.refresh();
+  }
+
+  isPivotEnabled() {
+    return this._pivotManager.isEnabled();
   }
 
   getPivotConfig() {
@@ -1848,6 +1867,29 @@ export class GridCore {
     this._invalidateMeasuredRows();
     void this.saveColumnState();
     void this.refresh();
+  }
+
+  // ─── Flex 컬럼 너비 계산 ───────────────────────────────────
+
+  /**
+   * Flex 컬럼의 너비를 현재 그리드 너비에 맞춰 계산
+   * @private
+   */
+  _calculateFlexColumnWidths() {
+    const containerWidth = this._container?.clientWidth ?? 0;
+    if (containerWidth === 0) return;
+
+    // 핀 고정된 컬럼의 너비를 제외한 center 영역 너비 계산
+    const pinnedWidths = this._columns.getPinnedWidths();
+    const centerAvailableWidth = containerWidth - pinnedWidths.leftWidth - pinnedWidths.rightWidth;
+
+    // Center 컬럼들의 flex 계산
+    const centerColumns = this._columns.getColumnsByPin().center;
+    const centerColIds = centerColumns.map((c) => c.def.id);
+    this._columns.getModel().calculateFlexWidths(centerAvailableWidth, centerColIds);
+
+    // Left/Right pinned 컬럼도 각각 계산 (필요시)
+    // 현재는 center만 지원
   }
 
   destroy() {

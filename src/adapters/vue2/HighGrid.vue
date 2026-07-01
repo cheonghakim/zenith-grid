@@ -166,11 +166,13 @@ export default {
     // Grouping
     enableGrouping(...a)     { return this.grid?.enableGrouping(...a); },
     disableGrouping()        { return this.grid?.disableGrouping(); },
+    isGroupingEnabled()      { return this.grid?.isGroupingEnabled(); },
     toggleGroup(...a)        { return this.grid?.toggleGroup(...a); },
 
     // Tree
     enableTree(...a)         { return this.grid?.enableTree(...a); },
     disableTree()            { return this.grid?.disableTree(); },
+    isTreeEnabled()          { return this.grid?.isTreeEnabled(); },
     toggleTreeRow(...a)      { return this.grid?.toggleTreeRow(...a); },
     expandAllTree()          { return this.grid?.expandAllTree(); },
     collapseAllTree()        { return this.grid?.collapseAllTree(); },
@@ -185,6 +187,7 @@ export default {
     toggleSelectAll()        { return this.grid?.toggleSelectAll(); },
     setRowSelected(...a)     { return this.grid?.setRowSelected(...a); },
     getSelectedKeys()        { return this.grid?.getSelectedKeys(); },
+    getSelectedRows()        { return this.grid?.getSelectedRows(); },
     getSelectionState()      { return this.grid?.getSelectionState(); },
 
     // Live updates
@@ -225,6 +228,7 @@ export default {
     // Pivot
     enablePivot(...a)        { return this.grid?.enablePivot(...a); },
     disablePivot()           { return this.grid?.disablePivot(); },
+    isPivotEnabled()         { return this.grid?.isPivotEnabled(); },
 
     // Export
     exportCsv(...a)          { return this.grid?.exportCsv(...a); },

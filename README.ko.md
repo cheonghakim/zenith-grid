@@ -158,13 +158,46 @@ const grid = createGrid("#app", {
 - `id`: 컬럼 고유 ID
 - `field`: row 객체에서 값을 읽을 필드명
 - `headerName` 또는 `header`: 헤더 텍스트
-- `width`: 기본 너비
+- `width`: 고정 너비 (픽셀 단위)
+- `flex`: 비율 기반 너비 (`width` 대신 사용)
 - `align`: `left`, `center`, `right`
 - `type`: `number`, `date` 등 정렬/비교 힌트
 - `renderer`: 사용자 셀 렌더러
 - `formatter`: 값 포맷팅 함수
 - `pinned`: `left` 또는 `right`
-- `minWidth`, `maxWidth`: 리사이즈 범위
+- `minWidth`, `maxWidth`: 리사이즈 범위 (`width`와 `flex` 모두에 적용)
+
+#### Flex 컬럼 (비율 기반 너비)
+
+`width` 대신 `flex`를 사용하면 사용 가능한 공간에 맞춰 비율로 너비가 자동 조절됩니다:
+
+```js
+const columns = [
+  { id: "id", field: "id", headerName: "ID", width: 80 },        // 고정 80px
+  { id: "name", field: "name", headerName: "이름", flex: 2 },    // 2배 비율
+  { id: "email", field: "email", headerName: "이메일", flex: 1 }, // 1배 비율
+  { id: "actions", headerName: "작업", width: 120 },             // 고정 120px
+];
+
+// 그리드 너비가 1000px일 때:
+// - 고정 컬럼: 80 + 120 = 200px
+// - 남은 공간: 800px
+// - name 컬럼: 800 × (2/3) ≈ 533px
+// - email 컬럼: 800 × (1/3) ≈ 267px
+```
+
+**Flex와 제약 조건:**
+
+```js
+{
+  id: "description",
+  field: "description",
+  headerName: "설명",
+  flex: 1,
+  minWidth: 200,  // 최소 200px 이하로 줄어들지 않음
+  maxWidth: 600,  // 최대 600px 이상으로 늘어나지 않음
+}
+```
 
 예시:
 
@@ -1071,8 +1104,8 @@ const grid = createGrid(container, {
 드래그 이벤트:
 
 ```js
-grid.on("row-drck-high-grid-start", ({ rowKey }) => console.log("드래그 시작", rowKey));
-grid.on("row-drck-high-grid-end",   ({ rowKey }) => console.log("드래그 종료", rowKey));
+grid.on("row-drag-start", ({ rowKey }) => console.log("드래그 시작", rowKey));
+grid.on("row-drag-end",   ({ rowKey }) => console.log("드래그 종료", rowKey));
 ```
 
 ### 36. 범위 선택
@@ -1444,3 +1477,22 @@ const rows = [
   { id: 2, a: 15, b: 25, c: "=AVG(A1:B2)" }  // 17.5로 평가됨
 ];
 ```
+
+### 60. 수식 엔진 플러그인 (엑셀 수준 함수 지원)
+
+위의 기본 수식 엔진은 `=SUM`, `=AVG`만 이해합니다. `createFormulaPlugin`을 설치하면 [hot-formula-parser](https://github.com/handsontable/formula-parser)를 npm에서 우선 로드하고(없으면 CDN으로 폴백) 사칙연산(`+ - * / ^`), 비교 연산, [formula.js](https://github.com/handsontable/formula.js)에 정의된 전체 함수(`MIN`, `MAX`, `IF`, `COUNT`, `VLOOKUP`, 문자열/논리 함수 등)를 그대로 쓸 수 있습니다. `row._formulas[field] = "=..."` 작성 규칙과 순환 참조 감지(`#REF!`)는 기본 엔진과 동일합니다.
+
+```js
+import { createGrid, createFormulaPlugin } from "highgrid";
+
+const grid = createGrid(container, {
+  columns,
+  rows: [
+    { id: 1, a: 10, b: 20, c: "=IF(A1>B1, A1, B1)" },
+    { id: 2, a: 15, b: 25, c: "=MIN(A1:B2) + MAX(A1:B2)" },
+  ],
+  plugins: [{ plugin: createFormulaPlugin() }],
+});
+```
+
+hot-formula-parser가 로드되는 동안(또는 로드에 실패한 경우)에는 기본 `=SUM` / `=AVG` 엔진으로 계속 계산되며, 전체 파서 준비가 끝나면 자동으로 다시 평가합니다.

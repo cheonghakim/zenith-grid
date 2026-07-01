@@ -9,9 +9,26 @@ export class SettingsPanelRenderer {
     this._open = options.defaultOpen ?? false;
     this._host = null;
     this._shell = null;
+    this._draggingRangeColId = null;
+
+    // Initialize composition state
+    this._isComposing = false;
+    this._quickFilterTimer = null;
+
+    // Operator picked in the filter panel before a value is entered.
+    // setColumnFilter() drops the filter entry while value is empty, so the
+    // operator can't be read back from _core state until a value exists —
+    // this map is what keeps the <select> showing the user's pick instead of
+    // reverting to the column's default operator on the next render().
+    this._pendingFilterOperator = new Map();
   }
 
   mount() {
+    // Don't mount if explicitly disabled
+    if (this._options.enabled === false) {
+      return;
+    }
+
     this._host = this._dom.getSidePanelHost();
     if (!this._host) {
       return;
@@ -29,6 +46,33 @@ export class SettingsPanelRenderer {
       return;
     }
 
+    // Avoid rebuilding the DOM while the width slider is being dragged —
+    // recreating the <input type="range"> mid-drag breaks native mouse capture.
+    if (this._draggingRangeColId) {
+      return;
+    }
+
+    // CRITICAL: Don't render while user is composing Korean/Chinese/Japanese
+    // Rendering mid-composition breaks IME input and loses characters
+    if (this._isComposing) {
+      return;
+    }
+
+    // Save focus state before re-rendering
+    const activeElement = document.activeElement;
+    const isFocusInPanel = this._shell.contains(activeElement);
+
+    // Store the CURRENT input value (what user actually typed)
+    const focusedInputValue = (isFocusInPanel && activeElement?.tagName === 'INPUT')
+      ? activeElement.value
+      : null;
+    const focusedInputType = (isFocusInPanel && activeElement?.tagName === 'INPUT')
+      ? activeElement.type
+      : null;
+    const cursorPosition = (isFocusInPanel && activeElement?.tagName === 'INPUT')
+      ? activeElement.selectionStart
+      : null;
+
     this._shell.innerHTML = '';
     this._shell.dataset.open = this._open ? 'true' : 'false';
 
@@ -38,9 +82,14 @@ export class SettingsPanelRenderer {
     const tabs = [
       { id: 'columns', label: this._t('sidePanel.tabs.columns', 'Columns') },
       { id: 'filters', label: this._t('sidePanel.tabs.filters', 'Filters') },
-      { id: 'plugins', label: this._t('sidePanel.tabs.plugins', 'Plugins') },
       { id: 'view', label: this._t('sidePanel.tabs.view', 'View') },
     ];
+
+    // Only show plugins tab if there are available plugins
+    const availablePlugins = this._core._availablePlugins ?? [];
+    if (availablePlugins.length > 0) {
+      tabs.splice(2, 0, { id: 'plugins', label: this._t('sidePanel.tabs.plugins', 'Plugins') });
+    }
 
     tabs.forEach((tab) => {
       const button = document.createElement('button');
@@ -98,6 +147,27 @@ export class SettingsPanelRenderer {
     card.appendChild(body);
     this._shell.appendChild(rail);
     this._shell.appendChild(card);
+
+    // Restore focus to the same input if it was focused before
+    if (isFocusInPanel && focusedInputType === 'search' && focusedInputValue !== null) {
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        const searchInput = this._shell.querySelector('input[type="search"]');
+        if (searchInput) {
+          // CRITICAL: Preserve the user's actual input, don't overwrite!
+          // Only set value if it's different (to preserve what user typed)
+          if (searchInput.value !== focusedInputValue) {
+            searchInput.value = focusedInputValue;
+          }
+
+          searchInput.focus();
+
+          // Restore cursor position (use saved position or end of text)
+          const pos = cursorPosition ?? focusedInputValue.length;
+          searchInput.setSelectionRange(pos, pos);
+        }
+      });
+    }
   }
 
   _renderColumnsSection() {
@@ -108,8 +178,10 @@ export class SettingsPanelRenderer {
     columns.forEach((column) => {
       const row = document.createElement('div');
       row.className = 'ck-high-grid-side-panel-row';
-      row.draggable = true;
       row.dataset.colId = column.def.id;
+
+      // Only make the drag handle draggable, not the entire row
+      let isDraggable = false;
 
       row.addEventListener('dragstart', (e) => {
         e.dataTransfer?.setData('text/plain', column.def.id);
@@ -117,16 +189,16 @@ export class SettingsPanelRenderer {
       });
       row.addEventListener('dragend', () => {
         row.classList.remove('ck-high-grid-side-panel-row-dragging');
-        section.querySelectorAll('.ck-high-grid-side-panel-row').forEach((r) => r.classList.remove('ck-high-grid-side-panel-row-drck-high-grid-over'));
+        section.querySelectorAll('.ck-high-grid-side-panel-row').forEach((r) => r.classList.remove('ck-high-grid-side-panel-row-drag-over'));
       });
       row.addEventListener('dragover', (e) => {
         e.preventDefault();
-        section.querySelectorAll('.ck-high-grid-side-panel-row').forEach((r) => r.classList.remove('ck-high-grid-side-panel-row-drck-high-grid-over'));
-        row.classList.add('ck-high-grid-side-panel-row-drck-high-grid-over');
+        section.querySelectorAll('.ck-high-grid-side-panel-row').forEach((r) => r.classList.remove('ck-high-grid-side-panel-row-drag-over'));
+        row.classList.add('ck-high-grid-side-panel-row-drag-over');
       });
       row.addEventListener('drop', (e) => {
         e.preventDefault();
-        row.classList.remove('ck-high-grid-side-panel-row-drck-high-grid-over');
+        row.classList.remove('ck-high-grid-side-panel-row-drag-over');
         const fromColId = e.dataTransfer?.getData('text/plain');
         const toColId = column.def.id;
         if (fromColId && fromColId !== toColId) {
@@ -140,9 +212,18 @@ export class SettingsPanelRenderer {
       top.className = 'ck-high-grid-side-panel-row-top';
 
       const dragHandle = document.createElement('span');
-      dragHandle.className = 'ck-high-grid-side-panel-drck-high-grid-handle';
+      dragHandle.className = 'ck-high-grid-side-panel-drag-handle';
       dragHandle.setAttribute('aria-hidden', 'true');
       dragHandle.appendChild(createSvgIcon('dragVertical', 14));
+
+      // Enable drag only when mouse is on drag handle
+      dragHandle.addEventListener('mouseenter', () => {
+        row.draggable = true;
+      });
+      dragHandle.addEventListener('mouseleave', () => {
+        row.draggable = false;
+      });
+
       top.appendChild(dragHandle);
 
       const label = document.createElement('label');
@@ -185,6 +266,7 @@ export class SettingsPanelRenderer {
 
       const rangeWrap = document.createElement('div');
       rangeWrap.className = 'ck-high-grid-side-panel-range-wrap';
+      rangeWrap.draggable = false; // Prevent drag on wrapper
 
       const range = document.createElement('input');
       range.type = 'range';
@@ -192,8 +274,40 @@ export class SettingsPanelRenderer {
       range.max = String(Number.isFinite(column.def.maxWidth) ? column.def.maxWidth : 480);
       range.step = '10';
       range.value = String(column.state.width ?? 150);
+      range.draggable = false; // Explicitly disable dragging
+
+      // Prevent all drag events from bubbling
+      range.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        // Suppress full panel re-render while dragging so the slider
+        // element isn't torn down mid-gesture (which breaks mouse capture).
+        this._draggingRangeColId = column.def.id;
+      });
+
+      range.addEventListener('dragstart', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      });
+
+      range.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+        this._draggingRangeColId = column.def.id;
+      }, { passive: true });
+
+      const stopDragging = () => {
+        if (this._draggingRangeColId === column.def.id) {
+          this._draggingRangeColId = null;
+          this.render();
+        }
+      };
+      range.addEventListener('change', stopDragging);
+      range.addEventListener('touchend', stopDragging);
+
       range.addEventListener('input', () => {
         this._core.setColumnWidth(column.def.id, Number(range.value));
+        // Update displayed value
+        widthValue.textContent = `${range.value}px`;
       });
 
       const widthValue = document.createElement('span');
@@ -229,9 +343,42 @@ export class SettingsPanelRenderer {
     const quickInput = document.createElement('input');
     quickInput.type = 'search';
     quickInput.placeholder = this._t('sidePanel.quickFilterPlaceholder', 'Search visible data...');
-    quickInput.value = state.quickFilter ?? '';
-    quickInput.addEventListener('input', () => {
-      this._core.setQuickFilter(quickInput.value, this._options.quickFilterFields ?? []);
+
+    // IMPORTANT: Use the user's current input value if available, not the state
+    // This prevents overwriting what the user is actively typing
+    const activeElement = document.activeElement;
+    const isSearchFocused = activeElement?.type === 'search' && activeElement?.placeholder === quickInput.placeholder;
+    quickInput.value = isSearchFocused ? activeElement.value : (state.quickFilter ?? '');
+
+    quickInput.addEventListener('compositionstart', () => {
+      this._isComposing = true;
+    });
+
+    quickInput.addEventListener('compositionend', (e) => {
+      // Keep _isComposing = true for a short delay to protect against
+      // rapid consecutive typing (e.g., "싸" + "이" + "버" + "거")
+      // Without this delay, render() can be called between compositions,
+      // causing the next character to be lost
+      setTimeout(() => {
+        this._isComposing = false;
+      }, 50);
+
+      // Apply filter with slight delay to allow consecutive typing
+      clearTimeout(this._quickFilterTimer);
+      this._quickFilterTimer = setTimeout(() => {
+        this._core.setQuickFilter(e.target.value, this._options.quickFilterFields ?? []);
+      }, 150);
+    });
+
+    quickInput.addEventListener('input', (e) => {
+      // Skip if composing (Korean/Chinese/Japanese input in progress)
+      if (this._isComposing) return;
+
+      // For non-IME input (English, numbers), use debounce
+      clearTimeout(this._quickFilterTimer);
+      this._quickFilterTimer = setTimeout(() => {
+        this._core.setQuickFilter(e.target.value, this._options.quickFilterFields ?? []);
+      }, 300);
     });
 
     quickLabel.appendChild(quickText);
@@ -439,7 +586,7 @@ export class SettingsPanelRenderer {
     field.appendChild(label);
 
     const meta = this._resolveFilterMeta(column);
-    const currentOperator = filter?.operator ?? meta.defaultOperator;
+    const currentOperator = filter?.operator ?? this._pendingFilterOperator.get(column.def.id) ?? meta.defaultOperator;
     const currentValue = filter?.value ?? (currentOperator === 'between' ? ['', ''] : meta.type === 'select' ? [] : '');
 
     if (meta.type !== 'select') {
@@ -464,6 +611,7 @@ export class SettingsPanelRenderer {
       });
 
       operatorSelect.addEventListener('change', () => {
+        this._pendingFilterOperator.set(column.def.id, operatorSelect.value);
         const nextValue = operatorSelect.value === 'between' ? ['', ''] : '';
         this._core.setColumnFilter(column.def.id, {
           type: meta.type,
@@ -503,6 +651,7 @@ export class SettingsPanelRenderer {
           operator: 'in',
           value: meta.multiple ? selectedValues : selectedValues[0] ?? '',
         });
+        this.render(); // Refresh UI to show updated filter state
       });
 
       field.appendChild(select);
@@ -533,6 +682,7 @@ export class SettingsPanelRenderer {
     clear.textContent = this._t('sidePanel.clearFilter', 'Clear');
     clear.disabled = !filter;
     clear.addEventListener('click', () => {
+      this._pendingFilterOperator.delete(column.def.id);
       this._core.clearColumnFilter(column.def.id);
     });
 

@@ -1,6 +1,6 @@
 {
   "name": "highgrid",
-  "version": "2.0.4",
+  "version": "2.1.0",
   "description": "Production-ready data grid library in vanilla JavaScript",
   "main": "dist/highgrid.umd.cjs",
   "module": "dist/highgrid.js",
@@ -90,6 +90,7 @@
     "url": "https://github.com/cheonghakim/high-grid/issues"
   },
   "dependencies": {
-    "exceljs": "^4.4.0"
+    "exceljs": "^4.4.0",
+    "hot-formula-parser": "^4.0.0"
   }
 }

@@ -56,7 +56,23 @@ export function createContextMenuPlugin(options = {}) {
     menu.style.left = `${payload.event.clientX}px`;
     menu.style.top = `${payload.event.clientY}px`;
 
+    // Inherit theme class from grid root
+    const gridRoot = core?._dom?.getRoot?.();
+    if (gridRoot?.classList.contains('ck-high-grid-theme-dark')) {
+      menu.classList.add('ck-high-grid-theme-dark');
+    }
+
     items.forEach((item) => {
+      // Handle separator
+      if (item.type === 'separator') {
+        const separator = document.createElement('div');
+        separator.className = 'ck-high-grid-context-menu-separator';
+        separator.setAttribute('role', 'separator');
+        menu.appendChild(separator);
+        return;
+      }
+
+      // Handle menu item
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'ck-high-grid-context-menu-item';
@@ -64,7 +80,9 @@ export function createContextMenuPlugin(options = {}) {
       button.textContent = item.label ?? 'Action';
       button.disabled = item.disabled === true;
       button.addEventListener('click', () => {
-        item.onSelect?.({
+        // Support both 'action' and 'onSelect'
+        const callback = item.action ?? item.onSelect;
+        callback?.({
           ...payload,
           type,
           core,

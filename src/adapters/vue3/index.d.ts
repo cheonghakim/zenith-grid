@@ -52,11 +52,13 @@ export interface HighGridExposed<Row = GridRow> {
   // Grouping
   enableGrouping(groupByFields: string[], options?: Record<string, any>): void;
   disableGrouping(): void;
+  isGroupingEnabled(): boolean;
   toggleGroup(groupKey: string): void;
 
   // Tree
   enableTree(options?: any): void;
   disableTree(): void;
+  isTreeEnabled(): boolean;
   toggleTreeRow(rowKey: GridKey): void;
   expandAllTree(): void;
   collapseAllTree(): void;
@@ -71,6 +73,7 @@ export interface HighGridExposed<Row = GridRow> {
   toggleSelectAll(): void;
   setRowSelected(rowKey: GridKey, selected: boolean, options?: Record<string, any>): void;
   getSelectedKeys(): Set<string>;
+  getSelectedRows(): Row[];
   getSelectionState(): any;
 
   // Live updates
@@ -111,6 +114,7 @@ export interface HighGridExposed<Row = GridRow> {
   // Pivot
   enablePivot(config: PivotConfig): void;
   disablePivot(): void;
+  isPivotEnabled(): boolean;
 
   // Export
   exportCsv(options?: any): string;

@@ -352,8 +352,10 @@ export declare class GridCore<Row = GridRow> {
   enableGrouping(groupByFields: string[], options?: Record<string, any>): void;
   toggleGroup(groupKey: string): void;
   disableGrouping(): void;
+  isGroupingEnabled(): boolean;
   enableTree(options?: TreeOptions<Row>): void;
   disableTree(): void;
+  isTreeEnabled(): boolean;
   toggleTreeRow(rowKey: GridKey): void;
   expandAllTree(): void;
   collapseAllTree(): void;
@@ -363,6 +365,7 @@ export declare class GridCore<Row = GridRow> {
   setRowSelected(rowKey: GridKey, selected: boolean, options?: Record<string, any>): void;
   on(eventName: string, handler: (...args: any[]) => any, options?: Record<string, any>): () => void;
   getSelectedKeys(): Set<string>;
+  getSelectedRows(): Row[];
   getSelectionState(): any;
   getDisplayMode(): GridDisplayMode;
   getPaginationState(): any;
@@ -452,6 +455,7 @@ export declare class GridCore<Row = GridRow> {
   /** Pivot */
   enablePivot(config: PivotConfig): void;
   disablePivot(): void;
+  isPivotEnabled(): boolean;
   getPivotConfig(): PivotConfig;
   /** Master-Detail */
   toggleDetail(rowKey: GridKey): void;

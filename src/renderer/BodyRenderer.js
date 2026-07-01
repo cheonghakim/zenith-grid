@@ -90,15 +90,15 @@ export class BodyRenderer {
           const draggingRow = container.querySelector(".ck-high-grid-row-dragging");
           if (draggingRow && draggingRow !== rowElement) {
             event.preventDefault();
-            rowElement.classList.add("ck-high-grid-row-drck-high-grid-over");
+            rowElement.classList.add("ck-high-grid-row-drag-over");
           }
         });
         rowElement.addEventListener("dragleave", () => {
-          rowElement.classList.remove("ck-high-grid-row-drck-high-grid-over");
+          rowElement.classList.remove("ck-high-grid-row-drag-over");
         });
         rowElement.addEventListener("drop", (event) => {
           event.preventDefault();
-          rowElement.classList.remove("ck-high-grid-row-drck-high-grid-over");
+          rowElement.classList.remove("ck-high-grid-row-drag-over");
           const fromRowKey = event.dataTransfer?.getData("text/plain");
           const toRowKey = row._rowKey;
           if (fromRowKey && fromRowKey !== toRowKey) {
@@ -690,7 +690,7 @@ export class BodyRenderer {
     ) {
       const handle = document.createElement("button");
       handle.type = "button";
-      handle.className = "ck-high-grid-row-drck-high-grid-handle";
+      handle.className = "ck-high-grid-row-drag-handle";
       handle.draggable = true;
       handle.style.cursor = "grab";
       handle.style.marginRight = "8px";
@@ -714,8 +714,8 @@ export class BodyRenderer {
         rowEl?.classList.remove("ck-high-grid-row-dragging");
         const container = handle.closest(".ck-high-grid-rows-container");
         container
-          ?.querySelectorAll(".ck-high-grid-row-drck-high-grid-over")
-          .forEach((el) => el.classList.remove("ck-high-grid-row-drck-high-grid-over"));
+          ?.querySelectorAll(".ck-high-grid-row-drag-over")
+          .forEach((el) => el.classList.remove("ck-high-grid-row-drag-over"));
         this._options.onRowDragEnd?.();
       });
 
