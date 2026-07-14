@@ -1,1 +1,1 @@
-export { default as HighGrid } from './HighGrid.js';
+export { default as ZenithGrid } from './ZenithGrid.js';

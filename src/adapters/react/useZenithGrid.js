@@ -2,15 +2,15 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { createGrid } from '../../index.js';
 
 /**
- * useHighGrid - React hook for HighGrid
+ * useZenithGrid - React hook for ZenithGrid
  *
  * Usage:
- *   const { containerRef, grid, state } = useHighGrid({ columns, rows });
+ *   const { containerRef, grid, state } = useZenithGrid({ columns, rows });
  *   return <div ref={containerRef} style={{ height: 400 }} />;
  *
  * @param {import('../../index.js').GridOptions} [options]
  */
-export function useHighGrid(options = {}) {
+export function useZenithGrid(options = {}) {
   const containerRef = useRef(null);
   const gridRef = useRef(null);
   const optionsRef = useRef(options);

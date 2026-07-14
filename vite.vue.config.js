@@ -7,8 +7,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/adapters/vue3/index.js'),
-      name: 'HighGridVue',
-      fileName: 'highgrid-vue',
+      name: 'ZenithGridVue',
+      fileName: 'zenith-grid-vue',
       formats: ['es'],
     },
     outDir: 'dist',

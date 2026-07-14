@@ -146,8 +146,8 @@ describe('BodyRenderer', () => {
 
     expect(beforeRowRender).toHaveBeenCalled();
     expect(afterCellRender).toHaveBeenCalled();
-    expect(rowsContainer.querySelector('.ck-high-grid-row')?.dataset.hooked).toBe('true');
-    expect(rowsContainer.querySelector('.ck-high-grid-cell[data-after-cell="done"]')).not.toBeNull();
-    expect(rowsContainer.querySelector('.ck-high-grid-selection-checkbox')?.disabled).toBe(true);
+    expect(rowsContainer.querySelector('.ck-zenith-grid-row')?.dataset.hooked).toBe('true');
+    expect(rowsContainer.querySelector('.ck-zenith-grid-cell[data-after-cell="done"]')).not.toBeNull();
+    expect(rowsContainer.querySelector('.ck-zenith-grid-selection-checkbox')?.disabled).toBe(true);
   });
 });

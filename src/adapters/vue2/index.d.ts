@@ -1,9 +1,9 @@
 import { DefineComponent } from 'vue';
 import type { GridInstance, GridOptions } from '../../index.js';
 
-export interface HighGridProps extends Omit<GridOptions, 'container'> {}
+export interface ZenithGridProps extends Omit<GridOptions, 'container'> {}
 
-export interface HighGridEmits {
+export interface ZenithGridEmits {
   (e: 'ready', grid: GridInstance): void;
   (e: 'row-click', payload: any): void;
   (e: 'cell-click', payload: any): void;
@@ -23,8 +23,8 @@ export interface HighGridEmits {
   (e: 'state-change', payload: any): void;
 }
 
-export interface HighGridMethods extends Omit<GridInstance, 'on' | 'destroy'> {
+export interface ZenithGridMethods extends Omit<GridInstance, 'on' | 'destroy'> {
   grid: GridInstance | null;
 }
 
-export const HighGrid: DefineComponent<HighGridProps, {}, {}, {}, HighGridMethods>;
+export const ZenithGrid: DefineComponent<ZenithGridProps, {}, {}, {}, ZenithGridMethods>;

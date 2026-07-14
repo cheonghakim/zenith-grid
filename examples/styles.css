@@ -719,166 +719,166 @@ button.btn-xs {
 }
 
 /* -------------------------------------------------------------
-   ★ HighGrid 핵심 스타일 오버라이드 (깨짐 없는 다크/라이트 테마 통합) ★
+   ★ ZenithGrid 핵심 스타일 오버라이드 (깨짐 없는 다크/라이트 테마 통합) ★
    ------------------------------------------------------------- */
-.ck-high-grid-root, .highgrid-container {
+.ck-zenith-grid-root, .zenith-grid-container {
   background: var(--grid-bg) !important;
   color: var(--grid-text) !important;
   border-color: var(--panel-border) !important;
 }
 
-.ck-high-grid-header, .highgrid-header {
+.ck-zenith-grid-header, .zenith-grid-header {
   background: var(--grid-header-bg) !important;
   border-bottom: 1px solid var(--grid-cell-border) !important;
 }
 
-.ck-high-grid-header-cell, .highgrid-header-cell, .ck-high-grid-header-span-placeholder {
+.ck-zenith-grid-header-cell, .zenith-grid-header-cell, .ck-zenith-grid-header-span-placeholder {
   background: var(--grid-header-bg) !important;
   color: var(--grid-text-muted) !important;
   border-right: 1px solid var(--grid-cell-border) !important;
 }
 
-.ck-high-grid-header-group-cell {
+.ck-zenith-grid-header-group-cell {
   background: var(--grid-header-bg) !important;
   color: var(--grid-text) !important;
   border-bottom: 2px solid var(--accent-blue) !important;
   border-right: 1px solid var(--grid-cell-border) !important;
 }
 
-.ck-high-grid-row-number-header {
+.ck-zenith-grid-row-number-header {
   background: var(--grid-header-bg) !important;
   border-right-color: var(--grid-cell-border) !important;
   color: var(--grid-text-muted) !important;
 }
 
-.ck-high-grid-row-number-cell {
+.ck-zenith-grid-row-number-cell {
   background: var(--grid-bg) !important;
   border-right-color: var(--grid-cell-border) !important;
 }
 
-.ck-high-grid-row:hover .ck-high-grid-row-number-cell {
+.ck-zenith-grid-row:hover .ck-zenith-grid-row-number-cell {
   background: var(--grid-row-hover) !important;
 }
 
-.ck-high-grid-row, .highgrid-row {
+.ck-zenith-grid-row, .zenith-grid-row {
   background: var(--grid-bg) !important;
   border-bottom: 1px solid var(--grid-cell-border) !important;
 }
 
-.ck-high-grid-row:hover, .highgrid-row:hover {
+.ck-zenith-grid-row:hover, .zenith-grid-row:hover {
   background: var(--grid-row-hover) !important;
 }
 
-/* 선택 행은 별도 오버라이드 (ck-high-grid-row !important 에 덮이지 않도록) */
-.ck-high-grid-row-selected {
+/* 선택 행은 별도 오버라이드 (ck-zenith-grid-row !important 에 덮이지 않도록) */
+.ck-zenith-grid-row-selected {
   background: var(--grid-row-selected, rgba(37, 99, 235, 0.08)) !important;
   box-shadow:
     inset 3px 0 0 var(--accent-blue),
     inset 0 0 0 1px rgba(59, 130, 246, 0.15) !important;
 }
 
-.ck-high-grid-row-selected:hover {
+.ck-zenith-grid-row-selected:hover {
   background: var(--grid-row-selected-hover, rgba(37, 99, 235, 0.12)) !important;
 }
 
-.ck-high-grid-cell, .highgrid-cell {
+.ck-zenith-grid-cell, .zenith-grid-cell {
   color: var(--grid-text) !important;
   border-right: 1px solid var(--grid-cell-border) !important;
   background: transparent !important;
 }
 
-.ck-high-grid-header-cell-pinned,
-.ck-high-grid-cell-pinned {
+.ck-zenith-grid-header-cell-pinned,
+.ck-zenith-grid-cell-pinned {
   box-shadow: 1px 0 0 var(--grid-cell-border-strong) !important;
 }
 
-.ck-high-grid-header-cell-pinned[style*="right"],
-.ck-high-grid-cell-pinned[style*="right"] {
+.ck-zenith-grid-header-cell-pinned[style*="right"],
+.ck-zenith-grid-cell-pinned[style*="right"] {
   box-shadow: -1px 0 0 var(--grid-cell-border-strong) !important;
 }
 
 /* 고정 행 */
-.ck-high-grid-pinned-top-rows,
-.ck-high-grid-pinned-bottom-rows {
+.ck-zenith-grid-pinned-top-rows,
+.ck-zenith-grid-pinned-bottom-rows {
   background: var(--grid-bg) !important;
 }
 
 /* 오버레이 */
-.ck-high-grid-overlay-card {
+.ck-zenith-grid-overlay-card {
   background: var(--panel-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
-.ck-high-grid-overlay-action {
+.ck-zenith-grid-overlay-action {
   background: var(--panel-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
-.ck-high-grid-overlay-skeleton-line {
+.ck-zenith-grid-overlay-skeleton-line {
   background: linear-gradient(90deg, var(--panel-border), var(--grid-header-bg), var(--panel-border)) !important;
   background-size: 200% 100% !important;
 }
 
 /* 컨텍스트 메뉴 - 헤더와 동일한 스타일 사용 (grid.css에서 통일) */
-.ck-high-grid-context-menu {
+.ck-zenith-grid-context-menu {
   background: var(--grid-popup-bg) !important;
   border-color: var(--panel-border) !important;
   box-shadow: var(--grid-popup-shadow) !important;
   color: var(--text-main) !important;
 }
 
-.ck-high-grid-context-menu-item {
+.ck-zenith-grid-context-menu-item {
   color: var(--text-main) !important;
 }
 
-.ck-high-grid-context-menu-item:hover:not(:disabled),
-.ck-high-grid-context-menu-item:focus-visible {
+.ck-zenith-grid-context-menu-item:hover:not(:disabled),
+.ck-zenith-grid-context-menu-item:focus-visible {
   background: var(--accent-soft) !important;
   color: var(--accent-blue) !important;
 }
 
 /* 필터 팝오버 */
-.ck-high-grid-header-filter-popover {
+.ck-zenith-grid-header-filter-popover {
   background: var(--grid-popup-bg) !important;
   border-color: var(--panel-border) !important;
   box-shadow: var(--grid-popup-shadow) !important;
   color: var(--text-main) !important;
 }
 
-.ck-high-grid-header-filter-popover-title {
+.ck-zenith-grid-header-filter-popover-title {
   color: var(--text-main) !important;
 }
 
-.ck-high-grid-header-filter-input,
-.ck-high-grid-header-filter-select,
-.ck-high-grid-header-filter-select-multiple {
+.ck-zenith-grid-header-filter-input,
+.ck-zenith-grid-header-filter-select,
+.ck-zenith-grid-header-filter-select-multiple {
   background: var(--panel-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
-.ck-high-grid-header-filter-action {
+.ck-zenith-grid-header-filter-action {
   background: var(--panel-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
 /* 인라인 필터 행 */
-.ck-high-grid-filter-row {
+.ck-zenith-grid-filter-row {
   background: var(--grid-header-bg) !important;
   border-bottom-color: var(--grid-cell-border) !important;
 }
 
-.ck-high-grid-filter-row-input {
+.ck-zenith-grid-filter-row-input {
   background: var(--panel-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
 /* 인피니트 로더 */
-.ck-high-grid-infinite-loader {
+.ck-zenith-grid-infinite-loader {
   background: var(--grid-popup-bg) !important;
   border-color: var(--panel-border) !important;
   box-shadow: var(--grid-popup-shadow) !important;
@@ -886,157 +886,157 @@ button.btn-xs {
 }
 
 /* 라이브 배너 */
-.ck-high-grid-live-banner {
+.ck-zenith-grid-live-banner {
   background: var(--panel-bg) !important;
   border-bottom-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
 /* 페이지네이션 영역 */
-.ck-high-grid-footer {
+.ck-zenith-grid-footer {
   background: var(--panel-bg) !important;
   border-top-color: var(--panel-border) !important;
 }
 
-.ck-high-grid-footer-summary {
+.ck-zenith-grid-footer-summary {
   color: var(--text-muted) !important;
 }
 
-.ck-high-grid-footer-button {
+.ck-zenith-grid-footer-button {
   background: linear-gradient(180deg, var(--grid-btn-bg-start, #ffffff), var(--grid-btn-bg-end, #f7f9fc)) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
-.ck-high-grid-footer-button:hover:not(:disabled) {
+.ck-zenith-grid-footer-button:hover:not(:disabled) {
   background: var(--grid-row-hover) !important;
 }
 
 /* 마스터-디테일 패널 */
-.ck-high-grid-row-detail {
+.ck-zenith-grid-row-detail {
   background: var(--grid-detail-bg) !important;
   border-bottom-color: var(--grid-detail-border) !important;
   color: var(--grid-detail-text) !important;
 }
 
 /* 사이드 패널 관련 오버라이드 (그레이/슬레이트 통일) */
-.ck-high-grid-side-panel-tab {
+.ck-zenith-grid-side-panel-tab {
   background: var(--grid-side-tab-bg) !important;
   color: var(--grid-text-muted) !important;
   border-color: var(--panel-border) !important;
 }
 
-.ck-high-grid-side-panel-tab[data-active="true"] {
+.ck-zenith-grid-side-panel-tab[data-active="true"] {
   background: var(--accent-blue) !important;
   color: #ffffff !important;
   border-color: var(--accent-blue) !important;
 }
 
-.ck-high-grid-side-panel-card {
+.ck-zenith-grid-side-panel-card {
   background: var(--grid-side-card-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--grid-text) !important;
 }
 
-.ck-high-grid-side-panel-header {
+.ck-zenith-grid-side-panel-header {
   background: var(--grid-header-bg) !important;
   border-bottom: 1px solid var(--panel-border) !important;
 }
 
-.ck-high-grid-side-panel-row, .ck-high-grid-side-panel-field, .ck-high-grid-side-panel-block {
+.ck-zenith-grid-side-panel-row, .ck-zenith-grid-side-panel-field, .ck-zenith-grid-side-panel-block {
   background: var(--grid-side-item-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--grid-text) !important;
 }
 
-.ck-high-grid-side-panel-checkbox, .ck-high-grid-side-panel-checkbox span, .ck-high-grid-side-panel-copy strong {
+.ck-zenith-grid-side-panel-checkbox, .ck-zenith-grid-side-panel-checkbox span, .ck-zenith-grid-side-panel-copy strong {
   color: var(--grid-text) !important;
 }
 
-.ck-high-grid-side-panel-copy span {
+.ck-zenith-grid-side-panel-copy span {
   color: var(--grid-text-muted) !important;
 }
 
-.ck-high-grid-side-panel-select {
+.ck-zenith-grid-side-panel-select {
   background: var(--grid-bg) !important;
   color: var(--grid-text) !important;
   border-color: var(--panel-border) !important;
 }
 
-.ck-high-grid-side-panel-field input,
-.ck-high-grid-side-panel-select-multiple {
+.ck-zenith-grid-side-panel-field input,
+.ck-zenith-grid-side-panel-select-multiple {
   background: var(--grid-bg) !important;
   color: var(--grid-text) !important;
   border-color: var(--panel-border) !important;
 }
 
-.ck-high-grid-side-panel-empty {
+.ck-zenith-grid-side-panel-empty {
   background: var(--grid-header-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--grid-text-muted) !important;
 }
 
 /* 사이드 패널 버튼 (Close / Action / Toggle) */
-.ck-high-grid-side-panel-close,
-.ck-high-grid-side-panel-action,
-.ck-high-grid-side-panel-toggle {
+.ck-zenith-grid-side-panel-close,
+.ck-zenith-grid-side-panel-action,
+.ck-zenith-grid-side-panel-toggle {
   background: var(--grid-side-item-bg, #f8fafc) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
-.ck-high-grid-side-panel-action:hover,
-.ck-high-grid-side-panel-toggle:hover,
-.ck-high-grid-side-panel-close:hover {
+.ck-zenith-grid-side-panel-action:hover,
+.ck-zenith-grid-side-panel-toggle:hover,
+.ck-zenith-grid-side-panel-close:hover {
   background: var(--grid-row-hover) !important;
 }
 
-.ck-high-grid-side-panel-toggle[data-active="true"] {
+.ck-zenith-grid-side-panel-toggle[data-active="true"] {
   background: var(--accent-blue) !important;
   border-color: var(--accent-blue) !important;
   color: #ffffff !important;
 }
 
-.ck-high-grid-cell-editor {
+.ck-zenith-grid-cell-editor {
   background: var(--panel-bg) !important;
   color: var(--text-main) !important;
   border-color: var(--accent-border) !important;
 }
 
 /* 고급 필터 다이얼로그 */
-.ck-high-grid-advanced-filter-dialog {
+.ck-zenith-grid-advanced-filter-dialog {
   background: var(--panel-bg) !important;
   border-color: var(--panel-border) !important;
   color: var(--text-main) !important;
 }
 
 /* 뷰포트 하얀 배경 깨짐 강제 수정 */
-.ck-high-grid-body-viewport, .ck-high-grid-body-container, .ck-high-grid-virtual-canvas, .ck-high-grid-header-center-viewport, .ck-high-grid-header-left-pinned, .ck-high-grid-header-right-pinned {
+.ck-zenith-grid-body-viewport, .ck-zenith-grid-body-container, .ck-zenith-grid-virtual-canvas, .ck-zenith-grid-header-center-viewport, .ck-zenith-grid-header-left-pinned, .ck-zenith-grid-header-right-pinned {
   background: var(--grid-bg) !important;
   background-color: var(--grid-bg) !important;
 }
 
-.ck-high-grid-body-viewport,
+.ck-zenith-grid-body-viewport,
 .benchmark-log,
 .event-log {
   scrollbar-width: thin;
   scrollbar-color: var(--grid-scrollbar-thumb) transparent;
 }
 
-.ck-high-grid-body-viewport::-webkit-scrollbar,
+.ck-zenith-grid-body-viewport::-webkit-scrollbar,
 .benchmark-log::-webkit-scrollbar,
 .event-log::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-.ck-high-grid-body-viewport::-webkit-scrollbar-track,
+.ck-zenith-grid-body-viewport::-webkit-scrollbar-track,
 .benchmark-log::-webkit-scrollbar-track,
 .event-log::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.ck-high-grid-body-viewport::-webkit-scrollbar-thumb,
+.ck-zenith-grid-body-viewport::-webkit-scrollbar-thumb,
 .benchmark-log::-webkit-scrollbar-thumb,
 .event-log::-webkit-scrollbar-thumb {
   background: var(--grid-scrollbar-thumb);
@@ -1045,7 +1045,7 @@ button.btn-xs {
   background-clip: padding-box;
 }
 
-.ck-high-grid-body-viewport::-webkit-scrollbar-thumb:hover,
+.ck-zenith-grid-body-viewport::-webkit-scrollbar-thumb:hover,
 .benchmark-log::-webkit-scrollbar-thumb:hover,
 .event-log::-webkit-scrollbar-thumb:hover {
   background: var(--grid-scrollbar-thumb-hover);
@@ -1053,7 +1053,7 @@ button.btn-xs {
 }
 
 /* 트리 및 마스터디테일 화살표 버튼 투명화 및 스타일링 */
-.ck-high-grid-row-toggle, .ck-high-grid-master-detail-toggle {
+.ck-zenith-grid-row-toggle, .ck-zenith-grid-master-detail-toggle {
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
@@ -1072,33 +1072,33 @@ button.btn-xs {
   transition: background-color 0.15s ease;
 }
 
-.ck-high-grid-row-toggle:hover, .ck-high-grid-master-detail-toggle:hover {
+.ck-zenith-grid-row-toggle:hover, .ck-zenith-grid-master-detail-toggle:hover {
   background: var(--grid-row-hover) !important;
 }
 
-.ck-high-grid-row-toggle svg, .ck-high-grid-master-detail-toggle svg {
+.ck-zenith-grid-row-toggle svg, .ck-zenith-grid-master-detail-toggle svg {
   width: 17px !important;
   height: 17px !important;
   color: var(--grid-text) !important;
 }
 
 /* 라이브러리 내장 다크 테마 토큰 매핑 */
-.ck-high-grid-theme-dark {
-  --ck-high-grid-surface:              var(--grid-bg);
-  --ck-high-grid-surface-elevated:     var(--panel-bg);
-  --ck-high-grid-surface-muted:        var(--grid-header-bg);
-  --ck-high-grid-border:               var(--panel-border);
-  --ck-high-grid-border-strong:        var(--grid-cell-border-strong);
-  --ck-high-grid-border-subtle:        var(--grid-cell-border);
-  --ck-high-grid-header-bg:            var(--grid-header-bg);
-  --ck-high-grid-header-border:        var(--grid-cell-border);
-  --ck-high-grid-ink:                  var(--grid-text);
-  --ck-high-grid-ink-muted:            var(--grid-text-muted);
-  --ck-high-grid-accent:               var(--accent-blue);
-  --ck-high-grid-accent-soft:          var(--accent-soft);
-  --ck-high-grid-row-hover-bg:         var(--grid-row-hover);
-  --ck-high-grid-row-selected-bg:      var(--grid-row-selected);
-  --ck-high-grid-overlay-bg:           rgba(11, 15, 23, 0.85);
+.ck-zenith-grid-theme-dark {
+  --ck-zenith-grid-surface:              var(--grid-bg);
+  --ck-zenith-grid-surface-elevated:     var(--panel-bg);
+  --ck-zenith-grid-surface-muted:        var(--grid-header-bg);
+  --ck-zenith-grid-border:               var(--panel-border);
+  --ck-zenith-grid-border-strong:        var(--grid-cell-border-strong);
+  --ck-zenith-grid-border-subtle:        var(--grid-cell-border);
+  --ck-zenith-grid-header-bg:            var(--grid-header-bg);
+  --ck-zenith-grid-header-border:        var(--grid-cell-border);
+  --ck-zenith-grid-ink:                  var(--grid-text);
+  --ck-zenith-grid-ink-muted:            var(--grid-text-muted);
+  --ck-zenith-grid-accent:               var(--accent-blue);
+  --ck-zenith-grid-accent-soft:          var(--accent-soft);
+  --ck-zenith-grid-row-hover-bg:         var(--grid-row-hover);
+  --ck-zenith-grid-row-selected-bg:      var(--grid-row-selected);
+  --ck-zenith-grid-overlay-bg:           rgba(11, 15, 23, 0.85);
 }
 
 /* ── 인쇄 레이아웃 ─────────────────────────────────────── */
@@ -1136,11 +1136,11 @@ button.btn-xs {
     display: block !important;
   }
 
-  /* ck-high-grid-has-side-panel 의 margin-right 제거 */
-  .ck-high-grid-root.ck-high-grid-has-side-panel .ck-high-grid-body-viewport,
-  .ck-high-grid-root.ck-high-grid-has-side-panel .ck-high-grid-footer,
-  .ck-high-grid-root.ck-high-grid-has-side-panel .ck-high-grid-live-banner,
-  .ck-high-grid-root.ck-high-grid-has-side-panel .ck-high-grid-header {
+  /* ck-zenith-grid-has-side-panel 의 margin-right 제거 */
+  .ck-zenith-grid-root.ck-zenith-grid-has-side-panel .ck-zenith-grid-body-viewport,
+  .ck-zenith-grid-root.ck-zenith-grid-has-side-panel .ck-zenith-grid-footer,
+  .ck-zenith-grid-root.ck-zenith-grid-has-side-panel .ck-zenith-grid-live-banner,
+  .ck-zenith-grid-root.ck-zenith-grid-has-side-panel .ck-zenith-grid-header {
     margin-right: 0 !important;
   }
 }

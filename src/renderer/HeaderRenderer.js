@@ -77,10 +77,10 @@ export class HeaderRenderer {
     ];
 
     for (const container of containers) {
-      const cells = container.querySelectorAll(".ck-high-grid-header-cell[data-col-id]");
+      const cells = container.querySelectorAll(".ck-zenith-grid-header-cell[data-col-id]");
       cells.forEach((cell) => {
         const colId = cell.getAttribute("data-col-id");
-        const indicator = cell.querySelector(".ck-high-grid-sort-indicator");
+        const indicator = cell.querySelector(".ck-zenith-grid-sort-indicator");
         if (indicator) {
           this._renderSortIndicator(indicator, colId);
         }
@@ -106,7 +106,7 @@ export class HeaderRenderer {
 
     // ── Single-level (original code) ──────────────────────────
     const row = document.createElement("div");
-    row.className = "ck-high-grid-header-row";
+    row.className = "ck-zenith-grid-header-row";
     row.setAttribute("role", "row");
 
     if (pinArea === "left" && this._options.rowNumbers) {
@@ -176,7 +176,7 @@ export class HeaderRenderer {
 
     for (let depthIdx = 0; depthIdx < totalDepths; depthIdx++) {
       const row = document.createElement("div");
-      row.className = "ck-high-grid-header-row ck-high-grid-header-row-depth";
+      row.className = "ck-zenith-grid-header-row ck-zenith-grid-header-row-depth";
       row.setAttribute("role", "row");
 
       if (pinArea === "left" && this._options.selectionEnabled) {
@@ -332,7 +332,7 @@ export class HeaderRenderer {
     const width = this._cellWidth(cell, pinLeafIds, leafWidthMap);
 
     const domCell = document.createElement("div");
-    domCell.className = "ck-high-grid-header-cell";
+    domCell.className = "ck-zenith-grid-header-cell";
     domCell.setAttribute(
       "role",
       cell.isGroup ? "presentation" : "columnheader",
@@ -343,18 +343,18 @@ export class HeaderRenderer {
     domCell.style.height = `${rowHeight}px`;
 
     if (cell._isSpanPlaceholder) {
-      domCell.classList.add("ck-high-grid-header-span-placeholder");
+      domCell.classList.add("ck-zenith-grid-header-span-placeholder");
       return domCell;
     }
 
-    if (cell.isGroup) domCell.classList.add("ck-high-grid-header-group-cell");
+    if (cell.isGroup) domCell.classList.add("ck-zenith-grid-header-group-cell");
     if (!cell.isGroup && this._options.getColumnFilter?.(cell.colId)) {
-      domCell.classList.add("ck-high-grid-header-cell-filtered");
+      domCell.classList.add("ck-zenith-grid-header-cell-filtered");
     }
 
     if (cell.isGroup) {
       const label = document.createElement("span");
-      label.className = "ck-high-grid-header-cell-text";
+      label.className = "ck-zenith-grid-header-cell-text";
       label.textContent = cell.headerName;
       domCell.appendChild(label);
       return domCell;
@@ -363,7 +363,7 @@ export class HeaderRenderer {
     // Leaf cell: sort button + resize handle
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "ck-high-grid-header-cell-button";
+    button.className = "ck-zenith-grid-header-cell-button";
     button.title = cell.headerName;
     button.style.height = "100%";
     button.dataset.gridFocusable = "header";
@@ -379,20 +379,20 @@ export class HeaderRenderer {
     });
 
     const labelEl = document.createElement("span");
-    labelEl.className = "ck-high-grid-header-cell-text";
+    labelEl.className = "ck-zenith-grid-header-cell-text";
     labelEl.textContent = cell.headerName;
 
     const indicator = document.createElement("span");
-    indicator.className = "ck-high-grid-sort-indicator";
+    indicator.className = "ck-zenith-grid-sort-indicator";
     this._renderSortIndicator(indicator, cell.colId);
 
     const titleWrap = document.createElement("span");
-    titleWrap.className = "ck-high-grid-header-title-wrap";
+    titleWrap.className = "ck-zenith-grid-header-title-wrap";
     titleWrap.appendChild(labelEl);
     titleWrap.appendChild(indicator);
 
     const filterIndicator = document.createElement("span");
-    filterIndicator.className = "ck-high-grid-filter-indicator";
+    filterIndicator.className = "ck-zenith-grid-filter-indicator";
     const activeFilter = this._options.getColumnFilter?.(cell.colId);
     if (activeFilter) {
       filterIndicator.textContent = this._getLocaleText(
@@ -414,7 +414,7 @@ export class HeaderRenderer {
 
     const menuBtn = document.createElement("button");
     menuBtn.type = "button";
-    menuBtn.className = "ck-high-grid-header-menu-btn";
+    menuBtn.className = "ck-zenith-grid-header-menu-btn";
     menuBtn.setAttribute("aria-label", `${cell.headerName} column menu`);
     menuBtn.appendChild(createSvgIcon("dotsVertical", 14));
     menuBtn.addEventListener("click", (event) => {
@@ -427,7 +427,7 @@ export class HeaderRenderer {
     if (cell.def.resizable !== false) {
       const resizeHandle = document.createElement("button");
       resizeHandle.type = "button";
-      resizeHandle.className = "ck-high-grid-header-resize-handle";
+      resizeHandle.className = "ck-zenith-grid-header-resize-handle";
       resizeHandle.setAttribute(
         "aria-label",
         `${cell.headerName} column width`,
@@ -456,7 +456,7 @@ export class HeaderRenderer {
 
   _buildSingleLevelCell(def, state, index, stickyMeta, allColumns) {
     const cell = document.createElement("div");
-    cell.className = "ck-high-grid-header-cell";
+    cell.className = "ck-zenith-grid-header-cell";
     cell.setAttribute("role", "columnheader");
     cell.dataset.colId = def.id;
     cell.style.width = `${state.width}px`;
@@ -464,7 +464,7 @@ export class HeaderRenderer {
 
     const stickyStyle = stickyMeta.get(def.id);
     if (stickyStyle) {
-      cell.classList.add("ck-high-grid-header-cell-pinned");
+      cell.classList.add("ck-zenith-grid-header-cell-pinned");
       if (stickyStyle.left != null) cell.style.left = `${stickyStyle.left}px`;
       if (stickyStyle.right != null)
         cell.style.right = `${stickyStyle.right}px`;
@@ -472,7 +472,7 @@ export class HeaderRenderer {
     }
 
     if (this._options.getColumnFilter?.(def.id)) {
-      cell.classList.add("ck-high-grid-header-cell-filtered");
+      cell.classList.add("ck-zenith-grid-header-cell-filtered");
     }
 
     if (def.reorderable !== false) {
@@ -483,27 +483,27 @@ export class HeaderRenderer {
           return;
         }
         event.dataTransfer?.setData("text/plain", def.id);
-        cell.classList.add("ck-high-grid-drag-origin");
+        cell.classList.add("ck-zenith-grid-drag-origin");
       });
       cell.addEventListener("dragend", () => {
-        cell.classList.remove("ck-high-grid-drag-origin");
+        cell.classList.remove("ck-zenith-grid-drag-origin");
         const container = cell.closest(
-          ".ck-high-grid-header-left-pinned, .ck-high-grid-header-center-container, .ck-high-grid-header-right-pinned",
+          ".ck-zenith-grid-header-left-pinned, .ck-zenith-grid-header-center-container, .ck-zenith-grid-header-right-pinned",
         );
         container
-          ?.querySelectorAll(".ck-high-grid-drag-target")
-          .forEach((el) => el.classList.remove("ck-high-grid-drag-target"));
+          ?.querySelectorAll(".ck-zenith-grid-drag-target")
+          .forEach((el) => el.classList.remove("ck-zenith-grid-drag-target"));
       });
       cell.addEventListener("dragover", (event) => {
         event.preventDefault();
-        cell.classList.add("ck-high-grid-drag-target");
+        cell.classList.add("ck-zenith-grid-drag-target");
       });
       cell.addEventListener("dragleave", () => {
-        cell.classList.remove("ck-high-grid-drag-target");
+        cell.classList.remove("ck-zenith-grid-drag-target");
       });
       cell.addEventListener("drop", (event) => {
         event.preventDefault();
-        cell.classList.remove("ck-high-grid-drag-target");
+        cell.classList.remove("ck-zenith-grid-drag-target");
         const fromColId = event.dataTransfer?.getData("text/plain");
         if (!fromColId || fromColId === def.id) return;
         this._options.onColumnDrop?.({
@@ -529,7 +529,7 @@ export class HeaderRenderer {
 
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "ck-high-grid-header-cell-button";
+    button.className = "ck-zenith-grid-header-cell-button";
     button.title = def.headerName;
     button.setAttribute(
       "aria-label",
@@ -548,20 +548,20 @@ export class HeaderRenderer {
     });
 
     const label = document.createElement("span");
-    label.className = "ck-high-grid-header-cell-text";
+    label.className = "ck-zenith-grid-header-cell-text";
     label.textContent = def.headerName;
 
     const indicator = document.createElement("span");
-    indicator.className = "ck-high-grid-sort-indicator";
+    indicator.className = "ck-zenith-grid-sort-indicator";
     this._renderSortIndicator(indicator, def.id);
 
     const titleWrap = document.createElement("span");
-    titleWrap.className = "ck-high-grid-header-title-wrap";
+    titleWrap.className = "ck-zenith-grid-header-title-wrap";
     titleWrap.appendChild(label);
     titleWrap.appendChild(indicator);
 
     const filterIndicator = document.createElement("span");
-    filterIndicator.className = "ck-high-grid-filter-indicator";
+    filterIndicator.className = "ck-zenith-grid-filter-indicator";
     const activeFilter = this._options.getColumnFilter?.(def.id);
     if (activeFilter) {
       filterIndicator.textContent = this._getLocaleText(
@@ -581,7 +581,7 @@ export class HeaderRenderer {
 
     const menuBtn = document.createElement("button");
     menuBtn.type = "button";
-    menuBtn.className = "ck-high-grid-header-menu-btn";
+    menuBtn.className = "ck-zenith-grid-header-menu-btn";
     menuBtn.setAttribute("aria-label", `${def.headerName} column menu`);
     menuBtn.appendChild(createSvgIcon("dotsVertical", 14));
     menuBtn.addEventListener("click", (event) => {
@@ -593,7 +593,7 @@ export class HeaderRenderer {
     if (def.resizable !== false) {
       const resizeHandle = document.createElement("button");
       resizeHandle.type = "button";
-      resizeHandle.className = "ck-high-grid-header-resize-handle";
+      resizeHandle.className = "ck-zenith-grid-header-resize-handle";
       resizeHandle.setAttribute("aria-label", `${def.headerName} column width`);
       resizeHandle.addEventListener("mousedown", (event) => {
         event.preventDefault();
@@ -618,7 +618,7 @@ export class HeaderRenderer {
     const width = this._options.rowNumberWidth ?? 44;
     const cell = document.createElement("div");
     cell.className =
-      "ck-high-grid-header-cell ck-high-grid-row-number-header ck-high-grid-header-cell-pinned";
+      "ck-zenith-grid-header-cell ck-zenith-grid-row-number-header ck-zenith-grid-header-cell-pinned";
     cell.setAttribute("role", "columnheader");
     cell.style.width = `${width}px`;
     cell.style.minWidth = `${width}px`;
@@ -632,7 +632,7 @@ export class HeaderRenderer {
     const width = this._options.selectionColumnWidth ?? 44;
     const cell = document.createElement("div");
     cell.className =
-      "ck-high-grid-header-cell ck-high-grid-header-selection-cell ck-high-grid-header-cell-pinned";
+      "ck-zenith-grid-header-cell ck-zenith-grid-header-selection-cell ck-zenith-grid-header-cell-pinned";
     cell.setAttribute("role", "columnheader");
     cell.style.width = `${width}px`;
     cell.style.minWidth = `${width}px`;
@@ -641,7 +641,7 @@ export class HeaderRenderer {
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.className = "ck-high-grid-selection-checkbox";
+    checkbox.className = "ck-zenith-grid-selection-checkbox";
     checkbox.setAttribute(
       "aria-label",
       this._getLocaleText("grid.selection.toggleAll", "Select all rows"),
@@ -660,7 +660,7 @@ export class HeaderRenderer {
   _createFilterAction(colId, def, anchorCell) {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "ck-high-grid-header-filter-button";
+    button.className = "ck-zenith-grid-header-filter-button";
     button.setAttribute("aria-label", `${def.headerName} filter`);
     button.setAttribute("aria-haspopup", "dialog");
     button.setAttribute(
@@ -685,7 +685,7 @@ export class HeaderRenderer {
       lastWidth: column.width ?? 0,
     };
 
-    document.body.classList.add("ck-high-grid-column-resizing");
+    document.body.classList.add("ck-zenith-grid-column-resizing");
 
     const onMouseMove = (moveEvent) => {
       if (!this._activeResize) return;
@@ -724,7 +724,7 @@ export class HeaderRenderer {
       this._removeResizeListeners();
       this._removeResizeListeners = null;
     }
-    document.body.classList.remove("ck-high-grid-column-resizing");
+    document.body.classList.remove("ck-zenith-grid-column-resizing");
     this._activeResize = null;
   }
 
@@ -744,7 +744,7 @@ export class HeaderRenderer {
 
   _createSpacer(width) {
     const spacer = document.createElement("div");
-    spacer.className = "ck-high-grid-col-spacer";
+    spacer.className = "ck-zenith-grid-col-spacer";
     spacer.style.width = `${width}px`;
     spacer.style.minWidth = `${width}px`;
     return spacer;
@@ -806,19 +806,19 @@ export class HeaderRenderer {
     indicator.appendChild(createSvgIcon(sort.icon, 14));
     if (sort.priority) {
       const priority = document.createElement("span");
-      priority.className = "ck-high-grid-sort-priority";
+      priority.className = "ck-zenith-grid-sort-priority";
       priority.textContent = sort.priority;
       indicator.appendChild(priority);
     }
   }
 
   _renderFilterRow(container, leafColumns, pinArea, horizontalRange) {
-    const existing = container.querySelector(".ck-high-grid-filter-row");
+    const existing = container.querySelector(".ck-zenith-grid-filter-row");
     if (existing) existing.remove();
     if (!leafColumns.length && pinArea !== "left") return;
 
     const row = document.createElement("div");
-    row.className = "ck-high-grid-filter-row";
+    row.className = "ck-zenith-grid-filter-row";
     row.setAttribute("role", "row");
 
     // spacer for row-number and selection columns
@@ -829,7 +829,7 @@ export class HeaderRenderer {
         : 0);
     if (pinArea === "left" && extraWidth > 0) {
       const spacer = document.createElement("div");
-      spacer.className = "ck-high-grid-filter-cell ck-high-grid-filter-cell-spacer";
+      spacer.className = "ck-zenith-grid-filter-cell ck-zenith-grid-filter-cell-spacer";
       spacer.style.width = `${extraWidth}px`;
       spacer.style.minWidth = `${extraWidth}px`;
       row.appendChild(spacer);
@@ -845,14 +845,14 @@ export class HeaderRenderer {
 
     for (const { def, state } of renderColumns) {
       const cell = document.createElement("div");
-      cell.className = "ck-high-grid-filter-cell";
+      cell.className = "ck-zenith-grid-filter-cell";
       cell.style.width = `${state.width}px`;
       cell.style.minWidth = `${state.width}px`;
 
       if (def.filterable !== false) {
         const input = document.createElement("input");
         input.type = "text";
-        input.className = "ck-high-grid-filter-row-input";
+        input.className = "ck-zenith-grid-filter-row-input";
         input.placeholder = def.headerName;
         const current = this._options.getColumnFilter?.(def.id);
         if (current?.value) input.value = String(current.value);
@@ -901,7 +901,7 @@ export class HeaderRenderer {
     this._closeFilterPopover({ preserveOpenId: true });
 
     const popover = document.createElement("div");
-    popover.className = "ck-high-grid-header-filter-popover";
+    popover.className = "ck-zenith-grid-header-filter-popover";
     popover.dataset.colId = colId;
     popover.setAttribute("role", "dialog");
     popover.setAttribute("aria-modal", "false");
@@ -909,7 +909,7 @@ export class HeaderRenderer {
 
     // 그리드 루트의 테마 클래스를 팝오버에 전파 (body에 append되므로 직접 상속 불가)
     const rootEl = this._dom.getRoot();
-    const themeClass = [...rootEl.classList].find((c) => c.startsWith("ck-high-grid-theme-"));
+    const themeClass = [...rootEl.classList].find((c) => c.startsWith("ck-zenith-grid-theme-"));
     if (themeClass) popover.classList.add(themeClass);
 
     const meta = this._resolveFilterMeta(def, colId);
@@ -921,13 +921,13 @@ export class HeaderRenderer {
       (operator === "between" ? ["", ""] : meta.type === "select" ? [] : "");
 
     const title = document.createElement("div");
-    title.className = "ck-high-grid-header-filter-popover-title";
+    title.className = "ck-zenith-grid-header-filter-popover-title";
     title.textContent = def.headerName;
     popover.appendChild(title);
 
     if (meta.type !== "select" && meta.type !== "set") {
       const operatorSelect = document.createElement("select");
-      operatorSelect.className = "ck-high-grid-header-filter-select";
+      operatorSelect.className = "ck-zenith-grid-header-filter-select";
       meta.operators.forEach((entry) => {
         const option = document.createElement("option");
         option.value = entry;
@@ -965,7 +965,7 @@ export class HeaderRenderer {
     } else {
       // 엑셀식 세트/선택 필터 UI: 검색 입력창 + 전체선택 체크박스 + 스크롤 가능한 체크박스 목록
       const container = document.createElement("div");
-      container.className = "ck-high-grid-header-filter-set-container";
+      container.className = "ck-zenith-grid-header-filter-set-container";
       container.style.display = "flex";
       container.style.flexDirection = "column";
       container.style.gap = "8px";
@@ -975,7 +975,7 @@ export class HeaderRenderer {
       // 1. 검색창
       const searchInput = document.createElement("input");
       searchInput.type = "search";
-      searchInput.className = "ck-high-grid-header-filter-input";
+      searchInput.className = "ck-zenith-grid-header-filter-input";
       searchInput.placeholder = this._getLocaleText(
         "grid.filter.search",
         "Search...",
@@ -985,7 +985,7 @@ export class HeaderRenderer {
 
       // 2. 전체선택 체크박스
       const selectAllWrap = document.createElement("label");
-      selectAllWrap.className = "ck-high-grid-filter-checkbox-label";
+      selectAllWrap.className = "ck-zenith-grid-filter-checkbox-label";
       selectAllWrap.style.display = "flex";
       selectAllWrap.style.alignItems = "center";
       selectAllWrap.style.gap = "6px";
@@ -994,7 +994,7 @@ export class HeaderRenderer {
 
       const selectAllCheck = document.createElement("input");
       selectAllCheck.type = "checkbox";
-      selectAllCheck.className = "ck-high-grid-filter-checkbox";
+      selectAllCheck.className = "ck-zenith-grid-filter-checkbox";
       selectAllWrap.appendChild(selectAllCheck);
 
       const selectAllText = document.createElement("span");
@@ -1007,14 +1007,14 @@ export class HeaderRenderer {
 
       // 3. 스크롤 가능한 항목 컨테이너
       const listContainer = document.createElement("div");
-      listContainer.className = "ck-high-grid-filter-list-container";
+      listContainer.className = "ck-zenith-grid-filter-list-container";
       listContainer.style.maxHeight = "150px";
       listContainer.style.overflowY = "auto";
       listContainer.style.display = "flex";
       listContainer.style.flexDirection = "column";
       listContainer.style.gap = "4px";
       listContainer.style.padding = "4px";
-      listContainer.style.border = "1px solid var(--ck-high-grid-border, #e2e8f0)";
+      listContainer.style.border = "1px solid var(--ck-zenith-grid-border, #e2e8f0)";
       listContainer.style.borderRadius = "4px";
       container.appendChild(listContainer);
 
@@ -1038,7 +1038,7 @@ export class HeaderRenderer {
 
       const updateSelectAllState = () => {
         const visibleChecks = [
-          ...listContainer.querySelectorAll(".ck-high-grid-filter-checkbox"),
+          ...listContainer.querySelectorAll(".ck-zenith-grid-filter-checkbox"),
         ];
         if (visibleChecks.length === 0) {
           selectAllCheck.checked = false;
@@ -1061,7 +1061,7 @@ export class HeaderRenderer {
 
         filteredChoices.forEach((choice) => {
           const itemWrap = document.createElement("label");
-          itemWrap.className = "ck-high-grid-filter-checkbox-label";
+          itemWrap.className = "ck-zenith-grid-filter-checkbox-label";
           itemWrap.style.display = "flex";
           itemWrap.style.alignItems = "center";
           itemWrap.style.gap = "6px";
@@ -1069,7 +1069,7 @@ export class HeaderRenderer {
 
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
-          checkbox.className = "ck-high-grid-filter-checkbox";
+          checkbox.className = "ck-zenith-grid-filter-checkbox";
           checkbox.value = String(choice.value);
           checkbox.checked = selectedValues.has(String(choice.value));
 
@@ -1094,7 +1094,7 @@ export class HeaderRenderer {
 
       selectAllCheck.addEventListener("change", () => {
         const visibleChecks = [
-          ...listContainer.querySelectorAll(".ck-high-grid-filter-checkbox"),
+          ...listContainer.querySelectorAll(".ck-zenith-grid-filter-checkbox"),
         ];
         visibleChecks.forEach((checkbox) => {
           checkbox.checked = selectAllCheck.checked;
@@ -1118,11 +1118,11 @@ export class HeaderRenderer {
     }
 
     const actions = document.createElement("div");
-    actions.className = "ck-high-grid-header-filter-actions";
+    actions.className = "ck-zenith-grid-header-filter-actions";
 
     const clearButton = document.createElement("button");
     clearButton.type = "button";
-    clearButton.className = "ck-high-grid-header-filter-action";
+    clearButton.className = "ck-zenith-grid-header-filter-action";
     clearButton.textContent = this._getLocaleText(
       "sidePanel.clearFilter",
       "Clear",
@@ -1135,7 +1135,7 @@ export class HeaderRenderer {
 
     const closeButton = document.createElement("button");
     closeButton.type = "button";
-    closeButton.className = "ck-high-grid-header-filter-action";
+    closeButton.className = "ck-zenith-grid-header-filter-action";
     closeButton.textContent = this._getLocaleText("sidePanel.close", "Close");
     closeButton.addEventListener("click", () => {
       this._closeFilterPopover();
@@ -1168,7 +1168,7 @@ export class HeaderRenderer {
     const anchorCell = this._dom
       .getRoot()
       ?.querySelector(
-        `.ck-high-grid-header-cell[data-col-id="${this._openFilterColId}"]`,
+        `.ck-zenith-grid-header-cell[data-col-id="${this._openFilterColId}"]`,
       );
     if (!anchorCell) {
       this._closeFilterPopover();
@@ -1245,7 +1245,7 @@ export class HeaderRenderer {
   _createFilterEditor(meta, operator, value, onCommit) {
     if (operator === "between") {
       const wrap = document.createElement("div");
-      wrap.className = "ck-high-grid-header-filter-split";
+      wrap.className = "ck-zenith-grid-header-filter-split";
 
       const startInput = this._createFilterInput(
         meta,
@@ -1283,7 +1283,7 @@ export class HeaderRenderer {
 
   _createFilterInput(meta, value, onCommit) {
     const input = document.createElement("input");
-    input.className = "ck-high-grid-header-filter-input";
+    input.className = "ck-zenith-grid-header-filter-input";
     input.type = meta.inputType;
     input.value = value ?? "";
     input.placeholder = meta.placeholder;
@@ -1432,7 +1432,7 @@ export class HeaderRenderer {
     this._closeHeaderContextMenu();
 
     const menu = document.createElement("div");
-    menu.className = "ck-high-grid-context-menu ck-high-grid-header-context-menu";
+    menu.className = "ck-zenith-grid-context-menu ck-zenith-grid-header-context-menu";
     menu.style.position = "fixed";
     menu.style.zIndex = "9999";
     menu.style.left = `${event.clientX}px`;
@@ -1440,15 +1440,15 @@ export class HeaderRenderer {
 
     // Inherit theme class from grid root
     const gridRoot = this._dom?.getRoot?.();
-    if (gridRoot?.classList.contains('ck-high-grid-theme-dark')) {
-      menu.classList.add('ck-high-grid-theme-dark');
+    if (gridRoot?.classList.contains('ck-zenith-grid-theme-dark')) {
+      menu.classList.add('ck-zenith-grid-theme-dark');
     }
 
     const addItem = (label, action, disabled = false) => {
       const item = document.createElement("div");
       item.className =
-        "ck-high-grid-context-menu-item" +
-        (disabled ? " ck-high-grid-context-menu-item-disabled" : "");
+        "ck-zenith-grid-context-menu-item" +
+        (disabled ? " ck-zenith-grid-context-menu-item-disabled" : "");
       item.textContent = label;
       if (!disabled) {
         item.addEventListener("click", () => {
@@ -1461,7 +1461,7 @@ export class HeaderRenderer {
 
     const addSep = () => {
       const sep = document.createElement("div");
-      sep.className = "ck-high-grid-context-menu-separator";
+      sep.className = "ck-zenith-grid-context-menu-separator";
       menu.appendChild(sep);
     };
 
@@ -1496,7 +1496,7 @@ export class HeaderRenderer {
     // 필터 — narrow columns collapse the dedicated filter icon into this menu
     if (def.filterable !== false) {
       addItem(t("grid.header.menu.filter", "Filter..."), () => {
-        const cellEl = event.target.closest(".ck-high-grid-header-cell");
+        const cellEl = event.target.closest(".ck-zenith-grid-header-cell");
         if (cellEl) {
           this._toggleFilterPopover(colId, def, cellEl, cellEl);
         }

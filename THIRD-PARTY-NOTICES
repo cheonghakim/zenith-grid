@@ -1,16 +1,16 @@
-# HighGrid Third-Party Notices
+# ZenithGrid Third-Party Notices
 
-This file lists the third-party software components used by HighGrid,
+This file lists the third-party software components used by ZenithGrid,
 along with their licenses and copyright notices.
 
-HighGrid itself is licensed under the MIT License.
+ZenithGrid itself is licensed under the MIT License.
 See LICENSE file in the root of this repository.
 
 ────────────────────────────────────────────────────────────────────────────────
 RUNTIME / OPTIONAL DEPENDENCIES
 ────────────────────────────────────────────────────────────────────────────────
 
-These packages are NOT bundled into the HighGrid core. They are dynamically
+These packages are NOT bundled into the ZenithGrid core. They are dynamically
 loaded at runtime only when the corresponding feature/plugin is used.
 
 1.  ExcelJS
@@ -75,7 +75,7 @@ loaded at runtime only when the corresponding feature/plugin is used.
     Transitive dependencies (pulled in only when this plugin is installed):
     @handsontable/formulajs (MIT), tiny-emitter (MIT), jstat (MIT), and
     bessel (Apache-2.0, used internally by formulajs for statistical
-    functions). None of these are bundled into HighGrid core.
+    functions). None of these are bundled into ZenithGrid core.
 
 3.  Apache ECharts
     Version: ^5.x / 6.1.0 (devDependency for demo; user-supplied for production)
@@ -84,7 +84,7 @@ loaded at runtime only when the corresponding feature/plugin is used.
     Repository: https://github.com/apache/echarts
     Usage: Optional. Users may integrate ECharts for chart-in-cell rendering
     via the echartsPlugin (src/plugins/echartsPlugin.js). ECharts is
-    NOT bundled into HighGrid and must be installed separately:
+    NOT bundled into ZenithGrid and must be installed separately:
     `npm install echarts`
     When distributing an application that includes ECharts, you must
     comply with Apache License 2.0 — include the license text and the
@@ -127,7 +127,7 @@ loaded at runtime only when the corresponding feature/plugin is used.
     Inter License: https://github.com/google/fonts/blob/main/ofl/inter/OFL.txt
     Plus Jakarta Sans License: https://github.com/tokotype/PlusJakartaSans
     Usage: The demo page (examples/index.html) loads Inter and Plus Jakarta Sans
-    from Google Fonts. These font files are not bundled into the HighGrid core
+    from Google Fonts. These font files are not bundled into the ZenithGrid core
     library package.
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -139,7 +139,7 @@ PEER DEPENDENCIES (not bundled — installed by the end user)
    License: MIT
    Homepage: https://vuejs.org
    Usage: Required only when using the Vue 3 adapter
-   (`highgrid/src/adapters/vue3`). The core library works without Vue.
+   (`zenith-grid/src/adapters/vue3`). The core library works without Vue.
 
    MIT License
    Copyright (c) 2013-present, Yuxi (Evan) You
@@ -151,7 +151,7 @@ PEER DEPENDENCIES (not bundled — installed by the end user)
    License: MIT
    Homepage: https://react.dev
    Usage: Required only when using the React adapter
-   (`highgrid/src/adapters/react`). The core library works without React.
+   (`zenith-grid/src/adapters/react`). The core library works without React.
 
    MIT License
    Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -208,7 +208,7 @@ npm package or any distributed bundle.
 NOTES
 ────────────────────────────────────────────────────────────────────────────────
 
-- The HighGrid core library (src/) is original work licensed under MIT, except
+- The ZenithGrid core library (src/) is original work licensed under MIT, except
   for the selected MDI icon path data listed in entry #4.
 
 - sparklinePlugin (src/plugins/sparklinePlugin.js) renders mini charts using
@@ -225,6 +225,6 @@ NOTES
   support — the plugin only unlocks the full Excel-style function set.
 
 - MIT and Apache-2.0 are both permissive licenses. You can use MIT-licensed
-  HighGrid together with Apache-2.0 ECharts without license conflicts.
+  ZenithGrid together with Apache-2.0 ECharts without license conflicts.
   However, when distributing a compiled application that includes ECharts,
   you must retain the Apache-2.0 copyright notice.

@@ -1,5 +1,54 @@
 # Changelog
 
+## [3.0.0] - 2026-07-14
+
+### ⚠️ BREAKING CHANGES
+
+The project has been renamed from **HighGrid** to **Zenith Grid**. Every public identifier that carried the old name has changed.
+
+#### Package name changed: `highgrid` → `zenith-grid`
+
+```diff
+- npm install highgrid
++ npm install zenith-grid
+
+- import { createGrid } from 'highgrid';
+- import 'highgrid/styles/grid.css';
++ import { createGrid } from 'zenith-grid';
++ import 'zenith-grid/styles/grid.css';
+```
+
+Subpath exports follow the same pattern: `highgrid/vue` → `zenith-grid/vue`, `highgrid/vue2` → `zenith-grid/vue2`, `highgrid/react` → `zenith-grid/react`. The UMD global is now `ZenithGrid` instead of `HighGrid`, and bundle files are `dist/zenith-grid.js`, `dist/zenith-grid-vue.js`, etc.
+
+#### CSS class prefix changed: `ck-high-grid-` → `ck-zenith-grid-`
+
+```diff
+- <div class="ck-high-grid-theme-dark">
++ <div class="ck-zenith-grid-theme-dark">
+```
+
+#### CSS custom property prefix changed: `--ck-high-grid-` → `--ck-zenith-grid-`
+
+```diff
+  :root {
+-   --ck-high-grid-accent: #7c3aed;
+-   --ck-high-grid-row-height: 48px;
++   --ck-zenith-grid-accent: #7c3aed;
++   --ck-zenith-grid-row-height: 48px;
+  }
+```
+
+#### Framework adapter API renamed
+
+| Before | After |
+| --- | --- |
+| `HighGrid` (Vue 2 / Vue 3 component) | `ZenithGrid` |
+| `useHighGrid` (React / Vue 3 composable) | `useZenithGrid` |
+| `HighGridProps` (TypeScript type) | `ZenithGridProps` |
+| `UseHighGridReturn` (TypeScript type) | `UseZenithGridReturn` |
+
+The grid's core API (`createGrid`, `GridCore`, all managers, plugins, and options) is unchanged — only names carrying the old brand were touched.
+
 ## [2.1.0] - 2026-07-01
 
 ### Added

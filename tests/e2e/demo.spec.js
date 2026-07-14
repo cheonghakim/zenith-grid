@@ -5,15 +5,15 @@ function readNumber(text) {
   return Number.isNaN(value) ? 0 : value;
 }
 
-test.describe('HighGrid demo smoke', () => {
+test.describe('ZenithGrid demo smoke', () => {
   test('renders the main demo and responds to common remote actions', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { level: 1, name: 'HighGrid Demo' })).toBeVisible();
-    await expect(page.locator('#grid-overview .ck-high-grid-row').first()).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'ZenithGrid Demo' })).toBeVisible();
+    await expect(page.locator('#grid-overview .ck-zenith-grid-row').first()).toBeVisible();
 
     await page.getByRole('button', { name: 'Live & Performance' }).click();
-    await expect(page.locator('#grid-live .ck-high-grid-row').first()).toBeVisible();
+    await expect(page.locator('#grid-live .ck-zenith-grid-row').first()).toBeVisible();
 
     const rowCount = page.locator('#rowCount');
     const before = readNumber(await rowCount.textContent());
@@ -33,7 +33,7 @@ test.describe('HighGrid demo smoke', () => {
     await page.goto('/');
 
     await page.getByRole('button', { name: 'Live & Performance' }).click();
-    await expect(page.locator('#grid-live .ck-high-grid-row').first()).toBeVisible();
+    await expect(page.locator('#grid-live .ck-zenith-grid-row').first()).toBeVisible();
 
     await page.keyboard.press('Tab');
     await expect(page.locator(':focus')).toBeVisible();

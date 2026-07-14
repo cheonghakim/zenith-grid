@@ -20,7 +20,7 @@ const ICON_SVG_PATHS = {
     "M12,2A7,7 0 0,0 5,9C5,11.38 6.19,13.47 8,14.74V17A2,2 0 0,0 10,19H14A2,2 0 0,0 16,17V14.74C17.81,13.47 19,11.38 19,9A7,7 0 0,0 12,2M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21Z",
 };
 
-export function createSvgIcon(type, size = 14, className = "ck-high-grid-icon") {
+export function createSvgIcon(type, size = 14, className = "ck-zenith-grid-icon") {
   const pathData = ICON_SVG_PATHS[type];
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 24 24");

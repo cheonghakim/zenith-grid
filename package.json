@@ -1,34 +1,34 @@
 {
-  "name": "highgrid",
-  "version": "2.1.0",
+  "name": "zenith-grid",
+  "version": "3.0.0",
   "description": "Production-ready data grid library in vanilla JavaScript",
-  "main": "dist/highgrid.umd.cjs",
-  "module": "dist/highgrid.js",
+  "main": "dist/zenith-grid.umd.cjs",
+  "module": "dist/zenith-grid.js",
   "types": "./index.d.ts",
   "type": "module",
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "import": "./dist/highgrid.js",
-      "require": "./dist/highgrid.umd.cjs",
-      "default": "./dist/highgrid.js"
+      "import": "./dist/zenith-grid.js",
+      "require": "./dist/zenith-grid.umd.cjs",
+      "default": "./dist/zenith-grid.js"
     },
     "./vue": {
-      "types": "./dist/highgrid-vue.d.ts",
-      "import": "./dist/highgrid-vue.js",
-      "default": "./dist/highgrid-vue.js"
+      "types": "./dist/zenith-grid-vue.d.ts",
+      "import": "./dist/zenith-grid-vue.js",
+      "default": "./dist/zenith-grid-vue.js"
     },
     "./vue2": {
-      "types": "./dist/highgrid-vue2.d.ts",
-      "import": "./dist/highgrid-vue2.js",
-      "require": "./dist/highgrid-vue2.umd.cjs",
-      "default": "./dist/highgrid-vue2.js"
+      "types": "./dist/zenith-grid-vue2.d.ts",
+      "import": "./dist/zenith-grid-vue2.js",
+      "require": "./dist/zenith-grid-vue2.umd.cjs",
+      "default": "./dist/zenith-grid-vue2.js"
     },
     "./react": {
-      "types": "./dist/highgrid-react.d.ts",
-      "import": "./dist/highgrid-react.js",
-      "require": "./dist/highgrid-react.cjs",
-      "default": "./dist/highgrid-react.js"
+      "types": "./dist/zenith-grid-react.d.ts",
+      "import": "./dist/zenith-grid-react.js",
+      "require": "./dist/zenith-grid-react.cjs",
+      "default": "./dist/zenith-grid-react.js"
     },
     "./styles/grid.css": "./src/styles/grid.css",
     "./styles/tokens.css": "./src/styles/tokens.css",
@@ -83,11 +83,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cheonghakim/high-grid.git"
+    "url": "git+https://github.com/cheonghakim/zenith-grid.git"
   },
-  "homepage": "https://cheonghakim.github.io/high-grid",
+  "homepage": "https://cheonghakim.github.io/zenith-grid",
   "bugs": {
-    "url": "https://github.com/cheonghakim/high-grid/issues"
+    "url": "https://github.com/cheonghakim/zenith-grid/issues"
   },
   "dependencies": {
     "exceljs": "^4.4.0",

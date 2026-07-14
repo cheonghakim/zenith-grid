@@ -1,7 +1,7 @@
 import { RefObject } from 'react';
 import type { GridInstance, GridOptions } from '../../index.js';
 
-export interface UseHighGridReturn {
+export interface UseZenithGridReturn {
   /** Attach to your container div: <div ref={containerRef} /> */
   containerRef: RefObject<HTMLDivElement>;
   /** The raw GridCore instance (null until mounted). */
@@ -52,4 +52,4 @@ export interface UseHighGridReturn {
   getPaginationState: () => any;
 }
 
-export function useHighGrid(options?: GridOptions): UseHighGridReturn;
+export function useZenithGrid(options?: GridOptions): UseZenithGridReturn;

@@ -529,7 +529,7 @@ export declare function createContextMenuPlugin<Row = GridRow>(options?: Context
 export declare function createCsvShortcutPlugin(options?: CsvShortcutPluginOptions): GridPlugin;
 export declare function createXlsxExportPlugin(options?: { name?: string; fileName?: string }): GridPlugin;
 export declare function createSparklinePlugin(options?: { name?: string }): GridPlugin;
-export declare function useHighGridReact(options?: GridOptions): {
+export declare function useZenithGridReact(options?: GridOptions): {
   containerRef: { current: HTMLElement | null };
   grid: GridCore | null;
   getGrid: () => GridCore | null;

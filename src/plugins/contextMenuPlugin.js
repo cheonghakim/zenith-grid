@@ -50,7 +50,7 @@ export function createContextMenuPlugin(options = {}) {
     payload.event.preventDefault();
 
     const menu = document.createElement('div');
-    menu.className = 'ck-high-grid-context-menu';
+    menu.className = 'ck-zenith-grid-context-menu';
     menu.setAttribute('role', 'menu');
     menu.style.position = 'fixed';
     menu.style.left = `${payload.event.clientX}px`;
@@ -58,15 +58,15 @@ export function createContextMenuPlugin(options = {}) {
 
     // Inherit theme class from grid root
     const gridRoot = core?._dom?.getRoot?.();
-    if (gridRoot?.classList.contains('ck-high-grid-theme-dark')) {
-      menu.classList.add('ck-high-grid-theme-dark');
+    if (gridRoot?.classList.contains('ck-zenith-grid-theme-dark')) {
+      menu.classList.add('ck-zenith-grid-theme-dark');
     }
 
     items.forEach((item) => {
       // Handle separator
       if (item.type === 'separator') {
         const separator = document.createElement('div');
-        separator.className = 'ck-high-grid-context-menu-separator';
+        separator.className = 'ck-zenith-grid-context-menu-separator';
         separator.setAttribute('role', 'separator');
         menu.appendChild(separator);
         return;
@@ -75,7 +75,7 @@ export function createContextMenuPlugin(options = {}) {
       // Handle menu item
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'ck-high-grid-context-menu-item';
+      button.className = 'ck-zenith-grid-context-menu-item';
       button.setAttribute('role', 'menuitem');
       button.textContent = item.label ?? 'Action';
       button.disabled = item.disabled === true;

@@ -9,7 +9,7 @@
  */
 export function createTextareaEditor({ row, def, value }) {
   const textarea = document.createElement('textarea');
-  textarea.className = 'ck-high-grid-cell-editor';
+  textarea.className = 'ck-zenith-grid-cell-editor';
   textarea.style.resize = 'vertical';
   textarea.style.minHeight = '60px';
 

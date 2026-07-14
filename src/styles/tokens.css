@@ -1,23 +1,23 @@
 ﻿/**
- * HighGrid Design Tokens
+ * ZenithGrid Design Tokens
  *
  * CSS custom properties that control every visual aspect of the grid.
  *
  * Usage:
- *   import 'highgrid/styles/tokens.css';
- *   import 'highgrid/styles/grid.css';
+ *   import 'zenith-grid/styles/tokens.css';
+ *   import 'zenith-grid/styles/grid.css';
  *
  * Theming:
- *   .ck-high-grid-root redefines tokens on itself, so overrides must target
- *   .ck-high-grid-root directly (or use a higher-specificity descendant selector):
+ *   .ck-zenith-grid-root redefines tokens on itself, so overrides must target
+ *   .ck-zenith-grid-root directly (or use a higher-specificity descendant selector):
  *
  *   // ✅ works — targets the root element
- *   #myGrid .ck-high-grid-root { --ck-high-grid-accent: #7c3aed; }
+ *   #myGrid .ck-zenith-grid-root { --ck-zenith-grid-accent: #7c3aed; }
  *
- *   // ❌ shadowed by .ck-high-grid-root's own declaration (v2.x limitation)
- *   #myGrid { --ck-high-grid-accent: #7c3aed; }
+ *   // ❌ shadowed by .ck-zenith-grid-root's own declaration (v2.x limitation)
+ *   #myGrid { --ck-zenith-grid-accent: #7c3aed; }
  *
- *   TODO(v3): variables will be moved from .ck-high-grid-root to :root,
+ *   TODO(v3): variables will be moved from .ck-zenith-grid-root to :root,
  *   at which point parent-element overrides will work as expected.
  */
 
@@ -25,182 +25,182 @@
   /* ── Colour Palette ───────────────────────────────────────── */
 
   /* Surface */
-  --ck-high-grid-surface:              #fbfcfe;
-  --ck-high-grid-surface-elevated:     rgba(255, 255, 255, 0.98);
-  --ck-high-grid-surface-muted:        #f3f6fa;
+  --ck-zenith-grid-surface:              #fbfcfe;
+  --ck-zenith-grid-surface-elevated:     rgba(255, 255, 255, 0.98);
+  --ck-zenith-grid-surface-muted:        #f3f6fa;
 
   /* Border */
-  --ck-high-grid-border:               #d7dee7;
-  --ck-high-grid-border-strong:        #bcc7d4;
-  --ck-high-grid-border-subtle:        #e6ebf1;
+  --ck-zenith-grid-border:               #d7dee7;
+  --ck-zenith-grid-border-strong:        #bcc7d4;
+  --ck-zenith-grid-border-subtle:        #e6ebf1;
 
   /* Ink (text) */
-  --ck-high-grid-ink:                  #18212b;
-  --ck-high-grid-ink-muted:            #556170;
-  --ck-high-grid-ink-disabled:         #9ba8b5;
+  --ck-zenith-grid-ink:                  #18212b;
+  --ck-zenith-grid-ink-muted:            #556170;
+  --ck-zenith-grid-ink-disabled:         #9ba8b5;
 
   /* Accent */
-  --ck-high-grid-accent:               #0f4c81;
-  --ck-high-grid-accent-hover:         #0d3f6d;
-  --ck-high-grid-accent-soft:          #e6f0fa;
-  --ck-high-grid-accent-focus-ring:    rgba(15, 76, 129, 0.18);
+  --ck-zenith-grid-accent:               #0f4c81;
+  --ck-zenith-grid-accent-hover:         #0d3f6d;
+  --ck-zenith-grid-accent-soft:          #e6f0fa;
+  --ck-zenith-grid-accent-focus-ring:    rgba(15, 76, 129, 0.18);
 
   /* State colours */
-  --ck-high-grid-row-selected-bg:      #e8f0fb;
-  --ck-high-grid-row-hover-bg:         #f2f6fc;
-  --ck-high-grid-row-odd-bg:           #fbfcfe;
-  --ck-high-grid-row-group-bg:         linear-gradient(90deg, #f6f9fc, #eef4fa);
-  --ck-high-grid-row-tree-bg:          rgba(15, 76, 129, 0.08);
+  --ck-zenith-grid-row-selected-bg:      #e8f0fb;
+  --ck-zenith-grid-row-hover-bg:         #f2f6fc;
+  --ck-zenith-grid-row-odd-bg:           #fbfcfe;
+  --ck-zenith-grid-row-group-bg:         linear-gradient(90deg, #f6f9fc, #eef4fa);
+  --ck-zenith-grid-row-tree-bg:          rgba(15, 76, 129, 0.08);
 
   /* Header */
-  --ck-high-grid-header-bg:            linear-gradient(180deg, #f7f9fc, #eef3f8);
-  --ck-high-grid-header-group-bg:      linear-gradient(180deg, #daeaf8, #c8dcf0);
-  --ck-high-grid-header-group-color:   #2c5282;
-  --ck-high-grid-header-border:        #dde5ee;
+  --ck-zenith-grid-header-bg:            linear-gradient(180deg, #f7f9fc, #eef3f8);
+  --ck-zenith-grid-header-group-bg:      linear-gradient(180deg, #daeaf8, #c8dcf0);
+  --ck-zenith-grid-header-group-color:   #2c5282;
+  --ck-zenith-grid-header-border:        #dde5ee;
 
   /* Side panel */
-  --ck-high-grid-side-panel-rail-width:  36px;
-  --ck-high-grid-side-panel-card-width:  320px;
-  --ck-high-grid-side-panel-edge-gap:    4px;
-  --ck-high-grid-side-panel-bg:          linear-gradient(180deg, rgba(254,255,255,0.99), rgba(247,250,253,0.99));
-  --ck-high-grid-side-panel-rail-bg:     linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,248,252,0.98));
-  --ck-high-grid-side-panel-rail-active: linear-gradient(180deg, #15273c, #0f1c2d);
+  --ck-zenith-grid-side-panel-rail-width:  36px;
+  --ck-zenith-grid-side-panel-card-width:  320px;
+  --ck-zenith-grid-side-panel-edge-gap:    4px;
+  --ck-zenith-grid-side-panel-bg:          linear-gradient(180deg, rgba(254,255,255,0.99), rgba(247,250,253,0.99));
+  --ck-zenith-grid-side-panel-rail-bg:     linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,248,252,0.98));
+  --ck-zenith-grid-side-panel-rail-active: linear-gradient(180deg, #15273c, #0f1c2d);
 
   /* Overlay */
-  --ck-high-grid-overlay-bg:           rgba(248, 250, 252, 0.82);
+  --ck-zenith-grid-overlay-bg:           rgba(248, 250, 252, 0.82);
 
   /* Live banner */
-  --ck-high-grid-live-banner-bg:       linear-gradient(90deg, #e8f1fb, #f5f9fd);
-  --ck-high-grid-live-banner-border:   #d3e0ed;
+  --ck-zenith-grid-live-banner-bg:       linear-gradient(90deg, #e8f1fb, #f5f9fd);
+  --ck-zenith-grid-live-banner-border:   #d3e0ed;
 
   /* ── Typography ───────────────────────────────────────────── */
 
-  --ck-high-grid-font-family:          "Segoe UI Variable", "Segoe UI", Arial, sans-serif;
-  --ck-high-grid-font-size:            14px;
-  --ck-high-grid-font-size-sm:         13px;
-  --ck-high-grid-font-size-xs:         11px;
-  --ck-high-grid-font-weight-normal:   400;
-  --ck-high-grid-font-weight-medium:   500;
-  --ck-high-grid-font-weight-bold:     600;
-  --ck-high-grid-font-weight-heavy:    700;
+  --ck-zenith-grid-font-family:          "Segoe UI Variable", "Segoe UI", Arial, sans-serif;
+  --ck-zenith-grid-font-size:            14px;
+  --ck-zenith-grid-font-size-sm:         13px;
+  --ck-zenith-grid-font-size-xs:         11px;
+  --ck-zenith-grid-font-weight-normal:   400;
+  --ck-zenith-grid-font-weight-medium:   500;
+  --ck-zenith-grid-font-weight-bold:     600;
+  --ck-zenith-grid-font-weight-heavy:    700;
 
   /* ── Spacing & Layout ─────────────────────────────────────── */
 
-  --ck-high-grid-row-height:           40px;
-  --ck-high-grid-header-height:        40px;
-  --ck-high-grid-cell-padding-x:       12px;
-  --ck-high-grid-cell-gap:             8px;
+  --ck-zenith-grid-row-height:           40px;
+  --ck-zenith-grid-header-height:        40px;
+  --ck-zenith-grid-cell-padding-x:       12px;
+  --ck-zenith-grid-cell-gap:             8px;
 
   /* ── Borders & Radius ─────────────────────────────────────── */
 
-  --ck-high-grid-radius:               10px;
-  --ck-high-grid-radius-md:            8px;
-  --ck-high-grid-radius-sm:            6px;
-  --ck-high-grid-radius-xs:            4px;
-  --ck-high-grid-border-width:         1px;
+  --ck-zenith-grid-radius:               10px;
+  --ck-zenith-grid-radius-md:            8px;
+  --ck-zenith-grid-radius-sm:            6px;
+  --ck-zenith-grid-radius-xs:            4px;
+  --ck-zenith-grid-border-width:         1px;
 
   /* ── Shadows ──────────────────────────────────────────────── */
 
-  --ck-high-grid-shadow:               0 20px 48px rgba(15, 23, 42, 0.12);
-  --ck-high-grid-shadow-panel:         0 14px 34px rgba(15, 28, 45, 0.24);
-  --ck-high-grid-shadow-tab:           0 10px 28px rgba(15, 23, 42, 0.08);
-  --ck-high-grid-shadow-row-hover:     0 2px 6px rgba(15, 23, 42, 0.07);
+  --ck-zenith-grid-shadow:               0 20px 48px rgba(15, 23, 42, 0.12);
+  --ck-zenith-grid-shadow-panel:         0 14px 34px rgba(15, 28, 45, 0.24);
+  --ck-zenith-grid-shadow-tab:           0 10px 28px rgba(15, 23, 42, 0.08);
+  --ck-zenith-grid-shadow-row-hover:     0 2px 6px rgba(15, 23, 42, 0.07);
 
   /* ── Transitions ──────────────────────────────────────────── */
 
-  --ck-high-grid-transition-fast:      120ms ease;
-  --ck-high-grid-transition-base:      150ms ease;
-  --ck-high-grid-transition-panel:     180ms ease;
+  --ck-zenith-grid-transition-fast:      120ms ease;
+  --ck-zenith-grid-transition-base:      150ms ease;
+  --ck-zenith-grid-transition-panel:     180ms ease;
 
   /* ── Grid limits ──────────────────────────────────────────── */
 
-  --ck-high-grid-max-height:           80vh;
-  --ck-high-grid-min-height:           320px;
-  --ck-high-grid-min-col-width:        50px;
+  --ck-zenith-grid-max-height:           80vh;
+  --ck-zenith-grid-min-height:           320px;
+  --ck-zenith-grid-min-col-width:        50px;
 
   /* ── Live row animation ───────────────────────────────────── */
 
-  --ck-high-grid-live-enter-duration:  700ms;
+  --ck-zenith-grid-live-enter-duration:  700ms;
 }
 
 /* ── Dark theme override example ──────────────────────────────
-   Add class="ck-high-grid-theme-dark" to the grid container to activate.
+   Add class="ck-zenith-grid-theme-dark" to the grid container to activate.
    ─────────────────────────────────────────────────────────── */
 
 /* color-scheme만 래퍼에 적용 — native 스크롤바 등 브라우저 UI 다크 모드 처리 */
-.ck-high-grid-theme-dark {
+.ck-zenith-grid-theme-dark {
   color-scheme: dark;
 }
 
 /* ── Dark theme variables (single source of truth) ────────────────────────────
-   specificity 0-2-0 으로 .ck-high-grid-root(0-1-0)의 변수 재정의를 이김.
+   specificity 0-2-0 으로 .ck-zenith-grid-root(0-1-0)의 변수 재정의를 이김.
    두 가지 사용 패턴을 모두 커버:
-     1. <div class="ck-high-grid-theme-dark"><div class="ck-high-grid-root">
-     2. <div class="ck-high-grid-root ck-high-grid-theme-dark">
-   TODO(v3): .ck-high-grid-root의 변수 선언을 :root로 이전하면 이 블록 제거 가능.
+     1. <div class="ck-zenith-grid-theme-dark"><div class="ck-zenith-grid-root">
+     2. <div class="ck-zenith-grid-root ck-zenith-grid-theme-dark">
+   TODO(v3): .ck-zenith-grid-root의 변수 선언을 :root로 이전하면 이 블록 제거 가능.
    ─────────────────────────────────────────────────────────── */
-.ck-high-grid-theme-dark .ck-high-grid-root,
-.ck-high-grid-root.ck-high-grid-theme-dark {
+.ck-zenith-grid-theme-dark .ck-zenith-grid-root,
+.ck-zenith-grid-root.ck-zenith-grid-theme-dark {
   color-scheme: dark;
-  background: var(--ck-high-grid-surface);
-  color: var(--ck-high-grid-ink);
+  background: var(--ck-zenith-grid-surface);
+  color: var(--ck-zenith-grid-ink);
 
-  --ck-high-grid-surface:              #12181f;
-  --ck-high-grid-surface-elevated:     rgba(22, 30, 40, 0.98);
-  --ck-high-grid-surface-muted:        #1a2330;
+  --ck-zenith-grid-surface:              #12181f;
+  --ck-zenith-grid-surface-elevated:     rgba(22, 30, 40, 0.98);
+  --ck-zenith-grid-surface-muted:        #1a2330;
 
-  --ck-high-grid-border:               #2d3a47;
-  --ck-high-grid-border-strong:        #3d4e5e;
-  --ck-high-grid-border-subtle:        #222e3c;
+  --ck-zenith-grid-border:               #2d3a47;
+  --ck-zenith-grid-border-strong:        #3d4e5e;
+  --ck-zenith-grid-border-subtle:        #222e3c;
 
-  --ck-high-grid-ink:                  #e8edf3;
-  --ck-high-grid-ink-muted:            #8fa5bc;
-  --ck-high-grid-ink-disabled:         #4e6070;
+  --ck-zenith-grid-ink:                  #e8edf3;
+  --ck-zenith-grid-ink-muted:            #8fa5bc;
+  --ck-zenith-grid-ink-disabled:         #4e6070;
 
-  --ck-high-grid-accent:               #4a9eed;
-  --ck-high-grid-accent-hover:         #3a8edc;
-  --ck-high-grid-accent-soft:          #162436;
-  --ck-high-grid-accent-focus-ring:    rgba(74, 158, 237, 0.22);
+  --ck-zenith-grid-accent:               #4a9eed;
+  --ck-zenith-grid-accent-hover:         #3a8edc;
+  --ck-zenith-grid-accent-soft:          #162436;
+  --ck-zenith-grid-accent-focus-ring:    rgba(74, 158, 237, 0.22);
 
-  --ck-high-grid-row-selected-bg:      #162a42;
-  --ck-high-grid-row-hover-bg:         #1b2733;
-  --ck-high-grid-row-odd-bg:           #141c25;
-  --ck-high-grid-row-group-bg:         linear-gradient(90deg, #1a2635, #152030);
-  --ck-high-grid-row-tree-bg:          rgba(74, 158, 237, 0.08);
+  --ck-zenith-grid-row-selected-bg:      #162a42;
+  --ck-zenith-grid-row-hover-bg:         #1b2733;
+  --ck-zenith-grid-row-odd-bg:           #141c25;
+  --ck-zenith-grid-row-group-bg:         linear-gradient(90deg, #1a2635, #152030);
+  --ck-zenith-grid-row-tree-bg:          rgba(74, 158, 237, 0.08);
 
-  --ck-high-grid-header-bg:            linear-gradient(180deg, #1c2836, #141e2a);
-  --ck-high-grid-header-group-bg:      linear-gradient(180deg, #1e3a5c, #152d4a);
-  --ck-high-grid-header-group-color:   #88c4f0;
-  --ck-high-grid-header-border:        #283848;
+  --ck-zenith-grid-header-bg:            linear-gradient(180deg, #1c2836, #141e2a);
+  --ck-zenith-grid-header-group-bg:      linear-gradient(180deg, #1e3a5c, #152d4a);
+  --ck-zenith-grid-header-group-color:   #88c4f0;
+  --ck-zenith-grid-header-border:        #283848;
 
-  --ck-high-grid-overlay-bg:           rgba(12, 18, 25, 0.82);
-  --ck-high-grid-live-banner-bg:       linear-gradient(90deg, #162840, #1a2e48);
-  --ck-high-grid-live-banner-border:   #24384e;
+  --ck-zenith-grid-overlay-bg:           rgba(12, 18, 25, 0.82);
+  --ck-zenith-grid-live-banner-bg:       linear-gradient(90deg, #162840, #1a2e48);
+  --ck-zenith-grid-live-banner-border:   #24384e;
 
-  --ck-high-grid-side-panel-bg:        linear-gradient(180deg, rgba(20,28,38,0.99), rgba(16,24,33,0.99));
-  --ck-high-grid-side-panel-rail-bg:   linear-gradient(180deg, rgba(22,30,42,0.98), rgba(18,26,36,0.98));
-  --ck-high-grid-side-panel-rail-active: linear-gradient(180deg, #1e3a5c, #152d4a);
+  --ck-zenith-grid-side-panel-bg:        linear-gradient(180deg, rgba(20,28,38,0.99), rgba(16,24,33,0.99));
+  --ck-zenith-grid-side-panel-rail-bg:   linear-gradient(180deg, rgba(22,30,42,0.98), rgba(18,26,36,0.98));
+  --ck-zenith-grid-side-panel-rail-active: linear-gradient(180deg, #1e3a5c, #152d4a);
 }
 
 /* ── Compact density preset ───────────────────────────────────
-   <div class="ck-high-grid-theme-compact"> wraps the grid host.
+   <div class="ck-zenith-grid-theme-compact"> wraps the grid host.
    ─────────────────────────────────────────────────────────── */
 
-.ck-high-grid-theme-compact {
-  --ck-high-grid-row-height:           32px;
-  --ck-high-grid-header-height:        32px;
-  --ck-high-grid-cell-padding-x:       8px;
-  --ck-high-grid-font-size:            12px;
-  --ck-high-grid-font-size-sm:         11px;
+.ck-zenith-grid-theme-compact {
+  --ck-zenith-grid-row-height:           32px;
+  --ck-zenith-grid-header-height:        32px;
+  --ck-zenith-grid-cell-padding-x:       8px;
+  --ck-zenith-grid-font-size:            12px;
+  --ck-zenith-grid-font-size-sm:         11px;
 }
 
 /* ── Spacious density preset ──────────────────────────────────
-   <div class="ck-high-grid-theme-spacious"> wraps the grid host.
+   <div class="ck-zenith-grid-theme-spacious"> wraps the grid host.
    ─────────────────────────────────────────────────────────── */
 
-.ck-high-grid-theme-spacious {
-  --ck-high-grid-row-height:           52px;
-  --ck-high-grid-header-height:        48px;
-  --ck-high-grid-cell-padding-x:       16px;
-  --ck-high-grid-font-size:            15px;
+.ck-zenith-grid-theme-spacious {
+  --ck-zenith-grid-row-height:           52px;
+  --ck-zenith-grid-header-height:        48px;
+  --ck-zenith-grid-cell-padding-x:       16px;
+  --ck-zenith-grid-font-size:            15px;
 }

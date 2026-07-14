@@ -10,8 +10,8 @@ await build({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/adapters/vue2/index.js'),
-      name: 'HighGridVue2',
-      fileName: 'highgrid-vue2',
+      name: 'ZenithGridVue2',
+      fileName: 'zenith-grid-vue2',
       formats: ['es', 'umd'],
     },
     outDir: 'dist',
@@ -28,7 +28,7 @@ await build({
 
 copyFileSync(
   resolve(__dirname, 'src/adapters/vue2/index.d.ts'),
-  resolve(__dirname, 'dist/highgrid-vue2.d.ts')
+  resolve(__dirname, 'dist/zenith-grid-vue2.d.ts')
 );
 
 console.log('✓ Vue2 adapter built successfully');

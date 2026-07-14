@@ -34,9 +34,9 @@ export class SettingsPanelRenderer {
       return;
     }
 
-    this._dom.getRoot()?.classList.add('ck-high-grid-has-side-panel');
+    this._dom.getRoot()?.classList.add('ck-zenith-grid-has-side-panel');
     this._shell = document.createElement('div');
-    this._shell.className = 'ck-high-grid-side-panel';
+    this._shell.className = 'ck-zenith-grid-side-panel';
     this._host.appendChild(this._shell);
     this.render();
   }
@@ -77,7 +77,7 @@ export class SettingsPanelRenderer {
     this._shell.dataset.open = this._open ? 'true' : 'false';
 
     const rail = document.createElement('div');
-    rail.className = 'ck-high-grid-side-panel-rail';
+    rail.className = 'ck-zenith-grid-side-panel-rail';
 
     const tabs = [
       { id: 'columns', label: this._t('sidePanel.tabs.columns', 'Columns') },
@@ -94,7 +94,7 @@ export class SettingsPanelRenderer {
     tabs.forEach((tab) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'ck-high-grid-side-panel-tab';
+      button.className = 'ck-zenith-grid-side-panel-tab';
       button.dataset.active = this._open && this._activeTab === tab.id ? 'true' : 'false';
       button.textContent = tab.label;
       button.addEventListener('click', () => {
@@ -110,17 +110,17 @@ export class SettingsPanelRenderer {
     });
 
     const card = document.createElement('aside');
-    card.className = 'ck-high-grid-side-panel-card';
+    card.className = 'ck-zenith-grid-side-panel-card';
 
     const header = document.createElement('div');
-    header.className = 'ck-high-grid-side-panel-header';
+    header.className = 'ck-zenith-grid-side-panel-header';
 
     const title = document.createElement('h3');
     title.textContent = tabs.find((tab) => tab.id === this._activeTab)?.label ?? 'Settings';
 
     const closeButton = document.createElement('button');
     closeButton.type = 'button';
-    closeButton.className = 'ck-high-grid-side-panel-close';
+    closeButton.className = 'ck-zenith-grid-side-panel-close';
     closeButton.textContent = this._t('sidePanel.close', 'Close');
     closeButton.addEventListener('click', () => {
       this._open = false;
@@ -132,7 +132,7 @@ export class SettingsPanelRenderer {
     card.appendChild(header);
 
     const body = document.createElement('div');
-    body.className = 'ck-high-grid-side-panel-body';
+    body.className = 'ck-zenith-grid-side-panel-body';
 
     if (this._activeTab === 'columns') {
       body.appendChild(this._renderColumnsSection());
@@ -172,12 +172,12 @@ export class SettingsPanelRenderer {
 
   _renderColumnsSection() {
     const section = document.createElement('div');
-    section.className = 'ck-high-grid-side-panel-section';
+    section.className = 'ck-zenith-grid-side-panel-section';
 
     const columns = this._core.getAllLeafColumns();
     columns.forEach((column) => {
       const row = document.createElement('div');
-      row.className = 'ck-high-grid-side-panel-row';
+      row.className = 'ck-zenith-grid-side-panel-row';
       row.dataset.colId = column.def.id;
 
       // Only make the drag handle draggable, not the entire row
@@ -185,20 +185,20 @@ export class SettingsPanelRenderer {
 
       row.addEventListener('dragstart', (e) => {
         e.dataTransfer?.setData('text/plain', column.def.id);
-        row.classList.add('ck-high-grid-side-panel-row-dragging');
+        row.classList.add('ck-zenith-grid-side-panel-row-dragging');
       });
       row.addEventListener('dragend', () => {
-        row.classList.remove('ck-high-grid-side-panel-row-dragging');
-        section.querySelectorAll('.ck-high-grid-side-panel-row').forEach((r) => r.classList.remove('ck-high-grid-side-panel-row-drag-over'));
+        row.classList.remove('ck-zenith-grid-side-panel-row-dragging');
+        section.querySelectorAll('.ck-zenith-grid-side-panel-row').forEach((r) => r.classList.remove('ck-zenith-grid-side-panel-row-drag-over'));
       });
       row.addEventListener('dragover', (e) => {
         e.preventDefault();
-        section.querySelectorAll('.ck-high-grid-side-panel-row').forEach((r) => r.classList.remove('ck-high-grid-side-panel-row-drag-over'));
-        row.classList.add('ck-high-grid-side-panel-row-drag-over');
+        section.querySelectorAll('.ck-zenith-grid-side-panel-row').forEach((r) => r.classList.remove('ck-zenith-grid-side-panel-row-drag-over'));
+        row.classList.add('ck-zenith-grid-side-panel-row-drag-over');
       });
       row.addEventListener('drop', (e) => {
         e.preventDefault();
-        row.classList.remove('ck-high-grid-side-panel-row-drag-over');
+        row.classList.remove('ck-zenith-grid-side-panel-row-drag-over');
         const fromColId = e.dataTransfer?.getData('text/plain');
         const toColId = column.def.id;
         if (fromColId && fromColId !== toColId) {
@@ -209,10 +209,10 @@ export class SettingsPanelRenderer {
       });
 
       const top = document.createElement('div');
-      top.className = 'ck-high-grid-side-panel-row-top';
+      top.className = 'ck-zenith-grid-side-panel-row-top';
 
       const dragHandle = document.createElement('span');
-      dragHandle.className = 'ck-high-grid-side-panel-drag-handle';
+      dragHandle.className = 'ck-zenith-grid-side-panel-drag-handle';
       dragHandle.setAttribute('aria-hidden', 'true');
       dragHandle.appendChild(createSvgIcon('dragVertical', 14));
 
@@ -227,7 +227,7 @@ export class SettingsPanelRenderer {
       top.appendChild(dragHandle);
 
       const label = document.createElement('label');
-      label.className = 'ck-high-grid-side-panel-checkbox';
+      label.className = 'ck-zenith-grid-side-panel-checkbox';
 
       const visible = document.createElement('input');
       visible.type = 'checkbox';
@@ -243,7 +243,7 @@ export class SettingsPanelRenderer {
       label.appendChild(text);
 
       const pinSelect = document.createElement('select');
-      pinSelect.className = 'ck-high-grid-side-panel-select';
+      pinSelect.className = 'ck-zenith-grid-side-panel-select';
       ['none', 'left', 'right'].forEach((value) => {
         const option = document.createElement('option');
         option.value = value === 'none' ? '' : value;
@@ -265,7 +265,7 @@ export class SettingsPanelRenderer {
       top.appendChild(pinSelect);
 
       const rangeWrap = document.createElement('div');
-      rangeWrap.className = 'ck-high-grid-side-panel-range-wrap';
+      rangeWrap.className = 'ck-zenith-grid-side-panel-range-wrap';
       rangeWrap.draggable = false; // Prevent drag on wrapper
 
       const range = document.createElement('input');
@@ -311,7 +311,7 @@ export class SettingsPanelRenderer {
       });
 
       const widthValue = document.createElement('span');
-      widthValue.className = 'ck-high-grid-side-panel-range-value';
+      widthValue.className = 'ck-zenith-grid-side-panel-range-value';
       widthValue.textContent = `${column.state.width ?? 150}px`;
 
       rangeWrap.appendChild(range);
@@ -327,15 +327,15 @@ export class SettingsPanelRenderer {
 
   _renderFiltersSection() {
     const section = document.createElement('div');
-    section.className = 'ck-high-grid-side-panel-section';
+    section.className = 'ck-zenith-grid-side-panel-section';
 
     const state = this._core.getFilterState();
 
     const quickWrap = document.createElement('div');
-    quickWrap.className = 'ck-high-grid-side-panel-block';
+    quickWrap.className = 'ck-zenith-grid-side-panel-block';
 
     const quickLabel = document.createElement('label');
-    quickLabel.className = 'ck-high-grid-side-panel-field';
+    quickLabel.className = 'ck-zenith-grid-side-panel-field';
 
     const quickText = document.createElement('span');
     quickText.textContent = this._t('sidePanel.quickFilter', 'Quick Filter');
@@ -394,16 +394,16 @@ export class SettingsPanelRenderer {
     // 고급 필터 빌더 UI
     if (typeof this._core.setAdvancedFilter === 'function') {
       const advSection = document.createElement('div');
-      advSection.className = 'ck-high-grid-side-panel-block ck-high-grid-advanced-filter-section';
+      advSection.className = 'ck-zenith-grid-side-panel-block ck-zenith-grid-advanced-filter-section';
 
       const advTitle = document.createElement('div');
-      advTitle.className = 'ck-high-grid-side-panel-subtitle';
+      advTitle.className = 'ck-zenith-grid-side-panel-subtitle';
       advTitle.textContent = this._t('sidePanel.advancedFilter', 'Advanced Filter');
       advSection.appendChild(advTitle);
 
       const addConditionBtn = document.createElement('button');
       addConditionBtn.type = 'button';
-      addConditionBtn.className = 'ck-high-grid-side-panel-action';
+      addConditionBtn.className = 'ck-zenith-grid-side-panel-action';
       addConditionBtn.textContent = this._t('sidePanel.addCondition', '+ Add Condition');
       addConditionBtn.addEventListener('click', () => this._openAdvancedFilterBuilder());
       advSection.appendChild(addConditionBtn);
@@ -411,13 +411,13 @@ export class SettingsPanelRenderer {
       const advState = this._core._advancedFilterManager?.getState?.();
       if (advState?.filter) {
         const badge = document.createElement('span');
-        badge.className = 'ck-high-grid-advanced-filter-badge';
+        badge.className = 'ck-zenith-grid-advanced-filter-badge';
         badge.textContent = this._t('sidePanel.advancedFilterActive', 'Advanced filter active');
         advSection.appendChild(badge);
 
         const clearAdv = document.createElement('button');
         clearAdv.type = 'button';
-        clearAdv.className = 'ck-high-grid-side-panel-action ck-high-grid-side-panel-action-danger';
+        clearAdv.className = 'ck-zenith-grid-side-panel-action ck-zenith-grid-side-panel-action-danger';
         clearAdv.textContent = this._t('sidePanel.clearAdvancedFilter', 'Clear Advanced Filter');
         clearAdv.addEventListener('click', () => {
           this._core.clearAdvancedFilter();
@@ -431,7 +431,7 @@ export class SettingsPanelRenderer {
 
     const clearButton = document.createElement('button');
     clearButton.type = 'button';
-    clearButton.className = 'ck-high-grid-side-panel-action';
+    clearButton.className = 'ck-zenith-grid-side-panel-action';
     clearButton.textContent = this._t('sidePanel.clearAllFilters', 'Clear All Filters');
     clearButton.addEventListener('click', () => {
       this._core.clearFilters();
@@ -444,21 +444,21 @@ export class SettingsPanelRenderer {
   }
 
   _openAdvancedFilterBuilder() {
-    const existing = document.querySelector('.ck-high-grid-advanced-filter-dialog');
+    const existing = document.querySelector('.ck-zenith-grid-advanced-filter-dialog');
     if (existing) { existing.remove(); return; }
 
     const columns = this._core.getVisibleLeafColumns().filter((c) => c.def.filterable !== false);
     const dialog = document.createElement('div');
-    dialog.className = 'ck-high-grid-advanced-filter-dialog';
+    dialog.className = 'ck-zenith-grid-advanced-filter-dialog';
 
     const title = document.createElement('div');
-    title.className = 'ck-high-grid-advanced-filter-dialog-title';
+    title.className = 'ck-zenith-grid-advanced-filter-dialog-title';
     title.textContent = this._t('sidePanel.advancedFilter', 'Advanced Filter');
     dialog.appendChild(title);
 
     // 조건 목록
     const conditionsList = document.createElement('div');
-    conditionsList.className = 'ck-high-grid-advanced-filter-conditions';
+    conditionsList.className = 'ck-zenith-grid-advanced-filter-conditions';
     dialog.appendChild(conditionsList);
 
     const conditions = [];
@@ -467,11 +467,11 @@ export class SettingsPanelRenderer {
       const cond = { field: columns[0]?.def.field ?? '', operator: 'contains', value: '', filterType: 'text' };
       conditions.push(cond);
       const row = document.createElement('div');
-      row.className = 'ck-high-grid-advanced-filter-row';
+      row.className = 'ck-zenith-grid-advanced-filter-row';
 
       if (conditions.length > 1) {
         const logicSel = document.createElement('select');
-        logicSel.className = 'ck-high-grid-header-filter-select';
+        logicSel.className = 'ck-zenith-grid-header-filter-select';
         ['AND', 'OR'].forEach((v) => {
           const o = document.createElement('option');
           o.value = v; o.textContent = v;
@@ -482,7 +482,7 @@ export class SettingsPanelRenderer {
       }
 
       const fieldSel = document.createElement('select');
-      fieldSel.className = 'ck-high-grid-header-filter-select';
+      fieldSel.className = 'ck-zenith-grid-header-filter-select';
       columns.forEach((col) => {
         const o = document.createElement('option');
         o.value = col.def.field; o.textContent = col.def.headerName ?? col.def.header ?? col.def.id;
@@ -491,7 +491,7 @@ export class SettingsPanelRenderer {
       fieldSel.addEventListener('change', () => { cond.field = fieldSel.value; });
 
       const opSel = document.createElement('select');
-      opSel.className = 'ck-high-grid-header-filter-select';
+      opSel.className = 'ck-zenith-grid-header-filter-select';
       ['contains', 'notContains', 'equals', 'notEquals', 'startsWith', 'endsWith', 'empty', 'notEmpty'].forEach((op) => {
         const o = document.createElement('option');
         o.value = op; o.textContent = op;
@@ -504,13 +504,13 @@ export class SettingsPanelRenderer {
 
       const valueInput = document.createElement('input');
       valueInput.type = 'text';
-      valueInput.className = 'ck-high-grid-header-filter-input';
+      valueInput.className = 'ck-zenith-grid-header-filter-input';
       valueInput.placeholder = this._t('sidePanel.filterValue', 'Value...');
       valueInput.addEventListener('input', () => { cond.value = valueInput.value; });
 
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
-      removeBtn.className = 'ck-high-grid-advanced-filter-remove';
+      removeBtn.className = 'ck-zenith-grid-advanced-filter-remove';
       removeBtn.textContent = '×';
       removeBtn.addEventListener('click', () => {
         const idx = conditions.indexOf(cond);
@@ -529,13 +529,13 @@ export class SettingsPanelRenderer {
 
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
-    addBtn.className = 'ck-high-grid-side-panel-action';
+    addBtn.className = 'ck-zenith-grid-side-panel-action';
     addBtn.textContent = this._t('sidePanel.addCondition', '+ Add Condition');
     addBtn.addEventListener('click', addCondition);
 
     const applyBtn = document.createElement('button');
     applyBtn.type = 'button';
-    applyBtn.className = 'ck-high-grid-side-panel-action ck-high-grid-side-panel-action-primary';
+    applyBtn.className = 'ck-zenith-grid-side-panel-action ck-zenith-grid-side-panel-action-primary';
     applyBtn.textContent = this._t('sidePanel.applyFilter', 'Apply');
     applyBtn.addEventListener('click', () => {
       if (conditions.length === 0) return;
@@ -555,12 +555,12 @@ export class SettingsPanelRenderer {
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.className = 'ck-high-grid-side-panel-action';
+    cancelBtn.className = 'ck-zenith-grid-side-panel-action';
     cancelBtn.textContent = this._t('sidePanel.cancel', 'Cancel');
     cancelBtn.addEventListener('click', () => dialog.remove());
 
     const btnRow = document.createElement('div');
-    btnRow.className = 'ck-high-grid-advanced-filter-actions';
+    btnRow.className = 'ck-zenith-grid-advanced-filter-actions';
     btnRow.appendChild(addBtn);
     btnRow.appendChild(applyBtn);
     btnRow.appendChild(cancelBtn);
@@ -579,7 +579,7 @@ export class SettingsPanelRenderer {
 
   _renderColumnFilterField(column, filter) {
     const field = document.createElement('div');
-    field.className = 'ck-high-grid-side-panel-field';
+    field.className = 'ck-zenith-grid-side-panel-field';
 
     const label = document.createElement('span');
     label.textContent = column.def.headerName;
@@ -591,7 +591,7 @@ export class SettingsPanelRenderer {
 
     if (meta.type !== 'select') {
       const operatorSelect = document.createElement('select');
-      operatorSelect.className = 'ck-high-grid-side-panel-select';
+      operatorSelect.className = 'ck-zenith-grid-side-panel-select';
       meta.operators.forEach((operator) => {
         const option = document.createElement('option');
         option.value = operator;
@@ -631,7 +631,7 @@ export class SettingsPanelRenderer {
           : [String(currentValue)];
 
       const select = document.createElement('select');
-      select.className = 'ck-high-grid-side-panel-select ck-high-grid-side-panel-select-multiple';
+      select.className = 'ck-zenith-grid-side-panel-select ck-zenith-grid-side-panel-select-multiple';
       select.multiple = meta.multiple;
       select.size = Math.min(Math.max(meta.choices.length, 3), 6);
 
@@ -658,7 +658,7 @@ export class SettingsPanelRenderer {
 
       if (meta.choices.length === 0) {
         const hint = document.createElement('small');
-        hint.className = 'ck-high-grid-side-panel-help';
+        hint.className = 'ck-zenith-grid-side-panel-help';
         hint.textContent = this._t(
           'sidePanel.noFilterChoices',
           'No filter choices are available yet. Provide filterOptions for remote datasets.'
@@ -668,17 +668,17 @@ export class SettingsPanelRenderer {
     }
 
     const actions = document.createElement('div');
-    actions.className = 'ck-high-grid-side-panel-inline-actions';
+    actions.className = 'ck-zenith-grid-side-panel-inline-actions';
 
     const summary = document.createElement('small');
-    summary.className = 'ck-high-grid-side-panel-help';
+    summary.className = 'ck-zenith-grid-side-panel-help';
     summary.textContent = filter
       ? this._t('sidePanel.filterActive', 'Filter active')
       : this._t('sidePanel.filterInactive', 'No filter set');
 
     const clear = document.createElement('button');
     clear.type = 'button';
-    clear.className = 'ck-high-grid-side-panel-action ck-high-grid-side-panel-action-inline';
+    clear.className = 'ck-zenith-grid-side-panel-action ck-zenith-grid-side-panel-action-inline';
     clear.textContent = this._t('sidePanel.clearFilter', 'Clear');
     clear.disabled = !filter;
     clear.addEventListener('click', () => {
@@ -696,7 +696,7 @@ export class SettingsPanelRenderer {
   _createFilterValueEditor(meta, operator, value, onCommit) {
     if (operator === 'between') {
       const wrap = document.createElement('div');
-      wrap.className = 'ck-high-grid-side-panel-split-inputs';
+      wrap.className = 'ck-zenith-grid-side-panel-split-inputs';
 
       const startInput = this._createPrimitiveFilterInput(meta, Array.isArray(value) ? value[0] ?? '' : '', () => {
         onCommit([startInput.value, endInput.value]);
@@ -806,12 +806,12 @@ export class SettingsPanelRenderer {
 
   _renderPluginsSection() {
     const section = document.createElement('div');
-    section.className = 'ck-high-grid-side-panel-section';
+    section.className = 'ck-zenith-grid-side-panel-section';
 
     const plugins = this._core.getAvailablePlugins();
     if (plugins.length === 0) {
       const empty = document.createElement('p');
-      empty.className = 'ck-high-grid-side-panel-empty';
+      empty.className = 'ck-zenith-grid-side-panel-empty';
       empty.textContent = this._t('sidePanel.noPlugins', 'No built-in plugins were provided for this grid instance.');
       section.appendChild(empty);
       return section;
@@ -819,13 +819,13 @@ export class SettingsPanelRenderer {
 
     plugins.forEach((entry) => {
       const row = document.createElement('div');
-      row.className = 'ck-high-grid-side-panel-row';
+      row.className = 'ck-zenith-grid-side-panel-row';
 
       const top = document.createElement('div');
-      top.className = 'ck-high-grid-side-panel-row-top';
+      top.className = 'ck-zenith-grid-side-panel-row-top';
 
       const copy = document.createElement('div');
-      copy.className = 'ck-high-grid-side-panel-copy';
+      copy.className = 'ck-zenith-grid-side-panel-copy';
 
       const title = document.createElement('strong');
       title.textContent = entry.label ?? entry.name;
@@ -838,7 +838,7 @@ export class SettingsPanelRenderer {
 
       const toggle = document.createElement('button');
       toggle.type = 'button';
-      toggle.className = 'ck-high-grid-side-panel-toggle';
+      toggle.className = 'ck-zenith-grid-side-panel-toggle';
       const installed = this._core.hasPlugin(entry.name);
       toggle.dataset.active = installed ? 'true' : 'false';
       toggle.textContent = installed ? 'On' : 'Off';
@@ -861,17 +861,17 @@ export class SettingsPanelRenderer {
 
   _renderViewSection() {
     const section = document.createElement('div');
-    section.className = 'ck-high-grid-side-panel-section';
+    section.className = 'ck-zenith-grid-side-panel-section';
 
     const grouping = this._core.getGroupingState();
     const tree = this._core.getTreeState();
 
     const groupField = document.createElement('label');
-    groupField.className = 'ck-high-grid-side-panel-field';
+    groupField.className = 'ck-zenith-grid-side-panel-field';
     const groupLabel = document.createElement('span');
     groupLabel.textContent = this._t('sidePanel.groupBy', 'Group By');
     const groupSelect = document.createElement('select');
-    groupSelect.className = 'ck-high-grid-side-panel-select';
+    groupSelect.className = 'ck-zenith-grid-side-panel-select';
 
     const noneOption = document.createElement('option');
     noneOption.value = '';
@@ -901,10 +901,10 @@ export class SettingsPanelRenderer {
     section.appendChild(groupField);
 
     const treeRow = document.createElement('div');
-    treeRow.className = 'ck-high-grid-side-panel-row';
+    treeRow.className = 'ck-zenith-grid-side-panel-row';
 
     const treeCopy = document.createElement('div');
-    treeCopy.className = 'ck-high-grid-side-panel-copy';
+    treeCopy.className = 'ck-zenith-grid-side-panel-copy';
     const treeTitle = document.createElement('strong');
     treeTitle.textContent = this._t('sidePanel.treeMode', 'Tree Mode');
     const treeMeta = document.createElement('span');
@@ -916,7 +916,7 @@ export class SettingsPanelRenderer {
 
     const treeToggle = document.createElement('button');
     treeToggle.type = 'button';
-    treeToggle.className = 'ck-high-grid-side-panel-toggle';
+    treeToggle.className = 'ck-zenith-grid-side-panel-toggle';
     treeToggle.dataset.active = tree.enabled ? 'true' : 'false';
     treeToggle.textContent = tree.enabled
       ? this._t('sidePanel.on', 'On')
@@ -934,10 +934,10 @@ export class SettingsPanelRenderer {
     section.appendChild(treeRow);
 
     const variableRow = document.createElement('div');
-    variableRow.className = 'ck-high-grid-side-panel-row';
+    variableRow.className = 'ck-zenith-grid-side-panel-row';
 
     const variableCopy = document.createElement('div');
-    variableCopy.className = 'ck-high-grid-side-panel-copy';
+    variableCopy.className = 'ck-zenith-grid-side-panel-copy';
     const variableTitle = document.createElement('strong');
     variableTitle.textContent = this._t('sidePanel.variableRowHeight', 'Variable Row Height');
     const variableMeta = document.createElement('span');
@@ -949,7 +949,7 @@ export class SettingsPanelRenderer {
 
     const variableToggle = document.createElement('button');
     variableToggle.type = 'button';
-    variableToggle.className = 'ck-high-grid-side-panel-toggle';
+    variableToggle.className = 'ck-zenith-grid-side-panel-toggle';
     variableToggle.dataset.active = this._core.isVariableRowHeight() ? 'true' : 'false';
     variableToggle.textContent = this._core.isVariableRowHeight()
       ? this._t('sidePanel.on', 'On')
@@ -963,10 +963,10 @@ export class SettingsPanelRenderer {
     section.appendChild(variableRow);
 
     const liveAnimationRow = document.createElement('div');
-    liveAnimationRow.className = 'ck-high-grid-side-panel-row';
+    liveAnimationRow.className = 'ck-zenith-grid-side-panel-row';
 
     const liveAnimationCopy = document.createElement('div');
-    liveAnimationCopy.className = 'ck-high-grid-side-panel-copy';
+    liveAnimationCopy.className = 'ck-zenith-grid-side-panel-copy';
     const liveAnimationTitle = document.createElement('strong');
     liveAnimationTitle.textContent = this._t('sidePanel.rowMotion', 'Row Motion');
     const liveAnimationMeta = document.createElement('span');
@@ -978,7 +978,7 @@ export class SettingsPanelRenderer {
 
     const liveAnimationToggle = document.createElement('button');
     liveAnimationToggle.type = 'button';
-    liveAnimationToggle.className = 'ck-high-grid-side-panel-toggle';
+    liveAnimationToggle.className = 'ck-zenith-grid-side-panel-toggle';
     liveAnimationToggle.dataset.active = this._core.isLiveRowAnimationEnabled() ? 'true' : 'false';
     liveAnimationToggle.textContent = this._core.isLiveRowAnimationEnabled()
       ? this._t('sidePanel.on', 'On')
@@ -995,7 +995,7 @@ export class SettingsPanelRenderer {
   }
 
   destroy() {
-    this._dom.getRoot()?.classList.remove('ck-high-grid-has-side-panel');
+    this._dom.getRoot()?.classList.remove('ck-zenith-grid-has-side-panel');
     if (this._host) {
       this._host.innerHTML = '';
     }

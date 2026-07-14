@@ -3,7 +3,7 @@
  *
  * @param {Object} options
  * @param {string} [options.name='xlsx-export'] - 플러그인 이름
- * @param {string} [options.fileName='highgrid-export.xlsx'] - 기본 내보내기 파일명
+ * @param {string} [options.fileName='zenith-grid-export.xlsx'] - 기본 내보내기 파일명
  * @returns {Object}
  */
 export function createXlsxExportPlugin(options = {}) {
@@ -162,7 +162,7 @@ export function createXlsxExportPlugin(options = {}) {
             });
           });
 
-          const fileName = exportOptions.fileName ?? options.fileName ?? 'highgrid-export.xlsx';
+          const fileName = exportOptions.fileName ?? options.fileName ?? 'zenith-grid-export.xlsx';
 
           // Node.js (Vitest) 또는 JSDOM 등 URL.createObjectURL이 없는 환경 검사
           if (typeof window === 'undefined' || typeof URL.createObjectURL !== 'function') {

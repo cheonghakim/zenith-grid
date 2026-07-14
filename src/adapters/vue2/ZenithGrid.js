@@ -1,12 +1,7 @@
-<template>
-  <div ref="el" />
-</template>
-
-<script>
 import { createGrid } from '../../index.js';
 
 export default {
-  name: 'HighGrid',
+  name: 'ZenithGrid',
   props: {
     rows:                   { type: Array,              default: () => [] },
     columns:                { type: Array,              default: () => [] },
@@ -133,7 +128,6 @@ export default {
       return raw;
     },
 
-    // Data
     refresh(...a)            { return this.grid?.refresh(...a); },
     setRows(...a)            { return this.grid?.setRows(...a); },
     appendRows(...a)         { return this.grid?.appendRows(...a); },
@@ -141,8 +135,6 @@ export default {
     patchRow(...a)           { return this.grid?.patchRow(...a); },
     upsertRows(...a)         { return this.grid?.upsertRows(...a); },
     removeRows(...a)         { return this.grid?.removeRows(...a); },
-
-    // Columns
     setColumns(...a)         { return this.grid?.setColumns(...a); },
     setColumnWidth(...a)     { return this.grid?.setColumnWidth(...a); },
     setColumnVisible(...a)   { return this.grid?.setColumnVisible(...a); },
@@ -150,47 +142,33 @@ export default {
     moveColumn(...a)         { return this.grid?.moveColumn(...a); },
     autoSizeColumn(...a)     { return this.grid?.autoSizeColumn(...a); },
     autoSizeAllColumns()     { return this.grid?.autoSizeAllColumns(); },
-
-    // Filter
     setQuickFilter(...a)     { return this.grid?.setQuickFilter(...a); },
     setColumnFilter(...a)    { return this.grid?.setColumnFilter(...a); },
     clearColumnFilter(...a)  { return this.grid?.clearColumnFilter(...a); },
     clearFilters()           { return this.grid?.clearFilters(); },
     setAdvancedFilter(...a)  { return this.grid?.setAdvancedFilter(...a); },
     clearAdvancedFilter()    { return this.grid?.clearAdvancedFilter(); },
-
-    // Sort
     sortBy(...a)             { return this.grid?.sortBy(...a); },
     clearSort()              { return this.grid?.clearSort(); },
-
-    // Grouping
     enableGrouping(...a)     { return this.grid?.enableGrouping(...a); },
     disableGrouping()        { return this.grid?.disableGrouping(); },
     isGroupingEnabled()      { return this.grid?.isGroupingEnabled(); },
     toggleGroup(...a)        { return this.grid?.toggleGroup(...a); },
-
-    // Tree
     enableTree(...a)         { return this.grid?.enableTree(...a); },
     disableTree()            { return this.grid?.disableTree(); },
     isTreeEnabled()          { return this.grid?.isTreeEnabled(); },
     toggleTreeRow(...a)      { return this.grid?.toggleTreeRow(...a); },
     expandAllTree()          { return this.grid?.expandAllTree(); },
     collapseAllTree()        { return this.grid?.collapseAllTree(); },
-
-    // Pagination
     setPage(...a)            { return this.grid?.setPage(...a); },
     nextPage()               { return this.grid?.nextPage(); },
     prevPage()               { return this.grid?.prevPage(); },
     setPageSize(...a)        { return this.grid?.setPageSize(...a); },
-
-    // Selection
     toggleSelectAll()        { return this.grid?.toggleSelectAll(); },
     setRowSelected(...a)     { return this.grid?.setRowSelected(...a); },
     getSelectedKeys()        { return this.grid?.getSelectedKeys(); },
     getSelectedRows()        { return this.grid?.getSelectedRows(); },
     getSelectionState()      { return this.grid?.getSelectionState(); },
-
-    // Live updates
     liveAddRows(...a)        { return this.grid?.liveAddRows(...a); },
     liveUpdateRows(...a)     { return this.grid?.liveUpdateRows(...a); },
     livePatchRow(...a)       { return this.grid?.livePatchRow(...a); },
@@ -198,52 +176,34 @@ export default {
     liveRemoveRows(...a)     { return this.grid?.liveRemoveRows(...a); },
     pauseLiveUpdates()       { return this.grid?.pauseLiveUpdates(); },
     resumeLiveUpdates()      { return this.grid?.resumeLiveUpdates(); },
-
-    // Editing
     beginCellEdit(...a)      { return this.grid?.beginCellEdit(...a); },
     setCellValue(...a)       { return this.grid?.setCellValue(...a); },
-
-    // Undo/Redo
     undo()                   { return this.grid?.undo(); },
     redo()                   { return this.grid?.redo(); },
     canUndo()                { return this.grid?.canUndo(); },
     canRedo()                { return this.grid?.canRedo(); },
-
-    // Row features
     moveRow(...a)            { return this.grid?.moveRow(...a); },
     setPinnedTopRows(...a)   { return this.grid?.setPinnedTopRows(...a); },
     setPinnedBottomRows(...a){ return this.grid?.setPinnedBottomRows(...a); },
     toggleDetail(...a)       { return this.grid?.toggleDetail(...a); },
     isDetailExpanded(...a)   { return this.grid?.isDetailExpanded(...a); },
-
-    // Aggregate
     setColumnAggregate(...a) { return this.grid?.setColumnAggregate(...a); },
     clearColumnAggregate(...a){ return this.grid?.clearColumnAggregate(...a); },
     getAggregateResult()     { return this.grid?.getAggregateResult(); },
-
-    // Range selection
     clearRangeSelection()    { return this.grid?.clearRangeSelection(); },
     copyRangeToClipboard()   { return this.grid?.copyRangeToClipboard(); },
-
-    // Pivot
     enablePivot(...a)        { return this.grid?.enablePivot(...a); },
     disablePivot()           { return this.grid?.disablePivot(); },
     isPivotEnabled()         { return this.grid?.isPivotEnabled(); },
-
-    // Export
     exportCsv(...a)          { return this.grid?.exportCsv(...a); },
     downloadCsv(...a)        { return this.grid?.downloadCsv(...a); },
     downloadExcel(...a)      { return this.grid?.downloadExcel(...a); },
     downloadXlsx(...a)       { return this.grid?.downloadXlsx?.(...a); },
-
-    // Misc
     printGrid()              { return this.grid?.printGrid(); },
     setLocale(...a)          { return this.grid?.setLocale(...a); },
     usePlugin(...a)          { return this.grid?.usePlugin(...a); },
     unusePlugin(...a)        { return this.grid?.unusePlugin(...a); },
     on(...a)                 { return this.grid?.on(...a); },
-
-    // State
     getColumnState()         { return this.grid?.getColumnState(); },
     getPaginationState()     { return this.grid?.getPaginationState(); },
     getFilterState()         { return this.grid?.getFilterState(); },
@@ -253,8 +213,9 @@ export default {
     getFlatRows()            { return this.grid?.getFlatRows(); },
     getAllLeafColumns()      { return this.grid?.getAllLeafColumns(); },
     getVisibleLeafColumns()  { return this.grid?.getVisibleLeafColumns(); },
-
     destroy()                { return this.grid?.destroy(); },
   },
+  render(h) {
+    return h('div', { ref: 'el' });
+  },
 };
-</script>

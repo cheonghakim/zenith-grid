@@ -10,8 +10,8 @@ await build({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/adapters/react/index.js'),
-      name: 'HighGridReact',
-      fileName: 'highgrid-react',
+      name: 'ZenithGridReact',
+      fileName: 'zenith-grid-react',
       formats: ['es', 'cjs'],
     },
     outDir: 'dist',
@@ -31,7 +31,7 @@ await build({
 
 copyFileSync(
   resolve(__dirname, 'src/adapters/react/index.d.ts'),
-  resolve(__dirname, 'dist/highgrid-react.d.ts')
+  resolve(__dirname, 'dist/zenith-grid-react.d.ts')
 );
 
 console.log('✓ React adapter built successfully');

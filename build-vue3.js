@@ -12,8 +12,8 @@ await build({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/adapters/vue3/index.js'),
-      name: 'HighGridVue',
-      fileName: 'highgrid-vue',
+      name: 'ZenithGridVue',
+      fileName: 'zenith-grid-vue',
       formats: ['es'],
     },
     outDir: 'dist',
@@ -30,7 +30,7 @@ await build({
 
 copyFileSync(
   resolve(__dirname, 'src/adapters/vue3/index.d.ts'),
-  resolve(__dirname, 'dist/highgrid-vue.d.ts')
+  resolve(__dirname, 'dist/zenith-grid-vue.d.ts')
 );
 
 console.log('✓ Vue3 adapter built successfully');

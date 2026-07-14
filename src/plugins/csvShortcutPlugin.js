@@ -17,7 +17,7 @@ export function createCsvShortcutPlugin(options = {}) {
         }
         event.preventDefault();
         core.downloadCsv({
-          fileName: options.fileName ?? 'highgrid-export.csv',
+          fileName: options.fileName ?? 'zenith-grid-export.csv',
           ...options.exportOptions,
         });
       };

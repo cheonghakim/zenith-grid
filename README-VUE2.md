@@ -1,19 +1,19 @@
-# HighGrid Vue2 Support
+# ZenithGrid Vue2 Support
 
-HighGrid supports both Vue 2.7+ and Vue 3.3+.
+ZenithGrid supports both Vue 2.7+ and Vue 3.3+.
 
 ## Installation
 
 ```bash
-npm install highgrid
+npm install zenith-grid
 ```
 
 ## Vue 3 Usage
 
 ```vue
 <script setup>
-import { HighGrid } from 'highgrid/vue';
-import 'highgrid/styles/grid.css';
+import { ZenithGrid } from 'zenith-grid/vue';
+import 'zenith-grid/styles/grid.css';
 
 const columns = [
   { field: 'id', headerName: 'ID', width: 80 },
@@ -27,7 +27,7 @@ const rows = [
 </script>
 
 <template>
-  <HighGrid :rows="rows" :columns="columns" />
+  <ZenithGrid :rows="rows" :columns="columns" />
 </template>
 ```
 
@@ -35,15 +35,15 @@ const rows = [
 
 ```vue
 <template>
-  <HighGrid :rows="rows" :columns="columns" />
+  <ZenithGrid :rows="rows" :columns="columns" />
 </template>
 
 <script>
-import { HighGrid } from 'highgrid/vue2';
-import 'highgrid/styles/grid.css';
+import { ZenithGrid } from 'zenith-grid/vue2';
+import 'zenith-grid/styles/grid.css';
 
 export default {
-  components: { HighGrid },
+  components: { ZenithGrid },
   data() {
     return {
       columns: [
@@ -65,7 +65,7 @@ export default {
 Both Vue 2 and Vue 3 adapters expose the same API:
 
 ### Props
-All HighGrid options are available as props (rows, columns, pagination, etc.)
+All ZenithGrid options are available as props (rows, columns, pagination, etc.)
 
 ### Events
 - `@ready` - Grid instance is ready
@@ -77,7 +77,7 @@ All HighGrid options are available as props (rows, columns, pagination, etc.)
 ### Methods (via ref)
 ```vue
 <template>
-  <HighGrid ref="gridRef" :rows="rows" :columns="columns" />
+  <ZenithGrid ref="gridRef" :rows="rows" :columns="columns" />
 </template>
 
 <script>

@@ -1501,10 +1501,10 @@ benchmarkScrollButton.addEventListener("click", async () => {
   const viewport =
     document
       .getElementById("grid-live")
-      .querySelector(".ck-high-grid-body-viewport") ||
+      .querySelector(".ck-zenith-grid-body-viewport") ||
     document
       .getElementById("grid-live")
-      .querySelector(".highgrid-body-viewport");
+      .querySelector(".zenith-grid-body-viewport");
   if (!viewport) {
     logBenchmark("Scroll Step", 0, "failed: viewport not found");
     return;
@@ -1634,7 +1634,7 @@ document.getElementById("printButton")?.addEventListener("click", () => {
 
 // ── THEME SWITCHING ───────────────────────────────────────────
 const themeToggleBtn = document.getElementById("themeToggleBtn");
-let currentTheme = localStorage.getItem("highgrid-demo-theme") || "dark";
+let currentTheme = localStorage.getItem("zenith-grid-demo-theme") || "dark";
 
 function applyTheme(theme) {
   document.body.setAttribute("data-theme", theme);
@@ -1648,9 +1648,9 @@ function applyTheme(theme) {
   gridHosts.forEach((host) => {
     if (!host) return;
     if (theme === "dark") {
-      host.classList.add("ck-high-grid-theme-dark");
+      host.classList.add("ck-zenith-grid-theme-dark");
     } else {
-      host.classList.remove("ck-high-grid-theme-dark");
+      host.classList.remove("ck-zenith-grid-theme-dark");
     }
   });
 }
@@ -1661,7 +1661,7 @@ applyTheme(currentTheme);
 themeToggleBtn.addEventListener("click", () => {
   currentTheme = currentTheme === "dark" ? "light" : "dark";
   applyTheme(currentTheme);
-  localStorage.setItem("highgrid-demo-theme", currentTheme);
+  localStorage.setItem("zenith-grid-demo-theme", currentTheme);
   logEvent("theme-change", { theme: currentTheme });
 });
 

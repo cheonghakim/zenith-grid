@@ -21,7 +21,7 @@ export class ColumnStateManager {
     this._tableId = tableId;
     this._storageType = options.storage ?? 'localStorage';
     this._serverStorage = options.serverStorage ?? null;
-    this._storageKey = `highgrid:${tableId}:columns`;
+    this._storageKey = `zenith-grid:${tableId}:columns`;
     this._memoryStore = null;
   }
 

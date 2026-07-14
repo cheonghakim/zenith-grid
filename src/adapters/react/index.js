@@ -1,1 +1,1 @@
-export { useHighGrid } from './useHighGrid.js';
+export { useZenithGrid } from './useZenithGrid.js';

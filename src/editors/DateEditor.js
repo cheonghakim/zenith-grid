@@ -10,7 +10,7 @@
 export function createDateEditor({ row, def, value }) {
   const input = document.createElement('input');
   input.type = 'date';
-  input.className = 'ck-high-grid-cell-editor';
+  input.className = 'ck-zenith-grid-cell-editor';
 
   // 값을 YYYY-MM-DD 형식으로 포맷팅
   let dateStr = '';

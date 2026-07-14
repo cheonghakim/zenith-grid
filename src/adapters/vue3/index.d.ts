@@ -12,11 +12,11 @@ import type {
   PivotConfig,
 } from '../../../index.js';
 
-// ── HighGrid component ───────────────────────────────────────────────────────
+// ── ZenithGrid component ───────────────────────────────────────────────────────
 
-export interface HighGridProps<Row = GridRow> extends GridOptions<Row> {}
+export interface ZenithGridProps<Row = GridRow> extends GridOptions<Row> {}
 
-export interface HighGridExposed<Row = GridRow> {
+export interface ZenithGridExposed<Row = GridRow> {
   grid: ShallowRef<GridCore<Row> | null>;
 
   // Data
@@ -143,11 +143,11 @@ export interface HighGridExposed<Row = GridRow> {
   destroy(): void;
 }
 
-export declare const HighGrid: DefineComponent<HighGridProps, HighGridExposed>;
+export declare const ZenithGrid: DefineComponent<ZenithGridProps, ZenithGridExposed>;
 
-// ── useHighGrid composable ───────────────────────────────────────────────────
+// ── useZenithGrid composable ───────────────────────────────────────────────────
 
-export interface UseHighGridState {
+export interface UseZenithGridState {
   selectedKeys: Set<string>;
   selectionCount: number;
   isAllSelected: boolean;
@@ -156,13 +156,13 @@ export interface UseHighGridState {
   paginationState: any;
 }
 
-export interface UseHighGridReturn<Row = GridRow> extends HighGridExposed<Row> {
+export interface UseZenithGridReturn<Row = GridRow> extends ZenithGridExposed<Row> {
   isReady: Ref<boolean>;
-  state: UseHighGridState;
+  state: UseZenithGridState;
   init(overrideOptions?: GridOptions<Row>): GridCore<Row> | null;
 }
 
-export declare function useHighGrid<Row = GridRow>(
+export declare function useZenithGrid<Row = GridRow>(
   containerRef: Ref<HTMLElement | null>,
   options?: GridOptions<Row>,
-): UseHighGridReturn<Row>;
+): UseZenithGridReturn<Row>;

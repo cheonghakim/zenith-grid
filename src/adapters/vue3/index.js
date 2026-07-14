@@ -1,2 +1,2 @@
-export { default as HighGrid } from './HighGrid.vue';
-export { useHighGrid } from './useHighGrid.js';
+export { default as ZenithGrid } from './ZenithGrid.vue';
+export { useZenithGrid } from './useZenithGrid.js';

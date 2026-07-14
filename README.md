@@ -1,6 +1,6 @@
-﻿# HighGrid
+﻿# ZenithGrid
 
-HighGrid is a vanilla JavaScript data grid library.
+ZenithGrid is a vanilla JavaScript data grid library.
 It covers the pieces you usually need in a real table: virtual scrolling, paging, infinite loading, grouping, tree data, live updates, plugins, and custom cell rendering.
 
 Other Languages: [한국어 문서 (Korean)](./README.ko.md)
@@ -9,13 +9,13 @@ Other Languages: [한국어 문서 (Korean)](./README.ko.md)
 
 ## Demo
 
-[데모 사이트(Demo site) 바로가기](https://cheonghakim.github.io/high-grid/)
+[데모 사이트(Demo site) 바로가기](https://cheonghakim.github.io/zenith-grid/)
 
 ---
 
 ### Table of Contents
 
-A categorized guide map to quickly locate details about HighGrid's extensive feature set. Click on any topic to jump directly to its section.
+A categorized guide map to quickly locate details about ZenithGrid's extensive feature set. Click on any topic to jump directly to its section.
 
 #### 1. Setup & Fundamentals
 
@@ -98,22 +98,22 @@ A categorized guide map to quickly locate details about HighGrid's extensive fea
 
 ### 1. Overview
 
-HighGrid is a vanilla JavaScript data grid for teams that want a solid default table without bringing in a large framework dependency.
+ZenithGrid is a vanilla JavaScript data grid for teams that want a solid default table without bringing in a large framework dependency.
 It includes virtual scrolling, client/server pagination, infinite loading, grouping, tree data, runtime updates, plugins, custom cell renderers, and a built-in side panel.
 
-**CSS Isolation:** HighGrid prefixes all internal CSS class names with `ck-high-grid-` and all CSS custom properties with `--ck-high-grid-`, preventing conflicts when used alongside AG-Grid or other grid libraries on the same page.
+**CSS Isolation:** ZenithGrid prefixes all internal CSS class names with `ck-zenith-grid-` and all CSS custom properties with `--ck-zenith-grid-`, preventing conflicts when used alongside AG-Grid or other grid libraries on the same page.
 
 ### 2. Installation
 
 ```bash
-npm install highgrid
+npm install zenith-grid
 ```
 
 Import both the library and the stylesheet.
 
 ```js
-import { createGrid } from "highgrid";
-import "highgrid/styles/grid.css";
+import { createGrid } from "zenith-grid";
+import "zenith-grid/styles/grid.css";
 ```
 
 ### 3. Quick Start
@@ -123,8 +123,8 @@ import "highgrid/styles/grid.css";
 ```
 
 ```js
-import { createGrid } from "highgrid";
-import "highgrid/styles/grid.css";
+import { createGrid } from "zenith-grid";
+import "zenith-grid/styles/grid.css";
 
 const rows = [
   { id: 1, name: "Alice", team: "Red", score: 1200 },
@@ -308,7 +308,7 @@ const grid = createGrid("#app", {
 });
 ```
 
-HighGrid ships with a default `role="grid"` structure and basic arrow-key navigation between headers and cells.
+ZenithGrid ships with a default `role="grid"` structure and basic arrow-key navigation between headers and cells.
 
 ### 8. Data Mutation API
 
@@ -543,7 +543,7 @@ import {
   uppercaseTeamPlugin,
   createContextMenuPlugin,
   createCsvShortcutPlugin,
-} from "highgrid";
+} from "zenith-grid";
 
 grid.usePlugin(uppercaseTeamPlugin);
 grid.unusePlugin("uppercase-team");
@@ -589,7 +589,7 @@ const myPlugin = {
 
 ### 17. Persisting Column State
 
-When `tableId` is provided, HighGrid can persist and restore column width, visibility, and pin state.
+When `tableId` is provided, ZenithGrid can persist and restore column width, visibility, and pin state.
 
 ```js
 await grid.saveColumnState();
@@ -640,14 +640,14 @@ const columns = [
 ### 21. Vue 3 Adapter
 
 ```bash
-npm install highgrid
+npm install zenith-grid
 ```
 
 **Component usage:**
 
 ```vue
 <template>
-  <HighGrid
+  <ZenithGrid
     :columns="columns"
     :rows="rows"
     row-key="id"
@@ -657,8 +657,8 @@ npm install highgrid
 </template>
 
 <script setup>
-import { HighGrid } from "highgrid/vue";
-import "highgrid/styles/grid.css";
+import { ZenithGrid } from "zenith-grid/vue";
+import "zenith-grid/styles/grid.css";
 </script>
 ```
 
@@ -671,11 +671,11 @@ import "highgrid/styles/grid.css";
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useHighGrid } from "highgrid/vue";
-import "highgrid/styles/grid.css";
+import { useZenithGrid } from "zenith-grid/vue";
+import "zenith-grid/styles/grid.css";
 
 const containerRef = ref(null);
-const { grid, state, init, setRows } = useHighGrid(containerRef, {
+const { grid, state, init, setRows } = useZenithGrid(containerRef, {
   columns,
   rows,
 });
@@ -686,19 +686,19 @@ onMounted(() => init());
 
 **Vue 2 Support:**
 
-HighGrid also supports Vue 2.7+. Import from `highgrid/vue2` instead:
+ZenithGrid also supports Vue 2.7+. Import from `zenith-grid/vue2` instead:
 
 ```vue
 <template>
-  <HighGrid :columns="columns" :rows="rows" row-key="id" />
+  <ZenithGrid :columns="columns" :rows="rows" row-key="id" />
 </template>
 
 <script>
-import { HighGrid } from "highgrid/vue2";
-import "highgrid/styles/grid.css";
+import { ZenithGrid } from "zenith-grid/vue2";
+import "zenith-grid/styles/grid.css";
 
 export default {
-  components: { HighGrid },
+  components: { ZenithGrid },
   data() {
     return {
       columns: [
@@ -715,10 +715,10 @@ export default {
 </script>
 ```
 
-**Note for Vue CLI / Webpack users:** If you encounter `Cannot find module 'highgrid/styles/grid.css'`, use the direct path instead:
+**Note for Vue CLI / Webpack users:** If you encounter `Cannot find module 'zenith-grid/styles/grid.css'`, use the direct path instead:
 
 ```js
-import "highgrid/src/styles/grid.css";
+import "zenith-grid/src/styles/grid.css";
 ```
 
 The Vue 2 adapter uses Options API and provides the same component API as Vue 3 (props, events, methods).
@@ -728,23 +728,23 @@ The Vue 2 adapter uses Options API and provides the same component API as Vue 3 
 Import `tokens.css` to expose every visual property as a CSS custom property.
 
 ```js
-import "highgrid/styles/tokens.css";
-import "highgrid/styles/grid.css";
+import "zenith-grid/styles/tokens.css";
+import "zenith-grid/styles/grid.css";
 ```
 
-To override tokens, target `.ck-high-grid-root` directly. Color tokens are defined on `.ck-high-grid-root` itself, so a plain parent selector is shadowed — use a descendant selector instead:
+To override tokens, target `.ck-zenith-grid-root` directly. Color tokens are defined on `.ck-zenith-grid-root` itself, so a plain parent selector is shadowed — use a descendant selector instead:
 
 ```css
 /* ✅ works for all tokens */
-#my-grid .ck-high-grid-root {
-  --ck-high-grid-accent: #7c3aed;
-  --ck-high-grid-row-height: 48px;
-  --ck-high-grid-font-size: 15px;
+#my-grid .ck-zenith-grid-root {
+  --ck-zenith-grid-accent: #7c3aed;
+  --ck-zenith-grid-row-height: 48px;
+  --ck-zenith-grid-font-size: 15px;
 }
 
-/* ❌ color tokens are shadowed by .ck-high-grid-root's own declarations (v2.x) */
+/* ❌ color tokens are shadowed by .ck-zenith-grid-root's own declarations (v2.x) */
 #my-grid {
-  --ck-high-grid-accent: #7c3aed;
+  --ck-zenith-grid-accent: #7c3aed;
 }
 ```
 
@@ -752,13 +752,13 @@ Built-in theme presets:
 
 ```html
 <!-- Dark mode -->
-<div class="ck-high-grid-theme-dark"><div id="my-grid"></div></div>
+<div class="ck-zenith-grid-theme-dark"><div id="my-grid"></div></div>
 
 <!-- Compact (32 px rows) -->
-<div class="ck-high-grid-theme-compact"><div id="my-grid"></div></div>
+<div class="ck-zenith-grid-theme-compact"><div id="my-grid"></div></div>
 
 <!-- Spacious (52 px rows) -->
-<div class="ck-high-grid-theme-spacious"><div id="my-grid"></div></div>
+<div class="ck-zenith-grid-theme-spacious"><div id="my-grid"></div></div>
 ```
 
 ### 23. TypeScript
@@ -766,7 +766,7 @@ Built-in theme presets:
 Type declarations are bundled — no separate `@types` package needed.
 
 ```ts
-import { createGrid, GridOptions, ColumnDef } from "highgrid";
+import { createGrid, GridOptions, ColumnDef } from "zenith-grid";
 
 interface Row {
   id: number;
@@ -831,17 +831,17 @@ A custom domain is optional. If you use one, configure it in GitHub Pages settin
 ### 28. React Adapter
 
 ```bash
-npm install highgrid
+npm install zenith-grid
 ```
 
 **Hook usage:**
 
 ```jsx
-import { useHighGrid } from "highgrid/react";
-import "highgrid/styles/grid.css";
+import { useZenithGrid } from "zenith-grid/react";
+import "zenith-grid/styles/grid.css";
 
 function MyGrid() {
-  const { containerRef, grid, state } = useHighGrid({
+  const { containerRef, grid, state } = useZenithGrid({
     rowKey: "id",
     columns,
     rows,
@@ -852,7 +852,7 @@ function MyGrid() {
 }
 ```
 
-`useHighGrid` returns:
+`useZenithGrid` returns:
 
 | Property       | Type                     | Description                          |
 | -------------- | ------------------------ | ------------------------------------ |
@@ -886,7 +886,7 @@ import {
   createDateEditor,
   createSelectEditor,
   createTextareaEditor,
-} from "highgrid";
+} from "zenith-grid";
 ```
 
 **DateEditor** — renders an `<input type="date">`:
@@ -942,7 +942,7 @@ Custom editor factory — the `editor` property accepts any function with signat
     const input = document.createElement("input");
     input.type = "number";
     input.value = String(value ?? "");
-    input.className = "ck-high-grid-cell-editor";
+    input.className = "ck-zenith-grid-cell-editor";
     return input;
   },
 }
@@ -1170,7 +1170,7 @@ grid.setColumns(updated);
 The sparkline plugin renders a small SVG chart directly inside a cell. It is ideal when you want to compare trends across many rows at a glance.
 
 ```js
-import { createGrid, createSparklinePlugin } from "highgrid";
+import { createGrid, createSparklinePlugin } from "zenith-grid";
 
 const grid = createGrid(container, {
   columns: [
@@ -1213,7 +1213,7 @@ const grid = createGrid(container, {
 The XLSX export plugin adds a `downloadXlsx` method to the grid. It uses [ExcelJS](https://github.com/exceljs/exceljs) — loaded from npm if available, otherwise falling back to a CDN.
 
 ```js
-import { createGrid, createXlsxExportPlugin } from "highgrid";
+import { createGrid, createXlsxExportPlugin } from "zenith-grid";
 
 const grid = createGrid(container, {
   columns,
@@ -1288,7 +1288,7 @@ grid.toggleDetail(rowKey);
 grid.printGrid();
 ```
 
-`printGrid` calls `window.print()`. Style the printout with `@media print` CSS — HighGrid sets `display: none` on scrollbars and overlays automatically.
+`printGrid` calls `window.print()`. Style the printout with `@media print` CSS — ZenithGrid sets `display: none` on scrollbars and overlays automatically.
 
 ### 43. Multi-column Sorting (Shift+Click)
 
@@ -1465,7 +1465,7 @@ const columns = [
 
 ### 57. Multi-level Group Aggregations
 
-HighGrid fully supports multi-level grouping (e.g. `['country', 'city', 'department']`). Column aggregations are automatically calculated, aggregated, and displayed in group header rows at every nested level.
+ZenithGrid fully supports multi-level grouping (e.g. `['country', 'city', 'department']`). Column aggregations are automatically calculated, aggregated, and displayed in group header rows at every nested level.
 
 ### 58. Web Worker Background Data Pipeline
 
@@ -1495,7 +1495,7 @@ const rows = [
 The built-in formula engine above only understands `=SUM` and `=AVG`. Installing `createFormulaPlugin` swaps in [hot-formula-parser](https://github.com/handsontable/formula-parser) — loaded from npm if available, otherwise falling back to a CDN — unlocking arithmetic operators (`+ - * / ^`), comparisons, and the full [formula.js](https://github.com/handsontable/formula.js) function set (`MIN`, `MAX`, `IF`, `COUNT`, `VLOOKUP`, string/logical functions, ...). The `row._formulas[field] = "=..."` authoring convention and circular-reference guard (`#REF!`) stay the same as the built-in engine.
 
 ```js
-import { createGrid, createFormulaPlugin } from "highgrid";
+import { createGrid, createFormulaPlugin } from "zenith-grid";
 
 const grid = createGrid(container, {
   columns,

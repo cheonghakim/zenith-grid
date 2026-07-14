@@ -6,13 +6,13 @@ import { createGrid } from '../../index.js';
  *
  * Usage:
  *   const containerRef = ref(null);
- *   const { grid, state, init } = useHighGrid(containerRef, { columns, rows });
+ *   const { grid, state, init } = useZenithGrid(containerRef, { columns, rows });
  *   onMounted(() => init());
  *
  * @param {import('vue').Ref<HTMLElement|null>} containerRef
- * @param {import('highgrid').GridOptions} [options]
+ * @param {import('zenith-grid').GridOptions} [options]
  */
-export function useHighGrid(containerRef, options = {}) {
+export function useZenithGrid(containerRef, options = {}) {
   const grid    = shallowRef(null);
   const isReady = ref(false);
 
@@ -27,14 +27,14 @@ export function useHighGrid(containerRef, options = {}) {
 
   /**
    * Instantiate the grid. Call this inside onMounted or when containerRef is ready.
-   * Passing overrideOptions merges with the options given to useHighGrid.
+   * Passing overrideOptions merges with the options given to useZenithGrid.
    *
-   * @param {import('highgrid').GridOptions} [overrideOptions]
-   * @returns {import('highgrid').GridCore}
+   * @param {import('zenith-grid').GridOptions} [overrideOptions]
+   * @returns {import('zenith-grid').GridCore}
    */
   function init(overrideOptions = {}) {
     if (!containerRef.value) {
-      console.warn('[useHighGrid] containerRef.value is null — call init() after mount.');
+      console.warn('[useZenithGrid] containerRef.value is null — call init() after mount.');
       return null;
     }
 
