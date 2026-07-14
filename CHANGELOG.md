@@ -49,6 +49,32 @@ Subpath exports follow the same pattern: `highgrid/vue` → `zenith-grid/vue`, `
 
 The grid's core API (`createGrid`, `GridCore`, all managers, plugins, and options) is unchanged — only names carrying the old brand were touched.
 
+#### Migrating an existing project
+
+Every rename is a mechanical string substitution, so most projects can migrate with a single pass over their source:
+
+```bash
+npm uninstall highgrid && npm install zenith-grid
+
+# macOS/Linux — adjust the file glob to match your project
+grep -rl 'HighGrid\|high-grid\|highgrid' src \
+  | xargs sed -i 's/HighGrid/ZenithGrid/g; s/ck-high-grid-/ck-zenith-grid-/g; s/--ck-high-grid-/--ck-zenith-grid-/g; s/highgrid/zenith-grid/g'
+```
+
+On Windows (PowerShell):
+
+```powershell
+Get-ChildItem -Recurse src -File | ForEach-Object {
+  (Get-Content $_ -Raw) `
+    -replace 'HighGrid', 'ZenithGrid' `
+    -replace 'ck-high-grid-', 'ck-zenith-grid-' `
+    -replace '--ck-high-grid-', '--ck-zenith-grid-' `
+    -replace 'highgrid', 'zenith-grid' | Set-Content $_ -Encoding utf8
+}
+```
+
+Order matters: replace `HighGrid` before the lowercase forms, and the `ck-`/`--ck-` prefixes before the bare `highgrid` package name.
+
 ## [2.1.0] - 2026-07-01
 
 ### Added
