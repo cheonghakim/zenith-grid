@@ -9,7 +9,7 @@ ZenithGrid는 바닐라 JavaScript 기반의 데이터 그리드 라이브러리
 
 ## Demo
 
-[데모 사이트(Demo site) 바로가기](https://cheonghakim.github.io/zenith-grid/)
+📖 [예제 모음](https://cheonghakim.github.io/zenith-grid/) — 기능별 라이브 코드 예제
 
 ---
 

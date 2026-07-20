@@ -9,7 +9,7 @@ Other Languages: [한국어 문서 (Korean)](./README.ko.md)
 
 ## Demo
 
-[데모 사이트(Demo site) 바로가기](https://cheonghakim.github.io/zenith-grid/)
+📖 [Examples](https://cheonghakim.github.io/zenith-grid/) — Feature-by-feature live examples with code
 
 ---
 

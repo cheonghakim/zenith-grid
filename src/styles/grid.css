@@ -560,6 +560,10 @@
   background-clip: padding-box;
 }
 
+.ck-zenith-grid-body-viewport::-webkit-scrollbar-corner {
+  background: var(--ck-zenith-grid-surface-elevated, #ffffff);
+}
+
 .ck-zenith-grid-header-center-viewport {
   overflow-y: hidden;
   scrollbar-width: none;
@@ -1983,6 +1987,14 @@
 .ck-zenith-grid-root.ck-zenith-grid-theme-dark {
   --ck-zenith-grid-ink: #e8edf3;
   --ck-zenith-grid-ink-muted: #8fa5bc;
+  /* Surface variables are declared on .ck-zenith-grid-root with light values.
+     Redefine here at 0-2-0 so dark-theme backgrounds resolve correctly. */
+  --ck-zenith-grid-surface: #12181f;
+  --ck-zenith-grid-surface-elevated: #141c25;
+  --ck-zenith-grid-surface-muted: #1a2330;
+  --ck-zenith-grid-border: #2d3a47;
+  --ck-zenith-grid-border-strong: #3d4f61;
+  --ck-zenith-grid-border-subtle: #1e2a38;
 }
 
 .ck-zenith-grid-theme-dark .ck-zenith-grid-root {

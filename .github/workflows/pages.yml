@@ -33,8 +33,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build demo site
-        run: npm run build:demo
+      - name: Build showcase site
+        run: npm run build:showcase
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

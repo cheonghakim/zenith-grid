@@ -6,6 +6,11 @@
   "module": "dist/zenith-grid.js",
   "types": "./index.d.ts",
   "type": "module",
+  "files": [
+    "dist",
+    "src/styles",
+    "index.d.ts"
+  ],
   "exports": {
     ".": {
       "types": "./index.d.ts",
@@ -37,8 +42,10 @@
   },
   "scripts": {
     "dev": "vite examples",
+    "dev:showcase": "vite --config vite.showcase.config.js",
     "build": "vite build",
     "build:demo": "vite build --config vite.demo.config.js",
+    "build:showcase": "vite build --config vite.showcase.config.js",
     "build:vue": "node build-vue3.js",
     "build:vue2": "node build-vue2.js",
     "build:react": "node build-react.js",

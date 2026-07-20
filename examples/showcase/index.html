@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HighGrid Examples</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body data-theme="dark">
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <span class="logo-name">HighGrid</span>
+          <span class="logo-tag">Examples</span>
+        </div>
+        <button id="theme-btn" class="theme-btn" title="Toggle theme">☀</button>
+      </div>
+      <div id="sidebar-nav" class="sidebar-nav"></div>
+    </nav>
+
+    <main class="main">
+      <div class="example-header">
+        <div>
+          <h2 id="example-title"></h2>
+          <p id="example-desc"></p>
+        </div>
+      </div>
+
+      <div class="preview-wrap">
+        <div id="grid-host"></div>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-toolbar">
+          <div class="code-tabs">
+            <button class="code-tab active">Code</button>
+          </div>
+          <button id="copy-btn" class="copy-btn">Copy</button>
+        </div>
+        <pre class="code-pre"><code id="code-display"></code></pre>
+      </div>
+    </main>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
