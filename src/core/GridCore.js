@@ -443,6 +443,14 @@ export class GridCore {
             options.hooks?.afterCellRender?.(ctx);
             this._pluginManager.callHook('afterCellRender', ctx);
           },
+          beforeRowDestroy: (ctx) => {
+            options.hooks?.beforeRowDestroy?.(ctx);
+            this._pluginManager.callHook('beforeRowDestroy', ctx);
+          },
+          beforeCellDestroy: (ctx) => {
+            options.hooks?.beforeCellDestroy?.(ctx);
+            this._pluginManager.callHook('beforeCellDestroy', ctx);
+          },
         },
         shouldAnimateRow: (rowKey) => this._liveUpdateManager.shouldAnimateRow(rowKey),
         getRowAnimationDuration: () => this._liveUpdateManager.getRowAnimationDuration(),
@@ -1440,6 +1448,9 @@ export class GridCore {
     const editor = this._createCellEditor(row, column, previous);
     cell.classList.add('ck-zenith-grid-cell-editing');
     delete cell.dataset.committed;
+    // The editor replaces whatever the column renderer mounted into this cell, so
+    // give that renderer its destroy() before its element is discarded.
+    this._bodyRenderer.disposeCell(cell);
     cell.innerHTML = '';
     cell.appendChild(editor);
     editor.focus();

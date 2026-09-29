@@ -26,6 +26,7 @@ export class WorkerBridge {
     this._enabled = options.enabled ?? true;
     this._timeout = options.timeout ?? 10000;
     this._worker = null;
+    this._workerObjectUrl = null;
     this._pendingRequests = new Map(); // id -> { resolve, reject, timer }
     this._requestCounter = 0;
 
@@ -52,6 +53,7 @@ export class WorkerBridge {
     } catch (err) {
       console.warn('[WorkerBridge] Failed to create Worker. Falling back to main thread.', err);
       this._enabled = false;
+      this._revokeWorkerObjectUrl();
     }
   }
 
@@ -240,7 +242,20 @@ self.addEventListener('message', async (e) => {
     `.trim();
 
     const blob = new Blob([workerCode], { type: 'application/javascript' });
-    return new Worker(URL.createObjectURL(blob));
+    // Kept until destroy(): the blob URL must stay valid while the worker script loads,
+    // and each grid instance would otherwise leak one unrevoked URL (and its blob).
+    this._workerObjectUrl = URL.createObjectURL(blob);
+    return new Worker(this._workerObjectUrl);
+  }
+
+  _revokeWorkerObjectUrl() {
+    if (!this._workerObjectUrl) return;
+    try {
+      URL.revokeObjectURL(this._workerObjectUrl);
+    } catch {
+      // ignore — some test environments stub createObjectURL without revokeObjectURL
+    }
+    this._workerObjectUrl = null;
   }
 
   // ─── 요청 전송 ─────────────────────────────────────────────
@@ -315,5 +330,6 @@ self.addEventListener('message', async (e) => {
       this._worker.terminate();
       this._worker = null;
     }
+    this._revokeWorkerObjectUrl();
   }
 }

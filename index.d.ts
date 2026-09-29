@@ -13,6 +13,25 @@ export interface CellRendererParams<Row = GridRow> {
   state: ColumnState;
 }
 
+/**
+ * Return shape for renderers that mount something stateful into the cell
+ * (a framework component instance, a chart, a subscription). `destroy` is called
+ * right before the cell element is discarded: on every re-render of that row,
+ * when the cell enters edit mode, on `clear()`, and on `grid.destroy()`.
+ */
+export interface CellRendererResult {
+  element?: HTMLElement | string | number | null | undefined;
+  destroy?: (() => void) | null;
+}
+
+export type CellRendererReturn =
+  | HTMLElement
+  | string
+  | number
+  | CellRendererResult
+  | null
+  | undefined;
+
 export interface GridRowRenderContext<Row = GridRow> {
   row: Row;
   rowElement: HTMLElement;
@@ -118,6 +137,18 @@ export interface GridHooks<Row = GridRow> {
   afterRowRender?: ((context: GridRowRenderContext<Row>) => void) | null;
   beforeCellRender?: ((context: GridCellRenderContext<Row>) => void) | null;
   afterCellRender?: ((context: GridCellRenderContext<Row>) => void) | null;
+  /**
+   * Called right before a row element is discarded. The grid rebuilds every visible
+   * row on each render pass (scroll, sort, filter, edit commit, …), so this fires for
+   * every rendered row on every pass — not only on `grid.destroy()`. Cells inside the
+   * row receive `beforeCellDestroy` first.
+   */
+  beforeRowDestroy?: ((context: GridRowRenderContext<Row>) => void) | null;
+  /**
+   * Called right before a data cell element is discarded (re-render, edit start,
+   * `clear()`, `grid.destroy()`). Fires before the renderer's own `destroy()`.
+   */
+  beforeCellDestroy?: ((context: GridCellRenderContext<Row>) => void) | null;
 }
 
 export interface ColumnDef<Row = GridRow> {
@@ -145,7 +176,7 @@ export interface ColumnDef<Row = GridRow> {
   rowSpan?: number | ((params: { row: Row; def: ColumnDef<Row>; value: any }) => number);
   colSpan?: number | ((params: { row: Row; def: ColumnDef<Row>; value: any }) => number);
   formatter?: ((value: any, row: Row) => any) | null;
-  renderer?: ((params: CellRendererParams<Row>) => HTMLElement | string | number | null | undefined) | null;
+  renderer?: ((params: CellRendererParams<Row>) => CellRendererReturn) | null;
   editable?: boolean | ((params: { row: Row; def: ColumnDef<Row> }) => boolean);
   editor?: 'select' | 'date' | 'textarea' | ((params: CellEditParams<Row>) => HTMLElement | null | undefined) | null;
   editorOptions?: Record<string, any> | null;

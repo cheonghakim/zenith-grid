@@ -153,6 +153,10 @@ export class InfiniteScrollManager {
   }
 
   destroy() {
+    // Invalidate any in-flight onLoadMore() so a late response cannot re-append rows
+    // (or flip loading state) on a grid whose data store has already been torn down.
+    this._requestToken += 1;
     this._loading = false;
+    this._hasMore = false;
   }
 }

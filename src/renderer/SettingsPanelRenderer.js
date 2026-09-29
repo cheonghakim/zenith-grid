@@ -10,6 +10,9 @@ export class SettingsPanelRenderer {
     this._host = null;
     this._shell = null;
     this._draggingRangeColId = null;
+    this._advancedFilterDialog = null;
+    this._advancedFilterDismiss = null;
+    this._advancedFilterDismissTimer = null;
 
     // Initialize composition state
     this._isComposing = false;
@@ -444,9 +447,19 @@ export class SettingsPanelRenderer {
     return section;
   }
 
+  _closeAdvancedFilterBuilder() {
+    if (this._advancedFilterDismiss) {
+      document.removeEventListener('pointerdown', this._advancedFilterDismiss, true);
+      this._advancedFilterDismiss = null;
+    }
+    clearTimeout(this._advancedFilterDismissTimer);
+    this._advancedFilterDismissTimer = null;
+    this._advancedFilterDialog?.remove();
+    this._advancedFilterDialog = null;
+  }
+
   _openAdvancedFilterBuilder() {
-    const existing = document.querySelector('.ck-zenith-grid-advanced-filter-dialog');
-    if (existing) { existing.remove(); return; }
+    if (this._advancedFilterDialog) { this._closeAdvancedFilterBuilder(); return; }
 
     const columns = this._core.getVisibleLeafColumns().filter((c) => c.def.filterable !== false);
     const dialog = document.createElement('div');
@@ -550,7 +563,7 @@ export class SettingsPanelRenderer {
         tree = { type: logic, conditions: conditions.map((c) => ({ ...c })) };
       }
       this._core.setAdvancedFilter(tree);
-      dialog.remove();
+      this._closeAdvancedFilterBuilder();
       this.render();
     });
 
@@ -558,7 +571,7 @@ export class SettingsPanelRenderer {
     cancelBtn.type = 'button';
     cancelBtn.className = 'ck-zenith-grid-side-panel-action';
     cancelBtn.textContent = this._t('sidePanel.cancel', 'Cancel');
-    cancelBtn.addEventListener('click', () => dialog.remove());
+    cancelBtn.addEventListener('click', () => this._closeAdvancedFilterBuilder());
 
     const btnRow = document.createElement('div');
     btnRow.className = 'ck-zenith-grid-advanced-filter-actions';
@@ -568,12 +581,19 @@ export class SettingsPanelRenderer {
     dialog.appendChild(btnRow);
 
     document.body.appendChild(dialog);
+    this._advancedFilterDialog = dialog;
 
-    // 외부 클릭 시 닫기
-    setTimeout(() => {
+    // 외부 클릭 시 닫기. The dialog lives on document.body, outside the grid root, and
+    // its listener is on document — both are tracked on the instance so destroy() can
+    // remove them (a dialog left open at grid teardown would otherwise keep the grid
+    // reachable through the apply handler's closure).
+    this._advancedFilterDismissTimer = setTimeout(() => {
+      this._advancedFilterDismissTimer = null;
+      if (this._advancedFilterDialog !== dialog) return;
       const dismiss = (e) => {
-        if (!dialog.contains(e.target)) { dialog.remove(); document.removeEventListener('pointerdown', dismiss, true); }
+        if (!dialog.contains(e.target)) this._closeAdvancedFilterBuilder();
       };
+      this._advancedFilterDismiss = dismiss;
       document.addEventListener('pointerdown', dismiss, true);
     }, 0);
   }
@@ -1027,6 +1047,7 @@ export class SettingsPanelRenderer {
   }
 
   destroy() {
+    this._closeAdvancedFilterBuilder();
     this._dom.getRoot()?.classList.remove('ck-zenith-grid-has-side-panel', 'ck-zenith-grid-side-panel-open');
     if (this._host) {
       this._host.innerHTML = '';

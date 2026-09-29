@@ -260,6 +260,62 @@ const scoreColumn = {
 };
 ```
 
+#### Stateful renderers and cleanup
+
+ZenithGrid does **not** recycle row DOM. Every render pass (scroll, sort, filter, edit commit, `setRows`, …) tears down all visible row and cell elements and rebuilds them, so a renderer is called again for every visible cell on every pass. A renderer that only builds plain DOM needs nothing else. A renderer that mounts something with its own lifecycle (a framework component instance, a chart, an event subscription) must be told when its element goes away, or each pass leaks an instance.
+
+For that case, return `{ element, destroy }` instead of a bare element. The grid calls `destroy()` right before the cell element is discarded:
+
+- on every re-render of that row
+- when the cell enters edit mode (the editor replaces the rendered content)
+- on `grid.clear()` / `grid.destroy()`
+
+```js
+const chartColumn = {
+  id: "trend",
+  field: "trend",
+  renderer: ({ value }) => {
+    const el = document.createElement("div");
+    const chart = mountChart(el, value); // anything with a dispose method
+    return {
+      element: el,
+      destroy: () => chart.dispose(),
+    };
+  },
+};
+```
+
+`element` follows the same rules as a bare return value (`HTMLElement`, string, number, or `null`).
+
+#### Render lifecycle hooks
+
+The `hooks` option (and plugin `hooks`) receives every render and destroy event:
+
+| Hook | Context | When |
+| --- | --- | --- |
+| `beforeRowRender` | `{ row, rowElement, rowIndex }` | row element created, before cells are added |
+| `afterRowRender` | `{ row, rowElement, rowIndex }` | row element attached to the container |
+| `beforeCellRender` | `{ row, def, state, cell, value }` | before the column renderer / text is inserted |
+| `afterCellRender` | `{ row, def, state, cell, value }` | cell fully built |
+| `beforeCellDestroy` | `{ row, def, state, cell, value }` | right before the cell element is discarded, before the renderer's `destroy()` |
+| `beforeRowDestroy` | `{ row, rowElement, rowIndex }` | right before the row element is discarded, after its cells' `beforeCellDestroy` |
+
+```js
+const grid = createGrid(container, {
+  columns,
+  hooks: {
+    afterCellRender: ({ cell, def }) => {
+      if (def.id === "status") tooltipLib.attach(cell);
+    },
+    beforeCellDestroy: ({ cell, def }) => {
+      if (def.id === "status") tooltipLib.detach(cell);
+    },
+  },
+});
+```
+
+Because rows are rebuilt on every pass, the destroy hooks fire for every visible row on every pass, not only on `grid.destroy()`. Keep them cheap.
+
 ### 6. Core Options
 
 ```js
@@ -1164,6 +1220,35 @@ const updated = grid.getAllLeafColumns().map((c) => ({
 }));
 grid.setColumns(updated);
 ```
+
+#### Row-level classes and styles
+
+`conditionalFormat` targets a single cell. To style the whole row element use the grid options `getRowClassName` and `getRowStyle`. Both receive the display row and run for every visible row on each render pass.
+
+- `getRowClassName(row)` → `string | string[] | null` — class names added to the row element
+- `getRowStyle(row)` → `Record<string, string | number> | null` — inline styles applied to the row element (camelCase keys, e.g. `backgroundImage`)
+
+```js
+const grid = createGrid(container, {
+  columns,
+  rows,
+  getRowClassName: (row) => {
+    if (row.status === "error") return "row-error";
+    if (row.status === "warn") return ["row-warn", "row-attention"];
+    return null;
+  },
+  getRowStyle: (row) => {
+    // gradient frame: fills the row from the left in proportion to progress
+    const pct = Math.max(0, Math.min(100, Number(row.progress) || 0));
+    return {
+      backgroundImage: `linear-gradient(90deg, rgba(37, 99, 235, .18) ${pct}%, transparent ${pct}%)`,
+      boxShadow: row.pinned ? "inset 3px 0 0 #2563eb" : null,
+    };
+  },
+});
+```
+
+Row styles are applied to the row element, so cell backgrounds set via `conditionalFormat` or a theme still paint on top of them. Group headers, tree-loading rows and detail rows are passed through the callbacks too; check `row._type` if you need to skip them. Both callbacks are exposed as props by the Vue 2 / Vue 3 adapters (`:get-row-class-name`, `:get-row-style`).
 
 ### 38. Sparkline Plugin (Inline Charts)
 

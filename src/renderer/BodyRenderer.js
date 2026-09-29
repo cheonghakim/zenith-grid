@@ -13,6 +13,69 @@ export class BodyRenderer {
     this._options = options;
     this._currentRows = [];
     this._lastRenderAt = 0;
+    // Lifecycle bookkeeping for the destroy hooks. render() tears down every row/cell
+    // element on each pass (there is no DOM recycling), so anything a renderer mounted
+    // into a cell — a Vue/React instance, a chart, a subscription — would otherwise be
+    // dropped from the DOM without ever being told. These maps let _disposeRows() give
+    // each element's owner a chance to clean up before the element goes away.
+    this._rowContexts = new WeakMap();
+    this._cellContexts = new WeakMap();
+  }
+
+  /**
+   * Runs beforeCellDestroy + the renderer's own destroy() for a single cell, then
+   * forgets it. Safe to call on a cell that was never registered (no-op).
+   */
+  disposeCell(cell) {
+    const ctx = this._cellContexts.get(cell);
+    if (!ctx) return;
+    this._cellContexts.delete(cell);
+    const { row, def, state, value, destroy, disposers } = ctx;
+    try {
+      this._options.hooks?.beforeCellDestroy?.({ row, def, state, cell, value });
+    } catch (error) {
+      console.error("[zenith-grid] beforeCellDestroy hook failed", error);
+    }
+    if (typeof destroy === "function") {
+      try {
+        destroy();
+      } catch (error) {
+        console.error("[zenith-grid] cell renderer destroy() failed", error);
+      }
+    }
+    for (const dispose of disposers ?? []) {
+      try {
+        dispose();
+      } catch (error) {
+        console.error("[zenith-grid] cell disposer failed", error);
+      }
+    }
+  }
+
+  /**
+   * Runs the destroy hooks for every row/cell currently inside `container`.
+   * Must be called before the container's children are discarded.
+   */
+  _disposeRows(container) {
+    if (!container) return;
+    const rows = container.querySelectorAll(".ck-zenith-grid-row");
+    rows.forEach((rowElement) => {
+      rowElement
+        .querySelectorAll(".ck-zenith-grid-cell")
+        .forEach((cell) => this.disposeCell(cell));
+      const ctx = this._rowContexts.get(rowElement);
+      if (!ctx) return;
+      this._rowContexts.delete(rowElement);
+      try {
+        this._options.hooks?.beforeRowDestroy?.({
+          row: ctx.row,
+          rowElement,
+          rowIndex: ctx.rowIndex,
+        });
+      } catch (error) {
+        console.error("[zenith-grid] beforeRowDestroy hook failed", error);
+      }
+    });
   }
 
   render(displayRows, rangeBundle) {
@@ -80,6 +143,7 @@ export class BodyRenderer {
       }
     }
 
+    this._disposeRows(container);
     container.innerHTML = "";
 
     const visibleColumns = this._columnModel.getVisibleLeafColumns();
@@ -105,6 +169,7 @@ export class BodyRenderer {
       rowElement.dataset.rowIndex = String(index - startIndex);
       rowElement.setAttribute("role", "row");
       rowElement.setAttribute("aria-rowindex", String(index + 1));
+      this._rowContexts.set(rowElement, { row, rowIndex: index });
       this._applyClassNames(rowElement, this._options.getRowClassName?.(row));
       this._applyInlineStyles(rowElement, this._options.getRowStyle?.(row));
 
@@ -787,14 +852,27 @@ export class BodyRenderer {
       cell.title = String(validationError);
     }
 
+    // Per-cell teardown callbacks (run by disposeCell). Anything below that schedules
+    // timers or attaches nodes outside the cell must register here so it cannot outlive
+    // the cell — e.g. a hover tooltip whose 400ms timer fires after grid.destroy().
+    const cellDisposers = [];
+
     // 셀 툴팁 (Cell Tooltip)
     if (!validationError) {
       if (typeof def.tooltipComponent === "function") {
         // 리치 툴팁: 커스텀 HTML 팝업
         let tooltipEl = null;
         let showTimer = null;
+        cellDisposers.push(() => {
+          clearTimeout(showTimer);
+          showTimer = null;
+          tooltipEl?.remove();
+          tooltipEl = null;
+        });
         cell.addEventListener("mouseenter", () => {
+          clearTimeout(showTimer);
           showTimer = setTimeout(() => {
+            showTimer = null;
             tooltipEl = document.createElement("div");
             tooltipEl.className = "ck-zenith-grid-rich-tooltip";
             const content = def.tooltipComponent({ value, row, def });
@@ -879,8 +957,27 @@ export class BodyRenderer {
     const renderedValue = def.formatter ? def.formatter(value, row) : value;
     this._options.hooks?.beforeCellRender?.({ row, def, state, cell, value });
 
+    // Registered for every data cell (not just ones with a renderer) so that
+    // beforeCellDestroy mirrors beforeCellRender one-to-one.
+    const cellContext = { row, def, state, value, destroy: null, disposers: cellDisposers };
+    this._cellContexts.set(cell, cellContext);
+
     if (def.renderer) {
-      const rendered = def.renderer({ value, row, def, state });
+      let rendered = def.renderer({ value, row, def, state });
+      // A renderer that mounts something stateful (framework component, chart, …) can
+      // return { element, destroy } so the grid calls destroy() right before the cell
+      // element is torn down — on every re-render, on clear(), and on grid destroy().
+      if (
+        rendered != null &&
+        typeof rendered === "object" &&
+        !(rendered instanceof HTMLElement) &&
+        ("element" in rendered || "destroy" in rendered)
+      ) {
+        if (typeof rendered.destroy === "function") {
+          cellContext.destroy = rendered.destroy;
+        }
+        rendered = rendered.element;
+      }
       if (rendered instanceof HTMLElement) {
         cell.appendChild(rendered);
       } else if (rendered != null) {
@@ -958,6 +1055,7 @@ export class BodyRenderer {
         : this._dom.getPinnedBottomRowsContainer?.();
     if (!container) return;
 
+    this._disposeRows(container);
     if (!rows || rows.length === 0) {
       container.style.display = "none";
       container.innerHTML = "";
@@ -982,6 +1080,7 @@ export class BodyRenderer {
       rowEl.dataset.rowKey = row._rowKey ?? `pinned-${position}-${index}`;
       rowEl.style.height = `${rowHeight}px`;
       rowEl.setAttribute("role", "row");
+      this._rowContexts.set(rowEl, { row, rowIndex: index });
 
       if (row._type === "aggregate") {
         rowEl.classList.add("ck-zenith-grid-row-aggregate");
@@ -1055,8 +1154,16 @@ export class BodyRenderer {
   }
 
   clear() {
-    const container = this._dom.getRowsContainer();
-    if (container) container.innerHTML = "";
+    const containers = [
+      this._dom.getRowsContainer(),
+      this._dom.getPinnedTopRowsContainer?.(),
+      this._dom.getPinnedBottomRowsContainer?.(),
+    ];
+    for (const container of containers) {
+      if (!container) continue;
+      this._disposeRows(container);
+      container.innerHTML = "";
+    }
     this._currentRows = [];
   }
 

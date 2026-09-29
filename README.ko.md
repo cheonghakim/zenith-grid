@@ -256,6 +256,62 @@ const scoreColumn = {
 };
 ```
 
+#### 상태를 가진 렌더러와 정리(cleanup)
+
+ZenithGrid는 행 DOM을 **재활용하지 않습니다.** 렌더가 돌 때마다(스크롤, 정렬, 필터, 편집 확정, `setRows` 등) 보이는 행과 셀 요소를 전부 지우고 다시 만들기 때문에, 렌더러는 매 렌더마다 보이는 모든 셀에 대해 다시 호출됩니다. 단순 DOM만 만드는 렌더러라면 신경 쓸 것이 없지만, 자체 수명주기를 가진 것(프레임워크 컴포넌트 인스턴스, 차트, 이벤트 구독 등)을 마운트하는 렌더러는 요소가 사라지는 시점을 통보받아야 합니다. 그렇지 않으면 렌더마다 인스턴스가 하나씩 누수됩니다.
+
+이 경우 요소 대신 `{ element, destroy }`를 반환하세요. 그리드는 셀 요소가 버려지기 직전에 `destroy()`를 호출합니다.
+
+- 해당 행이 다시 렌더링될 때마다
+- 셀이 편집 모드로 들어갈 때 (편집기가 렌더된 내용을 대체)
+- `grid.clear()` / `grid.destroy()` 시
+
+```js
+const chartColumn = {
+  id: "trend",
+  field: "trend",
+  renderer: ({ value }) => {
+    const el = document.createElement("div");
+    const chart = mountChart(el, value); // dispose 메서드가 있는 무엇이든
+    return {
+      element: el,
+      destroy: () => chart.dispose(),
+    };
+  },
+};
+```
+
+`element`에는 일반 반환값과 같은 규칙이 적용됩니다(`HTMLElement`, 문자열, 숫자, `null`).
+
+#### 렌더 수명주기 훅
+
+`hooks` 옵션(그리고 플러그인의 `hooks`)은 모든 렌더/파괴 이벤트를 받습니다.
+
+| 훅 | 컨텍스트 | 시점 |
+| --- | --- | --- |
+| `beforeRowRender` | `{ row, rowElement, rowIndex }` | 행 요소 생성 직후, 셀 추가 전 |
+| `afterRowRender` | `{ row, rowElement, rowIndex }` | 행 요소가 컨테이너에 붙은 뒤 |
+| `beforeCellRender` | `{ row, def, state, cell, value }` | 컬럼 렌더러/텍스트 삽입 전 |
+| `afterCellRender` | `{ row, def, state, cell, value }` | 셀 구성 완료 후 |
+| `beforeCellDestroy` | `{ row, def, state, cell, value }` | 셀 요소가 버려지기 직전, 렌더러의 `destroy()`보다 먼저 |
+| `beforeRowDestroy` | `{ row, rowElement, rowIndex }` | 행 요소가 버려지기 직전, 그 행의 셀 `beforeCellDestroy` 이후 |
+
+```js
+const grid = createGrid(container, {
+  columns,
+  hooks: {
+    afterCellRender: ({ cell, def }) => {
+      if (def.id === "status") tooltipLib.attach(cell);
+    },
+    beforeCellDestroy: ({ cell, def }) => {
+      if (def.id === "status") tooltipLib.detach(cell);
+    },
+  },
+});
+```
+
+행이 매 렌더마다 다시 만들어지므로 파괴 훅은 `grid.destroy()` 때만이 아니라 매 렌더마다 보이는 모든 행에 대해 호출됩니다. 가볍게 유지하세요.
+
 ### 6. 주요 옵션
 
 ```js
@@ -1153,6 +1209,35 @@ const updated = grid.getAllLeafColumns().map((c) => ({
 }));
 grid.setColumns(updated);
 ```
+
+#### 행 단위 클래스와 스타일
+
+`conditionalFormat`은 셀 하나를 대상으로 합니다. 행 요소 전체에 스타일을 주려면 그리드 옵션 `getRowClassName`과 `getRowStyle`을 사용하세요. 둘 다 표시 행(display row)을 받고, 매 렌더마다 보이는 모든 행에 대해 실행됩니다.
+
+- `getRowClassName(row)` → `string | string[] | null` — 행 요소에 추가할 클래스
+- `getRowStyle(row)` → `Record<string, string | number> | null` — 행 요소에 적용할 인라인 스타일 (camelCase 키, 예: `backgroundImage`)
+
+```js
+const grid = createGrid(container, {
+  columns,
+  rows,
+  getRowClassName: (row) => {
+    if (row.status === "error") return "row-error";
+    if (row.status === "warn") return ["row-warn", "row-attention"];
+    return null;
+  },
+  getRowStyle: (row) => {
+    // 그라디언트 프레임: 진행률만큼 행을 왼쪽부터 채움
+    const pct = Math.max(0, Math.min(100, Number(row.progress) || 0));
+    return {
+      backgroundImage: `linear-gradient(90deg, rgba(37, 99, 235, .18) ${pct}%, transparent ${pct}%)`,
+      boxShadow: row.pinned ? "inset 3px 0 0 #2563eb" : null,
+    };
+  },
+});
+```
+
+행 스타일은 행 요소에 적용되므로 `conditionalFormat`이나 테마로 지정한 셀 배경은 그 위에 그려집니다. 그룹 헤더, 트리 로딩 행, 디테일 행도 콜백에 전달되니 제외하려면 `row._type`을 확인하세요. 두 콜백 모두 Vue 2 / Vue 3 어댑터에서 props로 노출됩니다(`:get-row-class-name`, `:get-row-style`).
 
 ### 38. 스파크라인 플러그인 (셀 내 미니 차트)
 

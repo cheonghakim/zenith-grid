@@ -1,5 +1,29 @@
 # Changelog
 
+## [3.1.0] - 2026-09-29
+
+### Added
+
+**Renderer lifecycle**
+- A column `renderer` may now return `{ element, destroy }`. The grid calls `destroy()` right before the cell element is discarded — on every re-render of the row, when the cell enters edit mode, on `clear()`, and on `grid.destroy()`. This is the hook stateful renderers (framework component instances, charts, subscriptions) were missing: the grid rebuilds every visible row on each render pass, so anything mounted into a cell without a teardown path leaked one instance per pass.
+- New render hooks `beforeCellDestroy({ row, def, state, cell, value })` and `beforeRowDestroy({ row, rowElement, rowIndex })`, available through the `hooks` option and through plugin `hooks`. They mirror `beforeCellRender` / `beforeRowRender` one-to-one and fire for pinned rows too.
+- `BodyRenderer.disposeCell(cell)` runs the destroy path for a single cell; `beginCellEdit()` now uses it so a mounted renderer is destroyed before the editor replaces it.
+
+**Vue 2 adapter**
+- `createVueRenderer(Component, options)` (exported from `zenith-grid/vue2`) wraps a `Vue.extend()` constructor or component options object as a cell renderer. It mounts one instance per cell, maps `{ value, row, def, state }` to `propsData` (customisable via `props`), supports `parent` for `provide/inject`/`$store`, binds `on` listeners with `vm.$on`, and returns `{ element, destroy }` so the grid `$destroy()`s the instance when the cell goes away.
+
+### Fixed
+
+**Teardown leaks**
+- Rich tooltips (`tooltipComponent`) were only cleaned up on `mouseleave`. Disposing a cell while it was hovered — a re-render, edit start, or `grid.destroy()` — left the 400ms show timer running, so the tooltip was still appended to `document.body` after the grid was gone, and an already-visible tooltip stayed behind on re-render. The tooltip timer and element are now torn down with the cell.
+- `InfiniteScrollManager.destroy()` did not invalidate an in-flight `onLoadMore()` request; a response arriving after `grid.destroy()` still fired `loadingComplete` and could re-append rows to the emptied data store. Late responses are now ignored.
+- The side panel's advanced filter dialog is appended to `document.body` with a capture-phase `pointerdown` listener on `document`; neither was removed on `grid.destroy()`, leaving the dialog on screen and the grid instance reachable through the Apply handler. Both are now tracked and removed on destroy (and the toggle now closes only this grid's dialog, not another grid's).
+- `WorkerBridge` created a blob URL for the inline worker but never called `URL.revokeObjectURL()`, leaking one URL and blob per grid instance. The URL is now revoked on `destroy()` and when worker construction fails.
+
+### Documentation
+- Documented the existing row-level styling options `getRowClassName(row)` and `getRowStyle(row)` (grid options and Vue adapter props), which had no README entry.
+- Documented the full render hook set (`beforeRowRender`, `afterRowRender`, `beforeCellRender`, `afterCellRender`, `beforeCellDestroy`, `beforeRowDestroy`) and the fact that rows are rebuilt, not recycled, on every render pass.
+
 ## [3.0.3] - 2026-09-10
 
 ### Fixed

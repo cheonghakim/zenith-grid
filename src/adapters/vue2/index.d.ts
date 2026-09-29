@@ -1,5 +1,29 @@
 import { DefineComponent } from 'vue';
-import type { GridCore, GridOptions } from '../../index.js';
+import type { CellRendererParams, CellRendererResult, GridCore, GridOptions, GridRow } from '../../index.js';
+
+export interface CreateVueRendererOptions<Row = GridRow> {
+  /**
+   * Maps renderer params to `propsData`. A function receives `{ value, row, def, state }`;
+   * an object is merged over those four defaults. Undeclared props are ignored by Vue.
+   */
+  props?: ((params: CellRendererParams<Row>) => Record<string, any>) | Record<string, any>;
+  /** Parent Vue instance — wires `$parent`, `provide/inject`, `$store`, `$router`, `$i18n`. */
+  parent?: any;
+  /** Listeners bound with `vm.$on` after mount. */
+  on?: (params: CellRendererParams<Row>) => Record<string, (...args: any[]) => void>;
+  /** Vue constructor; only required for a plain options object without `parent`. */
+  Vue?: any;
+}
+
+/**
+ * Wraps a Vue 2 component (`Vue.extend()` constructor or options object) as a
+ * ZenithGrid cell renderer. Each cell gets its own instance; the grid calls the
+ * returned `destroy` (→ `vm.$destroy()`) whenever the cell element is discarded.
+ */
+export function createVueRenderer<Row = GridRow>(
+  Component: any,
+  options?: CreateVueRendererOptions<Row>,
+): (params: CellRendererParams<Row>) => CellRendererResult & { element: HTMLElement; destroy: () => void };
 
 export interface ZenithGridProps extends Omit<GridOptions, 'container'> {}
 
